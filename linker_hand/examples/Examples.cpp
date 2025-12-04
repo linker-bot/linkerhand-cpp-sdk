@@ -3,6 +3,7 @@
 #include <map>
 #include <string>
 #include <atomic>
+#include <array>
 #include "LinkerHandApi.h"
 
 #include <iostream>
@@ -31,7 +32,7 @@ const std::string BOLD = "\033[1m";
 const std::string UNDERLINE = "\033[4m";
 const std::string REVERSE = "\033[7m";
 
-#define HAND_SPEED 100
+#define HAND_SPEED 200
 #define HAND_TORQUE 255
 
 // 用于标记程序是否应该退出
@@ -115,6 +116,17 @@ std::map<std::string, int> hand = {
     {"joint16", 250}, {"joint17", 250}, {"joint18", 250}, {"joint19", 250}, {"joint20", 250},
     {"joint21", 250}, {"joint22", 250}, {"joint23", 250}, {"joint24", 250}, {"joint25", 250}
 };
+
+// L6 - 执行动作 - 单指
+std::vector<std::vector<uint8_t>> L6_POSE_1 = {
+    {255, 255, 255, 255, 255, 255},
+    {0, 255, 255, 255, 255, 255},
+    {255, 0, 255, 255, 255, 255},
+    {255, 255, 0, 255, 255, 255},
+    {255, 255, 255, 0, 255, 255},
+    {255, 255, 255, 255, 0, 255},
+    {255, 255, 255, 255, 255, 0},
+    {255, 255, 255, 255, 255, 255}};
 
 // L7 - 执行动作 - 手掌握拳
 std::vector<std::vector<uint8_t>> L7_POSE_1 = {
@@ -234,16 +246,28 @@ void interactiveMode(LinkerHandApi &hand)
         case 7:
             for (size_t i = 0; i < 30; i++) 
             {
-                std::cout << "Obtain pressure sensing information 1:\n" << bytesToHex(hand.getForce(1)) << std::endl;
+                std::vector<std::vector<std::vector<uint8_t>>> touch_mats = hand.getForce();
+                // 手指名称表，顺序对应 touch_mats[0..4]
+                const std::array<const char*, 5> finger_name = {
+                    "THUMB_TOUCH", "INDEX_TOUCH", "MIDDLE_TOUCH", "RING_TOUCH", "LITTLE_TOUCH"
+                };
+
+                for (size_t n = 0; n < touch_mats.size(); ++n) {
+                    std::cout << finger_name[n] << ":\n";
+                    for (const auto &row : touch_mats[n])
+                    {
+                        for (uint8_t val : row)
+                            std::cout << std::setw(3) << static_cast<int>(val) << ' ';
+                        std::cout << '\n';
+                    }
+                    std::cout << '\n';
+                }
+
                 std::this_thread::sleep_for(std::chrono::milliseconds(100));
             }
             break;
         case 8:
-            for (size_t i = 0; i < 30; i++) 
-            {
-                std::cout << "Obtain pressure sensing information 2:\n" << bytesToHex(hand.getForce()) << std::endl;
-                std::this_thread::sleep_for(std::chrono::milliseconds(100));
-            }
+            std::cout << "NULL \n" << std::endl;
             break;
         case 9:
             std::cout << "Clear fault codes\n" << std::endl;
@@ -257,8 +281,19 @@ void interactiveMode(LinkerHandApi &hand)
             }
             break;
         case 11:
-            if (hand.handJoint_ == LINKER_HAND::L7)
-            {
+            if (hand.handJoint_ == LINKER_HAND::L6) {
+                std::cout << "L6 - Execute action" << std::endl;
+
+                for (size_t i = 0; i < 10; i++) {
+                    for (const auto &pose : L6_POSE_1) {
+                        hand.fingerMove(pose);
+                        std::this_thread::sleep_for(std::chrono::milliseconds(150));
+                    }
+                    std::this_thread::sleep_for(std::chrono::milliseconds(150));
+                }
+                
+
+            } else if (hand.handJoint_ == LINKER_HAND::L7) {
                 hand.setSpeed(std::vector<uint8_t>(7, HAND_SPEED)); // L7 need 7 speed
                 hand.setTorque(std::vector<uint8_t>(7, HAND_TORQUE)); // L7 need 7 torque
                 //---------------------------------------------------------
@@ -330,13 +365,13 @@ void interactiveMode(LinkerHandApi &hand)
                 //---------------------------------------------------------
 
                 // Open hand
-                std::vector<uint8_t> pos1_1 = {230, 0, 0, 15, 5, 250, 55, 100, 75, 95, 85, 0, 0, 0, 0, 250, 0, 40, 35, 5, 250, 0, 5, 0, 0};
+                std::vector<uint8_t> pos1_1 = {230, 0, 0, 15, 5, 250, 55, 80, 210, 202, 85, 0, 0, 0, 0, 250, 0, 40, 35, 5, 250, 0, 5, 0, 0};
                 std::vector<uint8_t> pos1_2 = {80, 255, 255, 255, 255, 180, 51, 51, 72, 202, 202, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255};
-                std::vector<uint8_t> pos1_3 = {75, 255, 255, 255, 255, 176, 51, 138, 135, 202, 202, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255};
+                std::vector<uint8_t> pos1_3 = {75, 255, 255, 255, 255, 176, 51, 80, 210, 202, 202, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255};
                 
                 // Make a fist
-                std::vector<uint8_t> pos2_1 = {230, 0, 0, 15, 5, 250, 55, 100, 75, 95, 85, 0, 0, 0, 0, 80, 0, 40, 35, 5, 250, 0, 5, 0, 0};
-                std::vector<uint8_t> pos2_2 = {230, 0, 0, 15, 5, 42, 55, 100, 75, 95, 85, 0, 0, 0, 0, 90, 0, 40, 35, 5, 120, 0, 5, 0, 0};
+                std::vector<uint8_t> pos2_1 = {230, 0, 0, 15, 5, 250, 55, 80, 210, 202, 85, 0, 0, 0, 0, 80, 0, 40, 35, 5, 250, 0, 5, 0, 0};
+                std::vector<uint8_t> pos2_2 = {230, 0, 0, 15, 5, 42, 55, 80, 210, 202, 85, 0, 0, 0, 0, 90, 0, 40, 35, 5, 120, 0, 5, 0, 0};
 
                 std::cout << "L25/L21 - Execute action - Make a fist" << std::endl;
                 hand.fingerMove(pos2_1);
@@ -391,15 +426,17 @@ int main()
     {
         std::cout << GREEN << "\nRun Choose LinkerHand:\n" << RESET;
         printColorLine1();
-        std::cout << BLUE << "[1]: L7\n" << RESET;
+        std::cout << BLUE << "[1]: L6\n" << RESET;
         printColorLine1();
-        std::cout << BLUE << "[2]: L10\n" << RESET;
+        std::cout << BLUE << "[2]: L7\n" << RESET;
         printColorLine1();
-        std::cout << BLUE << "[3]: L20\n" << RESET;
+        std::cout << BLUE << "[3]: L10\n" << RESET;
         printColorLine1();
-        std::cout << BLUE << "[4]: L21\n" << RESET;
+        std::cout << BLUE << "[4]: L20\n" << RESET;
         printColorLine1();
-        std::cout << BLUE << "[5]: L25\n" << RESET;
+        std::cout << BLUE << "[5]: L21\n" << RESET;
+        printColorLine1();
+        std::cout << BLUE << "[6]: L25\n" << RESET;
         printColorLine1();
         std::cout << RED << "[0]: Exit\n" << RESET;
         printColorLine1();
@@ -409,18 +446,21 @@ int main()
         switch (choice)
         {
         case 1:
-            linkerhand = LINKER_HAND::L7;
+            linkerhand = LINKER_HAND::L6;
             break;
         case 2:
-            linkerhand = LINKER_HAND::L10;
+            linkerhand = LINKER_HAND::L7;
             break;
         case 3:
-            linkerhand = LINKER_HAND::L20;
+            linkerhand = LINKER_HAND::L10;
             break;
         case 4:
-            linkerhand = LINKER_HAND::L21;
+            linkerhand = LINKER_HAND::L20;
             break;
         case 5:
+            linkerhand = LINKER_HAND::L21;
+            break;
+        case 6:
             linkerhand = LINKER_HAND::L25;
             break;
         case 0:
@@ -475,6 +515,8 @@ int main()
         printColorLine1();
         std::cout << BLUE << "[2]: CAN1\n" << RESET;
         printColorLine1();
+        std::cout << BLUE << "[3]: EtherCAT\n" << RESET;
+        printColorLine1();
         std::cout << RED << "[0]: Exit\n" << RESET;
         printColorLine1();
         std::cout << GREEN << "Please enter options: " << RESET;
@@ -487,6 +529,9 @@ int main()
             break;
         case 2:
             channel = COMM_TYPE::COMM_CAN_1;
+            break;
+        case 3:
+            channel = COMM_TYPE::COMM_ETHERCAT;
             break;
         case 0:
             exit();

@@ -8,6 +8,7 @@
 #include <sstream>
 #include <condition_variable>
 #include <map>
+#include <numeric>
 #include "IHand.h"
 #include "CanBusFactory.h"
 
@@ -286,6 +287,7 @@ public:
 	//--------------------------------------------------------------------
 	// 获取所有压感数据
     std::vector<std::vector<uint8_t>> getForce(const int type = 0) override;
+    std::vector<std::vector<std::vector<uint8_t>>> getForce() override;
     #if 1
     // 获取大拇指压感数据
     std::vector<uint8_t> getThumbForce() override;
@@ -420,6 +422,8 @@ private:
     int current_hand_type = 0; // 0:L25 1:L21
 
     uint8_t sensor_type = 0;
+
+    std::vector<std::vector<std::vector<uint8_t>>> touch_mats;
 };
 }
 #endif // LINKER_HAND_L25_H

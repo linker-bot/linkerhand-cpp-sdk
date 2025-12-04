@@ -1,6 +1,6 @@
 #ifndef MODBUS_L10_H
 #define MODBUS_L10_H
-
+#if USE_RMAN
 #include <thread>
 #include <mutex>
 #include <queue>
@@ -52,4 +52,5 @@ private:
 
 };
 }
+#endif
 #endif // MODBUS_L10_H

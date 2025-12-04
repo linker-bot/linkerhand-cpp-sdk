@@ -24,11 +24,23 @@ public:
         printUnsupportedFeature("setJointPositionArc");
     }
     // 获取速度数据
-    virtual std::vector<uint8_t> getSpeed() = 0;
+    virtual std::vector<uint8_t> getSpeed()
+    {
+        printUnsupportedFeature("getSpeed");
+        return {};
+    }
     // 设置关节速度
-    virtual void setSpeed(const std::vector<uint8_t> &speed) = 0;
+    virtual void setSpeed(const std::vector<uint8_t> &speed)
+    {
+        printUnsupportedFeature("setSpeed");
+    }
     // 获取当前关节位置
-    virtual std::vector<uint8_t> getCurrentStatus() = 0;
+    virtual std::vector<uint8_t> getCurrentStatus()
+    {
+        printUnsupportedFeature("getCurrentStatus");
+        return {};
+    }
+
     virtual std::vector<double> getCurrentStatusArc()
     {
         printUnsupportedFeature("getCurrentPositionArc");
@@ -52,6 +64,11 @@ public:
     {
         (void)type;
         printUnsupportedFeature("getForce");
+        return {};
+    }
+    virtual std::vector<std::vector<std::vector<uint8_t>>> getForce() 
+    {
+        printUnsupportedFeature("getForceTest");
         return {};
     }
     // 获取大拇指压感数据

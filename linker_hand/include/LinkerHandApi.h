@@ -19,8 +19,8 @@ public:
 	void setSpeed(const std::vector<uint8_t> &speed);
 	// 设置扭矩
 	void setTorque(const std::vector<uint8_t> &torque);
-	// 获取法向压力、切向压力、切向方向、接近感应
-	std::vector<std::vector<uint8_t>> getForce(const int dataType = 0);
+	// 获取压感
+	std::vector<std::vector<std::vector<uint8_t>>> getForce();
 	// 获取速度
 	std::vector<uint8_t> getSpeed();
 	// 获取当前关节状态

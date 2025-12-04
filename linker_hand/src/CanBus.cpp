@@ -64,7 +64,7 @@ namespace Communication
         // }
         
         // 停止
-        int result = system(std::string("sudo ip link set "+ interface +" down").c_str());
+        int result;// = system(std::string("sudo ip link set "+ interface +" down").c_str());
 
         result = system(std::string("sudo ip link set " + interface + " up type can bitrate " + std::to_string(bitrate)).c_str());
         if (result == 0) {
@@ -89,7 +89,7 @@ namespace Communication
         int result = system(std::string("sudo ip link set " + interface + " down").c_str());
     
         // 关闭 CAN 套接字
-        close(socket_fd);
+        // close(socket_fd);
     }
 
     std::string CanBus::printMillisecondTime() {
@@ -160,27 +160,41 @@ namespace Communication
         // 提前解锁
         lock.unlock();
 
-        if (linker_hand == LINKER_HAND::L10 || linker_hand == LINKER_HAND::L7) {
+        if (linker_hand == LINKER_HAND::L10) {
             // 压感
             if (data[0] >= 0xb1 && data[0] <= 0xb6) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(25)); // 获取每个指头的压感数据最少25毫秒等待，完整指令需要125毫秒，新压感的频率最高是8hz
+            	if (Common::current_hand_version > 1.4f) {
+            		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            	} else {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(25)); // 获取每个指头的压感数据最少25毫秒等待，完整指令需要125毫秒，新压感的频率最高是8hz
+                }
             }
-            // // 扭矩
-            // if (data[0] == 0x02) {
-            //     std::this_thread::sleep_for(std::chrono::milliseconds(2));
-            // }
-            // // 速度
-            // if (data[0] == 0x05) {
-            //     std::this_thread::sleep_for(std::chrono::milliseconds(2));
-            // }
         }
 
+        if (linker_hand == LINKER_HAND::L7) {
+            // 压感
+            if (data[0] >= 0xb1 && data[0] <= 0xb6) {
+            	if (Common::current_hand_version > 3.2f) {
+            		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            	} else {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(25));
+                }
+            }
+        }
+
+        if (linker_hand == LINKER_HAND::L20) {
+            // 压感
+            if (data[0] >= 0xb1 && data[0] <= 0xb6) {
+            	std::this_thread::sleep_for(std::chrono::milliseconds(6));
+            }
+        }
 
         if (linker_hand == LINKER_HAND::L21 || linker_hand == LINKER_HAND::L25) {
             // std::cout << "L21 or L25" << std::endl;
             // 压感
             if (data[0] >= 0xb1 && data[0] <= 0xb6) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(40));
+                // std::this_thread::sleep_for(std::chrono::milliseconds(40));
+                std::this_thread::sleep_for(std::chrono::milliseconds(6));
             }
             // 扭矩
             if (data[0] >= 0x51 && data[0] <= 0x55) {

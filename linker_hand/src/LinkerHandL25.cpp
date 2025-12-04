@@ -4,7 +4,7 @@ namespace LinkerHandL25
 {
 LinkerHand::LinkerHand(uint32_t handId, const std::string &canChannel, int baudrate, const int currentHandType) : handId(handId), running(true), current_hand_type(currentHandType)
 {
-    bus = Communication::CanBusFactory::createCanBus(canChannel, baudrate, currentHandType == 0 ? LINKER_HAND::L25 : LINKER_HAND::L21);
+    bus = Communication::CanBusFactory::createCanBus(handId, canChannel, baudrate, currentHandType == 0 ? LINKER_HAND::L25 : LINKER_HAND::L21);
 
     thumb_pressure = std::vector<uint8_t>(72, 0);
     index_finger_pressure = std::vector<uint8_t>(72, 0);
@@ -12,10 +12,37 @@ LinkerHand::LinkerHand(uint32_t handId, const std::string &canChannel, int baudr
     ring_finger_pressure = std::vector<uint8_t>(72, 0);
     little_finger_pressure = std::vector<uint8_t>(72, 0);
 
+    // 1. 定义并初始化
+    touch_mats.assign(
+        5,
+        std::vector<std::vector<uint8_t>>(
+            12,
+            std::vector<uint8_t>(6, 0)
+        )
+    );
+
+    // // 2. 打印
+    // for (size_t n = 0; n < touch_mats.size(); ++n)
+    // {
+    //     std::cout << "Matrix #" << n << ":\n";
+    //     for (const auto &row : touch_mats[n])
+    //     {
+    //         for (uint8_t val : row)
+    //             std::cout << std::setw(3) << static_cast<int>(val) << ' ';
+    //         std::cout << '\n';
+    //     }
+    //     std::cout << '\n'; // 两个矩阵之间空一行
+    // }
+
     receiveThread = std::thread(&LinkerHand::receiveResponse, this);
     
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    
     bus->send({TOUCH_SENSOR_TYPE}, handId);
-    bus->send({FRAME_PROPERTY::THUMB_TOUCH, 0xC6}, handId);
+    bus->send({FRAME_PROPERTY::THUMB_TOUCH}, handId);
+
+
+    
 }
 
 LinkerHand::~LinkerHand()
@@ -328,6 +355,16 @@ std::vector<uint8_t> LinkerHand::getTemperature()
     return temperature;
 }
 
+std::vector<std::vector<std::vector<uint8_t>>> LinkerHand::getForce() {
+    bus->send({FRAME_PROPERTY::THUMB_TOUCH, 0xC6}, handId);
+    bus->send({FRAME_PROPERTY::INDEX_TOUCH, 0xC6}, handId);
+    bus->send({FRAME_PROPERTY::MIDDLE_TOUCH, 0xC6}, handId);
+    bus->send({FRAME_PROPERTY::RING_TOUCH, 0xC6}, handId);
+    bus->send({FRAME_PROPERTY::LITTLE_TOUCH, 0xC6}, handId);
+
+    return touch_mats;
+}
+
 std::vector<std::vector<uint8_t>> LinkerHand::getForce(const int type) 
 {
     std::vector<std::vector<uint8_t>> result_vec;
@@ -515,7 +552,7 @@ void LinkerHand::receiveResponse()
             std::vector<uint8_t> payload(data.begin(), data.end());
 
             if (frame_property >= THUMB_TOUCH && frame_property <= LITTLE_TOUCH) {
-                if (data.size() == 8) {
+                if (data.size() == 3) {
                     if (sensor_type != 0x02) {
                         sensor_type = 0x02;
                         continue;
@@ -526,13 +563,21 @@ void LinkerHand::receiveResponse()
                         uint8_t index = ((data[1] >> 4) + 1) * 6;
                         if (index <= 0x48) {
                             std::vector<uint8_t> payload(data.begin() + 2, data.end());
-                            for (uint8_t i = index - 6, p = 0; i < index; ++i, ++p) {
-                                if (data[0] == FRAME_PROPERTY::THUMB_TOUCH) thumb_pressure[i] = payload[p];
-                                if (data[0] == FRAME_PROPERTY::INDEX_TOUCH) index_finger_pressure[i] = payload[p];
-                                if (data[0] == FRAME_PROPERTY::MIDDLE_TOUCH) middle_finger_pressure[i] = payload[p];
-                                if (data[0] == FRAME_PROPERTY::RING_TOUCH) ring_finger_pressure[i] = payload[p];
-                                if (data[0] == FRAME_PROPERTY::LITTLE_TOUCH) little_finger_pressure[i] = payload[p];
+
+                            const std::size_t index_1 = (data[0] & 0x0F) - 1;
+                            const std::size_t index_2 = (data[1] >> 4) & 0x0F;
+
+                            if (index_1 < touch_mats.size() && index_2 < touch_mats[index_1].size() && payload.size() <= touch_mats[index_1][index_2].size()) {
+                                std::memcpy(touch_mats[index_1][index_2].data(), payload.data(), payload.size());
                             }
+
+                            // for (uint8_t i = index - 6, p = 0; i < index; ++i, ++p) {
+                            //     if (data[0] == FRAME_PROPERTY::THUMB_TOUCH) thumb_pressure[i] = payload[p];
+                            //     if (data[0] == FRAME_PROPERTY::INDEX_TOUCH) index_finger_pressure[i] = payload[p];
+                            //     if (data[0] == FRAME_PROPERTY::MIDDLE_TOUCH) middle_finger_pressure[i] = payload[p];
+                            //     if (data[0] == FRAME_PROPERTY::RING_TOUCH) ring_finger_pressure[i] = payload[p];
+                            //     if (data[0] == FRAME_PROPERTY::LITTLE_TOUCH) little_finger_pressure[i] = payload[p];
+                            // }
                         }
                     }
                 } else {

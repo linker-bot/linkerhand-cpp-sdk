@@ -2,6 +2,7 @@
 #define HAND_FACTORY_H
 
 #include "IHand.h"
+#include "LinkerHandL6.h"
 #include "LinkerHandL7.h"
 #include "LinkerHandL10.h"
 #include "LinkerHandL20.h"
@@ -32,13 +33,19 @@ public:
         case COMM_TYPE::COMM_MODBUS:
             canChannel = "modbus";
             break;
+        case COMM_TYPE::COMM_ETHERCAT:
+            canChannel = "ethercat";
+            break;
         default:
             throw std::invalid_argument("Unknown comm type");
             break;
         }
 
-        if (canChannel == "can0" || canChannel == "can1") {
+        if (canChannel == "can0" || canChannel == "can1" || canChannel == "ethercat") {
             switch (type) {
+                case LINKER_HAND::L6:
+                    return std::make_unique<LinkerHandL6::LinkerHand>(handId, canChannel, baudrate);
+                    break;
                 case LINKER_HAND::L7:
                     return std::make_unique<LinkerHandL7::LinkerHand>(handId, canChannel, baudrate);
                     break;
@@ -58,6 +65,7 @@ public:
                     throw std::invalid_argument("Unknown hand type");
             }
         } else if (canChannel == "modbus") {
+        	#if USE_RMAN
             switch (type) {
                 case LINKER_HAND::L10:
                     return std::make_unique<ModbusLinkerHandL10::LinkerHand>(handId);
@@ -65,6 +73,9 @@ public:
                     throw std::invalid_argument("Unknown hand type");
                     break;
             }
+            #else
+            	throw std::runtime_error("ModBus support is disabled (USE_RMAN=0)");
+			#endif
         }
 
         return nullptr;

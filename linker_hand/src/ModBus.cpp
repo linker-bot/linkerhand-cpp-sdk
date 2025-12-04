@@ -1,5 +1,5 @@
 #include "ModBus.h"
-
+#if USE_RMAN
 namespace Communication
 {
 ModBus::ModBus(uint32_t handId): handId(handId)
@@ -91,3 +91,4 @@ std::vector<uint8_t> ModBus::readHoldingRegister(const int &id, const int &start
 }
 
 }
+#endif

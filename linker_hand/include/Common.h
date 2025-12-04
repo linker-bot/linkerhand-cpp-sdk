@@ -2,6 +2,7 @@
 #define COMMON_H
 
 enum LINKER_HAND {
+    L6,
     L7,
     L10,
     L20,
@@ -17,10 +18,14 @@ enum HAND_TYPE {
 enum COMM_TYPE {
     COMM_CAN_0,
     COMM_CAN_1,
-    COMM_MODBUS
+    COMM_MODBUS,
+    COMM_ETHERCAT
 };
 
-
+namespace Common
+{
+    inline float current_hand_version = 1.0;
+}
 #define SEND_DEBUG 0
 #define RECV_DEBUG 0
 

@@ -79,7 +79,7 @@ public:
     std::vector<double> getCurrentStatusArc() override;
 	//--------------------------------------------------------------------
 	// 获取所有压感数据
-    std::vector<std::vector<uint8_t>> getForce(const int type = 0) override;
+    std::vector<std::vector<std::vector<uint8_t>>> getForce() override;
     // 获取五个手指的法向压力
     std::vector<uint8_t> getNormalForce() override;
 	// 获取五个手指的切向压力
@@ -145,6 +145,8 @@ private:
     std::vector<uint8_t> middle_finger_pressure;
     std::vector<uint8_t> ring_finger_pressure;
     std::vector<uint8_t> little_finger_pressure;
+
+    std::vector<std::vector<std::vector<uint8_t>>> touch_mats;
     
     // 关节位置
     std::vector<uint8_t> joint_position1;

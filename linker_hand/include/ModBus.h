@@ -1,6 +1,6 @@
 #ifndef MOD_BUS_H
 #define MOD_BUS_H
-
+#if USE_RMAN
 #include <cstdint>
 #include <vector>
 #include <string>
@@ -43,5 +43,5 @@ namespace Communication //Communicator
         std::mutex send_mutex;
     };
 }
-
+#endif
 #endif // MOD_BUS_H

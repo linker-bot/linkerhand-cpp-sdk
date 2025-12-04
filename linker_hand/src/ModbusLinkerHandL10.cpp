@@ -1,5 +1,5 @@
 #include "ModbusLinkerHandL10.h"
-
+#if USE_RMAN
 namespace ModbusLinkerHandL10
 {
 
@@ -69,3 +69,4 @@ void LinkerHand::receiveResponse()
 }
 
 }
+#endif

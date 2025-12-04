@@ -44,9 +44,9 @@ std::vector<double> LinkerHandApi::getStateArc()
     return hand->getCurrentStatusArc();
 }
 
-std::vector<std::vector<uint8_t>> LinkerHandApi::getForce(const int type)
+std::vector<std::vector<std::vector<uint8_t>>> LinkerHandApi::getForce()
 {
-    return hand->getForce(type);
+    return hand->getForce();
 }
 
 std::string LinkerHandApi::getVersion()
