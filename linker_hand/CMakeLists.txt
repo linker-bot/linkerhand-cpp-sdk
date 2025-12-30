@@ -46,6 +46,8 @@ else()
   set(LINKERHAND_LIB_NAME "${PROJECT_NAME}_x86_${UBUNTU_VERSION}")
 endif()
 
+set(LINKERHAND_LIB_NAME "linkerhand_cpp")
+
 #-----------------------------------------------------------------------------
 # EtherCAT
 #-----------------------------------------------------------------------------
@@ -172,9 +174,9 @@ if(BUILD_SO)
 
     install(TARGETS ${LINKERHAND_LIB}
         EXPORT LinkerHandTargets
-        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/${PROJECT_NAME}/lib
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/${PROJECT_NAME}/lib
+        RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
     )
 
 else()
@@ -238,16 +240,16 @@ endif()
 include(GNUInstallDirs)
 
 install(DIRECTORY include/
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/linker_hand
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}/include
     FILES_MATCHING PATTERN "*.h"
 )
 
 install(DIRECTORY third_party/
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}/linker_hand/third_party
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}/third_party
 )
 
 install(FILES config/setting.yaml
-    DESTINATION ${CMAKE_INSTALL_DATADIR}/linker_hand/config
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}/config
 )
 
 if(BUILD_EXAMPLES)

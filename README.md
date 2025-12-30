@@ -99,30 +99,29 @@ project(MyProject)
 
 # 查找 LINKER_HAND_LIB 库
 find_library(LINKER_HAND_LIB
-    NAMES linker_hand_lib
-    PATHS /usr/local/linker_hand_cpp_sdk/lib
+    NAMES linkerhand_cpp
+    PATHS /usr/local/lib/linkerhand-cpp-sdk/lib/
     NO_DEFAULT_PATH
 )
+# 设置头文件路径
+set(LINKER_HAND_INCLUDE_DIR /usr/local/include/linkerhand-cpp-sdk/include/)
 
-# 查找 RMAN_API_LIB 库
-find_library(RMAN_API_LIB
-    NAMES api_cpp
-    PATHS /usr/local/linker_hand_cpp_sdk/third_party/Robotic_Arm/lib
-    NO_DEFAULT_PATH
-)
+# 检查是否找到
+if(NOT LINKER_HAND_LIB)
+    message(FATAL_ERROR "linkerhand_cpp library not found!")
+endif()
 
 # 包含目录
 include_directories(
 	include
-	/usr/local/linker_hand_cpp_sdk/include
-	/usr/local/linker_hand_cpp_sdk/third_party/Robotic_Arm/include
+	${LINKER_HAND_INCLUDE_DIR}
 )
 
 # 添加可执行文件
 add_executable(my_project main.cpp)
 
 # 链接库
-target_link_libraries(my_project ${LINKER_HAND_LIB} ${RMAN_API_LIB} pthread)
+target_link_libraries(my_project ${LINKER_HAND_LIB} pthread)
   ```
 
 - 文件结构
