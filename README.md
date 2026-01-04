@@ -11,7 +11,7 @@ LinkerHand-CPP-SDK 是由灵心巧手（北京）科技有限公司开发，用�
 - 下载 SDK
 
 ```bash
-git clone https://github.com/linkerbotai/linker_hand_cpp_sdk.git
+git clone https://github.com/linker-bot/linkerhand-cpp-sdk.git
 ```
 
 - 启动脚本
