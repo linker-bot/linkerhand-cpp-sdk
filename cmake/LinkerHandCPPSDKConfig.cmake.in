@@ -1,0 +1,45 @@
+@PACKAGE_INIT@
+
+# 确定系统架构
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64")
+    set(LIB_SUBDIR "x86_64")
+elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|arm64")
+    set(LIB_SUBDIR "aarch64")
+else()
+    set(LIB_SUBDIR "x86_64")
+endif()
+
+# 设置包含目录和库目录（相对于安装前缀）
+set(LinkerHandCPPSDK_INCLUDE_DIR "${CMAKE_CURRENT_LIST_DIR}/../../@PACKAGE_INCLUDE_INSTALL_DIR@")
+set(LinkerHandCPPSDK_LIB_DIR "${CMAKE_CURRENT_LIST_DIR}/../../@PACKAGE_LIB_INSTALL_DIR@")
+
+# 也支持从构建目录查找（用于开发时）
+list(APPEND LinkerHandCPPSDK_INCLUDE_DIR "${CMAKE_CURRENT_LIST_DIR}/../../include/linkerhand-cpp-sdk")
+list(APPEND LinkerHandCPPSDK_LIB_DIR "${CMAKE_CURRENT_LIST_DIR}/../../lib/linkerhand-cpp-sdk/${LIB_SUBDIR}")
+
+# 查找库文件
+find_library(LinkerHandCPPSDK_LIBRARY
+    NAMES linkerhand_cpp_sdk
+    PATHS ${LinkerHandCPPSDK_LIB_DIR}
+    NO_DEFAULT_PATH
+)
+
+# 检查库文件是否存在
+if(NOT LinkerHandCPPSDK_LIBRARY)
+    message(FATAL_ERROR "LinkerHandCPPSDK library not found in ${LinkerHandCPPSDK_LIB_DIR}")
+endif()
+
+# 设置变量供外部使用
+set(LinkerHandCPPSDK_FOUND TRUE)
+set(LinkerHandCPPSDK_VERSION @PROJECT_VERSION@)
+
+# 创建导入目标
+if(NOT TARGET LinkerHandCPPSDK::LinkerHandCPPSDK)
+    add_library(LinkerHandCPPSDK::LinkerHandCPPSDK SHARED IMPORTED)
+    set_target_properties(LinkerHandCPPSDK::LinkerHandCPPSDK PROPERTIES
+        IMPORTED_LOCATION "${LinkerHandCPPSDK_LIBRARY}"
+        INTERFACE_INCLUDE_DIRECTORIES "${LinkerHandCPPSDK_INCLUDE_DIR}"
+    )
+endif()
+
+check_required_components(LinkerHandCPPSDK)

@@ -1,6 +1,6 @@
 #ifdef __linux__
-#ifndef ETHERCAT_H
-#define ETHERCAT_H
+#ifndef LINKERHAND_ETHERCAT_H
+#define LINKERHAND_ETHERCAT_H
 
 #include <iostream>
 #include <unistd.h>
@@ -24,10 +24,13 @@ constexpr uint32_t PERIOD_US = 1000; // 10ms
 constexpr unsigned int MASTER_INDEX = 0;
 constexpr uint32_t cycle_ns = 8000000; // 8ms 周期
 
-namespace Communication //Communicator
-{
+namespace linkerhand {
+namespace communication {
 
-	class EtherCAT : public ICanBus {
+/**
+ * @brief EtherCAT 通信实现
+ */
+class EtherCAT : public ICanBus {
 
 	public:
 		EtherCAT(const uint32_t handId);
@@ -113,7 +116,11 @@ namespace Communication //Communicator
 		bool is_detection_hand;
 		uint32_t handId_;
 	};
-}
+} // namespace communication
+} // namespace linkerhand
 
-#endif // ETHERCAT_H
+// 向后兼容：在全局命名空间中提供别名
+namespace Communication = linkerhand::communication;
+
+#endif // LINKERHAND_ETHERCAT_H
 #endif

@@ -1,5 +1,5 @@
-#ifndef MODBUS_L10_H
-#define MODBUS_L10_H
+#ifndef LINKERHAND_MODBUS_L10_H
+#define LINKERHAND_MODBUS_L10_H
 #if USE_RMAN
 #include <thread>
 #include <mutex>
@@ -15,7 +15,7 @@
 namespace ModbusLinkerHandL10
 {
 
-class LinkerHand : public IHand
+class LinkerHand : public linkerhand::hand::IHand
 {
 public:
     LinkerHand(uint32_t handId);
@@ -53,4 +53,4 @@ private:
 };
 }
 #endif
-#endif // MODBUS_L10_H
+#endif // LINKERHAND_MODBUS_L10_H

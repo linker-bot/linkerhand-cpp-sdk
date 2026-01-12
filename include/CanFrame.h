@@ -1,5 +1,5 @@
-#ifndef CAN_FRAME_H
-#define CAN_FRAME_H
+#ifndef LINKERHAND_CAN_FRAME_H
+#define LINKERHAND_CAN_FRAME_H
 
 #include <iostream>
 #include <cstdint>
@@ -27,4 +27,4 @@ struct CANFrame
 };
 
 
-#endif // CAN_FRAME_H
+#endif // LINKERHAND_CAN_FRAME_H

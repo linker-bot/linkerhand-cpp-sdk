@@ -1,5 +1,5 @@
-#ifndef RANGE_TO_ARC_H
-#define RANGE_TO_ARC_H
+#ifndef LINKERHAND_RANGE_TO_ARC_H
+#define LINKERHAND_RANGE_TO_ARC_H
 
 #include <vector>
 #include <stdexcept>
@@ -66,4 +66,4 @@ std::vector<double> range_to_arc(const int &joints_type, const std::string &left
 
 std::vector<uint8_t> arc_to_range(const int &joints_type, const std::string &left_or_right, const std::vector<double> &hand_arc);
 
-#endif // RANGE_TO_ARC_H
+#endif // LINKERHAND_RANGE_TO_ARC_H

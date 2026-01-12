@@ -1,5 +1,9 @@
-cmake_minimum_required(VERSION 3.5)
-project(MyProject)
+cmake_minimum_required(VERSION 3.15)
+project(LinkerHand-CPP-SDK
+    VERSION 1.1.7
+    LANGUAGES CXX
+    DESCRIPTION "LinkerHand C++ SDK for robotic hand control"
+)
 
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64")
     set(LIB_SUBDIR "x86_64")
@@ -59,6 +63,53 @@ target_link_libraries(toolset_example ${LINKER_HAND_LIB} pthread)
 
 add_executable(action_group_show_l10 examples/action_group_show_l10.cpp)
 target_link_libraries(action_group_show_l10 ${LINKER_HAND_LIB} pthread)
+
+#-----------------------------------------------------------------------------
+# INSTALL TARGETS
+#-----------------------------------------------------------------------------
+# 安装头文件
+install(DIRECTORY include/
+    DESTINATION include/linkerhand-cpp-sdk
+    FILES_MATCHING PATTERN "*.h"
+)
+
+# 安装库文件
+if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/lib/${LIB_SUBDIR})
+    install(DIRECTORY lib/${LIB_SUBDIR}/
+        DESTINATION lib/linkerhand-cpp-sdk/${LIB_SUBDIR}
+        FILES_MATCHING PATTERN "*.so*"
+    )
+endif()
+
+#-----------------------------------------------------------------------------
+# PACKAGE CONFIGURATION
+#-----------------------------------------------------------------------------
+include(CMakePackageConfigHelpers)
+
+# 创建包配置文件
+write_basic_package_version_file(
+    "${CMAKE_CURRENT_BINARY_DIR}/LinkerHandCPPSDKConfigVersion.cmake"
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY AnyNewerVersion
+)
+
+# 设置包配置变量（用于 configure_file）
+set(PACKAGE_INCLUDE_INSTALL_DIR "include/linkerhand-cpp-sdk")
+set(PACKAGE_LIB_INSTALL_DIR "lib/linkerhand-cpp-sdk/${LIB_SUBDIR}")
+
+# 创建包配置文件模板
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/LinkerHandCPPSDKConfig.cmake.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/LinkerHandCPPSDKConfig.cmake"
+    @ONLY
+)
+
+# 安装包配置文件
+install(FILES
+    "${CMAKE_CURRENT_BINARY_DIR}/LinkerHandCPPSDKConfig.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/LinkerHandCPPSDKConfigVersion.cmake"
+    DESTINATION lib/cmake/LinkerHandCPPSDK
+)
 
 #-----------------------------------------------------------------------------
 # TESTING

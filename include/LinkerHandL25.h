@@ -1,5 +1,5 @@
-#ifndef LINKER_HAND_L25_H
-#define LINKER_HAND_L25_H
+#ifndef LINKERHAND_L25_H
+#define LINKERHAND_L25_H
 
 #include <thread>
 #include <mutex>
@@ -128,7 +128,7 @@ typedef enum
 }FRAME_PROPERTY;
 
 
-class LinkerHand : public IHand {
+class LinkerHand : public linkerhand::hand::IHand {
 public:
     LinkerHand(uint32_t handId, const std::string& canChannel, int baudrate, const int currentHandType = 0);
     ~LinkerHand();
@@ -426,4 +426,4 @@ private:
     std::vector<std::vector<std::vector<uint8_t>>> touch_mats;
 };
 }
-#endif // LINKER_HAND_L25_H
+#endif // LINKERHAND_L25_H

@@ -1,5 +1,5 @@
-#ifndef LINKER_HAND_L20_H
-#define LINKER_HAND_L20_H
+#ifndef LINKERHAND_L20_H
+#define LINKERHAND_L20_H
 
 #include <thread>
 #include <mutex>
@@ -62,7 +62,7 @@ typedef enum
 }FRAME_PROPERTY;
 
 
-class LinkerHand : public IHand {
+class LinkerHand : public linkerhand::hand::IHand {
 public:
     LinkerHand(uint32_t handId, const std::string& canChannel, int baudrate);
     ~LinkerHand();
@@ -169,4 +169,4 @@ private:
     uint8_t sensor_type = 0;
 };
 }
-#endif // LINKER_HAND_L20_H
+#endif // LINKERHAND_L20_H

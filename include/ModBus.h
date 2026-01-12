@@ -1,5 +1,5 @@
-#ifndef MOD_BUS_H
-#define MOD_BUS_H
+#ifndef LINKERHAND_MOD_BUS_H
+#define LINKERHAND_MOD_BUS_H
 #if USE_RMAN
 #include <cstdint>
 #include <vector>
@@ -20,9 +20,13 @@
 #include "Common.h"
 #include "ICommunication.h"
 
-namespace Communication //Communicator
-{
-    class ModBus : public ICommunication
+namespace linkerhand {
+namespace communication {
+
+/**
+ * @brief ModBus 通信实现
+ */
+class ModBus : public ICommunication
     {
     public:
         ModBus(uint32_t handId);
@@ -42,6 +46,11 @@ namespace Communication //Communicator
 
         std::mutex send_mutex;
     };
-}
+} // namespace communication
+} // namespace linkerhand
+
+// 向后兼容：在全局命名空间中提供别名
+namespace Communication = linkerhand::communication;
+
 #endif
-#endif // MOD_BUS_H
+#endif // LINKERHAND_MOD_BUS_H

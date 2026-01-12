@@ -1,5 +1,5 @@
-#ifndef I_HAND_H
-#define I_HAND_H
+#ifndef LINKERHAND_IHAND_H
+#define LINKERHAND_IHAND_H
 
 #include <set>
 #include <vector>
@@ -8,10 +8,21 @@
 #include <iomanip>
 #include <sstream>
 #include <chrono>
+#include <stdexcept>
 
 #include "RangeToArc.h"
 #include "Common.h"
+#include "ErrorCode.h"
 
+namespace linkerhand {
+namespace hand {
+
+/**
+ * @brief 灵巧手接口基类
+ * 
+ * 定义所有手型号必须实现的基础接口
+ * 注意：不支持的方法会抛出异常而不是返回空值
+ */
 class IHand
 {
 public:
@@ -21,172 +32,151 @@ public:
     virtual void setJointPositionArc(const std::vector<double> &jointAngles)
     {
         (void) jointAngles;
-        printUnsupportedFeature("setJointPositionArc");
+        throw UnsupportedFeatureException("setJointPositionArc");
     }
     // 获取速度数据
     virtual std::vector<uint8_t> getSpeed()
     {
-        printUnsupportedFeature("getSpeed");
-        return {};
+        throw UnsupportedFeatureException("getSpeed");
     }
     // 设置关节速度
     virtual void setSpeed(const std::vector<uint8_t> &speed)
     {
         (void) speed;
-        printUnsupportedFeature("setSpeed");
+        throw UnsupportedFeatureException("setSpeed");
     }
     // 获取当前关节位置
     virtual std::vector<uint8_t> getCurrentStatus()
     {
-        printUnsupportedFeature("getCurrentStatus");
-        return {};
+        throw UnsupportedFeatureException("getCurrentStatus");
     }
 
     virtual std::vector<double> getCurrentStatusArc()
     {
-        printUnsupportedFeature("getCurrentPositionArc");
-        return {};
+        throw UnsupportedFeatureException("getCurrentStatusArc");
     }
     // 获取电机故障码
     virtual std::vector<uint8_t> getFaultCode()
     {
-        printUnsupportedFeature("getFaultCode");
-        return {};
+        throw UnsupportedFeatureException("getFaultCode");
     }
     // 获取电机电流
     virtual std::vector<uint8_t> getCurrent()
     {
-        printUnsupportedFeature("getCurrent");
-        return {};
+        throw UnsupportedFeatureException("getCurrent");
     }
     // ------------------------------------------------------
     // 获取压感数据
     virtual std::vector<std::vector<uint8_t>> getForce(const int type)
     {
         (void)type;
-        printUnsupportedFeature("getForce");
-        return {};
+        throw UnsupportedFeatureException("getForce");
     }
     virtual std::vector<std::vector<std::vector<uint8_t>>> getForce() 
     {
-        printUnsupportedFeature("getForceTest");
-        return {};
+        throw UnsupportedFeatureException("getForce");
     }
     // 获取大拇指压感数据
     virtual std::vector<uint8_t> getThumbForce()
     {
-        printUnsupportedFeature("getThumbForce");
-        return {};
+        throw UnsupportedFeatureException("getThumbForce");
     }
     // 获取食指压感数据
     virtual std::vector<uint8_t> getIndexForce()
     {
-        printUnsupportedFeature("getIndexForce");
-        return {};
+        throw UnsupportedFeatureException("getIndexForce");
     }
     // 获取中指压感数据
     virtual std::vector<uint8_t> getMiddleForce()
     {
-        printUnsupportedFeature("getMiddleForce");
-        return {};
+        throw UnsupportedFeatureException("getMiddleForce");
     }
     // 获取无名指压感数据
     virtual std::vector<uint8_t> getRingForce()
     {
-        printUnsupportedFeature("getRingForce");
-        return {};
+        throw UnsupportedFeatureException("getRingForce");
     }
     // 获取小拇指压感数据
     virtual std::vector<uint8_t> getLittleForce()
     {
-        printUnsupportedFeature("getLittleForce");
-        return {};
+        throw UnsupportedFeatureException("getLittleForce");
     }
     // ------------------------------------------------------
     // 获取五指法向力
     virtual std::vector<uint8_t> getNormalForce()
     {
-        printUnsupportedFeature("getNormalForce");
-        return {};
+        throw UnsupportedFeatureException("getNormalForce");
     }
     // 获取五指切向力
     virtual std::vector<uint8_t> getTangentialForce()
     {
-        printUnsupportedFeature("getTangentialForce");
-        return {};
+        throw UnsupportedFeatureException("getTangentialForce");
     }
     // 获取五指法向力方向
     virtual std::vector<uint8_t> getTangentialForceDir()
     {
-        printUnsupportedFeature("getTangentialForceDir");
-        return {};
+        throw UnsupportedFeatureException("getTangentialForceDir");
     }
     // 获取五指接近感应
     virtual std::vector<uint8_t> getApproachInc()
     {
-        printUnsupportedFeature("getApproachInc");
-        return {};
+        throw UnsupportedFeatureException("getApproachInc");
     }
     // ------------------------------------------------------
     // 设置扭矩 L20暂不支持
     virtual void setTorque(const std::vector<uint8_t> &torque)
     {
         (void)torque;
-        printUnsupportedFeature("setTorque");
+        throw UnsupportedFeatureException("setTorque");
     }
     // 获取电机扭矩 L20暂不支持
     virtual std::vector<uint8_t> getTorque()
     {
-        printUnsupportedFeature("getTorque");
-        return {};
+        throw UnsupportedFeatureException("getTorque");
     }
     // 获取电机温度 L20暂不支持
     virtual std::vector<uint8_t> getTemperature()
     {
-        printUnsupportedFeature("getTemperature");
-        return {};
+        throw UnsupportedFeatureException("getTemperature");
     }
     // 获取版本号   目前仅支持L10
     virtual std::string getVersion()
     {
-        printUnsupportedFeature("getVersion");
-        return "";
+        throw UnsupportedFeatureException("getVersion");
     }
     // 获取设备ID L20协议
     virtual std::vector<uint8_t> getUID()
     {
-        printUnsupportedFeature("getUID");
-        return {};
+        throw UnsupportedFeatureException("getUID");
     }
     // 手指堵转或过流判断计数阀值 L20协议
     virtual std::vector<uint8_t> getRotorLockCount()
     {
-        printUnsupportedFeature("getRotorLockCount");
-        return {};
+        throw UnsupportedFeatureException("getRotorLockCount");
     }
     // 清除电机故障码 目前仅支持L20
 	virtual void clearFaultCode(const std::vector<uint8_t> &code)
     {
         (void)code;
-        printUnsupportedFeature("clearFaultCode");
+        throw UnsupportedFeatureException("clearFaultCode");
     }
     // 设置电流 目前仅支持L20 
 	virtual void setCurrent(const std::vector<uint8_t> &current)
     {
         (void)current;
-        printUnsupportedFeature("setCurrent");
+        throw UnsupportedFeatureException("setCurrent");
     }
 	// 设置电机使能 目前仅支持L25
 	virtual void setMotorEnable(const std::vector<uint8_t> &enable)
     {
         (void)enable;
-        printUnsupportedFeature("setMotorEnable");
+        throw UnsupportedFeatureException("setMotorEnable");
     }
 	// 设置电机使能 目前仅支持L25
 	virtual void setMotorDisable(const std::vector<uint8_t> &disable)
     {
         (void)disable;
-        printUnsupportedFeature("setMotorDisable");
+        throw UnsupportedFeatureException("setMotorDisable");
     }
 
     // ---------------------------------------------------------------------
@@ -231,16 +221,10 @@ public:
         return ss.str();
     }
 
-protected:
-    void printUnsupportedFeature(const std::string &featureName) const
-    {
-        static std::set<std::string> printedFeatures;
-        if (printedFeatures.find(featureName) == printedFeatures.end())
-        {
-            std::cout << featureName << " Not currently supported!" << std::endl;
-            printedFeatures.insert(featureName);
-        }
-    }
 };
-#endif // I_HAND_H
+
+} // namespace hand
+} // namespace linkerhand
+
+#endif // LINKERHAND_IHAND_H
 

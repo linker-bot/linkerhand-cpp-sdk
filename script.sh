@@ -1,6 +1,11 @@
 #!/bin/bash
 
-VERSION="1.1.6"
+# 从 CMakeLists.txt 读取版本号
+VERSION=$(grep -E "^\s*VERSION\s+" CMakeLists.txt | head -1 | sed 's/.*VERSION\s\+\([0-9.]*\).*/\1/')
+if [ -z "$VERSION" ]; then
+    # 如果无法读取，使用默认版本
+    VERSION="1.1.7"
+fi
 
 # 确定系统架构
 ARCH=$(uname -m)

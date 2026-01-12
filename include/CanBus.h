@@ -1,6 +1,6 @@
 #ifdef __linux__
-#ifndef CAN_BUS_H
-#define CAN_BUS_H
+#ifndef LINKERHAND_CAN_BUS_H
+#define LINKERHAND_CAN_BUS_H
 
 #include <iostream>
 #include <iomanip>
@@ -25,9 +25,13 @@
 
 #include "ICanBus.h"
 
-namespace Communication //Communicator
-{
-    class CanBus : public ICanBus
+namespace linkerhand {
+namespace communication {
+
+/**
+ * @brief Linux CAN 总线实现
+ */
+class CanBus : public linkerhand::communication::ICanBus
     {
     public:
         CanBus(const std::string& interface, int bitrate, const LINKER_HAND linkerhand);
@@ -62,7 +66,12 @@ namespace Communication //Communicator
 
         LINKER_HAND linker_hand;
     };
-}
+} // namespace communication
+} // namespace linkerhand
+
+// 向后兼容：在全局命名空间中提供别名
+namespace Communication = linkerhand::communication;
+
 #endif
-#endif // CAN_BUS_H
+#endif // LINKERHAND_CAN_BUS_H
 

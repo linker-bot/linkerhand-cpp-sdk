@@ -1,5 +1,5 @@
-#ifndef LINKER_HAND_L10_H
-#define LINKER_HAND_L10_H
+#ifndef LINKERHAND_L10_H
+#define LINKERHAND_L10_H
 
 #include <thread>
 #include <mutex>
@@ -52,7 +52,7 @@ typedef enum
     PALM_TOUCH = 0xB6, // 手掌指触觉传感
 }FRAME_PROPERTY;
 
-class LinkerHand : public IHand
+class LinkerHand : public linkerhand::hand::IHand
 {
 public:
     LinkerHand(uint32_t handId, const std::string &canChannel, int baudrate);
@@ -145,4 +145,4 @@ private:
     uint8_t sensor_type = 0;
 };
 } // namespace LinkerHandL10
-#endif // LINKER_HAND_L10_H
+#endif // LINKERHAND_L10_H

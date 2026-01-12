@@ -1,5 +1,5 @@
-#ifndef CAN_BUS_FACTORY_H
-#define CAN_BUS_FACTORY_H
+#ifndef LINKERHAND_CAN_BUS_FACTORY_H
+#define LINKERHAND_CAN_BUS_FACTORY_H
 
 #include "ICanBus.h"
 #include "CanBus.h"
@@ -10,8 +10,8 @@
 
 #include <stdexcept>
 
-namespace Communication
-{
+namespace linkerhand {
+namespace communication {
     class CanBusFactory
     {
     public:
@@ -31,17 +31,17 @@ namespace Communication
                 if (interfaceOrChannel == "can1") {
                     channel = PCAN_USBBUS2;
                 }
-                return std::make_unique<PCANBus>(channel, baudrate, linkerHand);
+                return std::make_unique<linkerhand::communication::PCANBus>(channel, baudrate, linkerHand);
 
             #else
                 // Linux/Unix 平台
                 if (interfaceOrChannel == "can0" || interfaceOrChannel == "can1") {
-                    return std::make_unique<CanBus>(interfaceOrChannel, bitrate, linkerHand);
+                    return std::make_unique<linkerhand::communication::CanBus>(interfaceOrChannel, bitrate, linkerHand);
                 } 
 
                 #if USE_ETHERCAT
                 else if (interfaceOrChannel == "ethercat") {
-                    return std::make_unique<EtherCAT>(handId);
+                    return std::make_unique<linkerhand::communication::EtherCAT>(handId);
                 }
                 #endif
 
@@ -53,6 +53,10 @@ namespace Communication
             #endif
         }
     };
-}
+} // namespace communication
+} // namespace linkerhand
 
-#endif // CAN_BUS_FACTORY_H
+// 向后兼容：在全局命名空间中提供别名
+namespace Communication = linkerhand::communication;
+
+#endif // LINKERHAND_CAN_BUS_FACTORY_H

@@ -5,7 +5,7 @@
 #include <thread>
 
 // 创建一个测试用的 IHand 实现类
-class TestHand : public IHand {
+class TestHand : public linkerhand::hand::IHand {
 public:
     void setJointPositions(const std::vector<uint8_t> &jointAngles) override {
         (void)jointAngles;
