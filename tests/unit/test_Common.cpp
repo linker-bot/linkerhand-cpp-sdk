@@ -15,8 +15,8 @@ TEST(CommonTest, LinkerHandEnumValues) {
 
 // 测试 HAND_TYPE 枚举值
 TEST(CommonTest, HandTypeEnumValues) {
-    EXPECT_EQ(LEFT, 0x28);
-    EXPECT_EQ(RIGHT, 0x27);
+    EXPECT_EQ(static_cast<uint32_t>(LEFT), 0x28);
+    EXPECT_EQ(static_cast<uint32_t>(RIGHT), 0x27);
     
     // 验证左右手类型不同
     EXPECT_NE(LEFT, RIGHT);
@@ -32,8 +32,8 @@ TEST(CommonTest, CommTypeEnumValues) {
 
 // 测试 Common 命名空间中的版本号
 TEST(CommonTest, CurrentHandVersion) {
-    EXPECT_GT(Common::current_hand_version, 0.0f);
-    EXPECT_LE(Common::current_hand_version, 10.0f); // 合理的版本号范围
+    EXPECT_GT(linkerhand::Common::current_hand_version, 0.0f);
+    EXPECT_LE(linkerhand::Common::current_hand_version, 10.0f); // 合理的版本号范围
 }
 
 // 测试枚举值的类型转换

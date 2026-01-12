@@ -15,7 +15,7 @@
 namespace ModbusLinkerHandL10
 {
 
-class LinkerHand : public IHand
+class LinkerHand : public linkerhand::hand::IHand
 {
 public:
     LinkerHand(uint32_t handId);

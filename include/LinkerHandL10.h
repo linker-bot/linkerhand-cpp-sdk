@@ -52,7 +52,7 @@ typedef enum
     PALM_TOUCH = 0xB6, // 手掌指触觉传感
 }FRAME_PROPERTY;
 
-class LinkerHand : public IHand
+class LinkerHand : public linkerhand::hand::IHand
 {
 public:
     LinkerHand(uint32_t handId, const std::string &canChannel, int baudrate);

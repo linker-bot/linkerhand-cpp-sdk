@@ -9,13 +9,12 @@
 #include "Common.h"
 #include "IHand.h"
 
-namespace linkerhand {
-namespace api {
-
 /**
  * @brief LinkerHand API 主类
  * 
  * 提供统一的接口用于控制各种型号的灵巧手设备
+ * 
+ * 注意：为了与预编译库兼容，此类保持在全局命名空间
  */
 class LinkerHandApi
 {
@@ -78,17 +77,18 @@ private:
 	void getApproachInc();
 
 private:
-	std::unique_ptr<hand::IHand> hand;
+	std::unique_ptr<linkerhand::hand::IHand> hand;
 	uint32_t handId;
 public:
 	LINKER_HAND handJoint_;
 	HAND_TYPE handType_;
 };
 
+// 在新命名空间中提供类型别名（用于未来版本）
+namespace linkerhand {
+namespace api {
+    using LinkerHandApi = ::LinkerHandApi;
 } // namespace api
 } // namespace linkerhand
-
-// 向后兼容：在全局命名空间中提供别名
-using LinkerHandApi = linkerhand::api::LinkerHandApi;
 
 #endif // LINKERHAND_API_H

@@ -53,7 +53,7 @@ typedef enum
 static constexpr uint8_t TOUCH_TYPE_MATRIX = 0x02; // 矩阵型触觉类型值
 static constexpr uint8_t TOUCH_PAGE_REQ    = 0xC6; // 触觉分页读取的请求子命令
 
-class LinkerHand : public IHand
+class LinkerHand : public linkerhand::hand::IHand
 {
 public:
     LinkerHand(uint32_t handId, const std::string &canChannel, int baudrate);

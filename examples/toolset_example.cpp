@@ -72,8 +72,8 @@ void exit()
     running = false;
     std::string can_channel;
     
-    if (channel == COMM_TYPE::COMM_CAN_0) can_channel = "can0";
-    if (channel == COMM_TYPE::COMM_CAN_1) can_channel = "can1";
+    if (channel == COMM_CAN_0) can_channel = "can0";
+    if (channel == COMM_CAN_1) can_channel = "can1";
     
     // system(std::string("sudo /usr/sbin/ip link set " + can_channel + " down").c_str());
     exit(0);
@@ -525,13 +525,13 @@ int main()
         switch (choice)
         {
         case 1:
-            channel = COMM_TYPE::COMM_CAN_0;
+            channel = COMM_CAN_0;
             break;
         case 2:
-            channel = COMM_TYPE::COMM_CAN_1;
+            channel = COMM_CAN_1;
             break;
         case 3:
-            channel = COMM_TYPE::COMM_ETHERCAT;
+            channel = COMM_ETHERCAT;
             break;
         case 0:
             exit();

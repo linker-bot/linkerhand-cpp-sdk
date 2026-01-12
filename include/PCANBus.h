@@ -17,9 +17,13 @@
 
 #include "ICanBus.h"
 
-namespace Communication
-{
-    class PCANBus : public ICanBus
+namespace linkerhand {
+namespace communication {
+
+/**
+ * @brief Windows PCAN 总线实现
+ */
+class PCANBus : public ICanBus
     {
     public:
         PCANBus(TPCANHandle channel, TPCANBaudrate bitrate, const LINKER_HAND linkerhand);
@@ -43,6 +47,11 @@ namespace Communication
         std::chrono::steady_clock::time_point receive_last_time;
         std::queue<TPCANMsg> send_queue;
     };
-}
+} // namespace communication
+} // namespace linkerhand
+
+// 向后兼容：在全局命名空间中提供别名
+namespace Communication = linkerhand::communication;
+
 #endif // LINKERHAND_PCAN_BUS_H
 #endif

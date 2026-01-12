@@ -31,7 +31,7 @@ namespace communication {
 /**
  * @brief Linux CAN 总线实现
  */
-class CanBus : public ICanBus
+class CanBus : public linkerhand::communication::ICanBus
     {
     public:
         CanBus(const std::string& interface, int bitrate, const LINKER_HAND linkerhand);

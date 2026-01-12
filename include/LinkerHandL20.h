@@ -62,7 +62,7 @@ typedef enum
 }FRAME_PROPERTY;
 
 
-class LinkerHand : public IHand {
+class LinkerHand : public linkerhand::hand::IHand {
 public:
     LinkerHand(uint32_t handId, const std::string& canChannel, int baudrate);
     ~LinkerHand();

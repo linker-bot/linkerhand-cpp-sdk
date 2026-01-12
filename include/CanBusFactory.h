@@ -31,17 +31,17 @@ namespace communication {
                 if (interfaceOrChannel == "can1") {
                     channel = PCAN_USBBUS2;
                 }
-                return std::make_unique<PCANBus>(channel, baudrate, linkerHand);
+                return std::make_unique<linkerhand::communication::PCANBus>(channel, baudrate, linkerHand);
 
             #else
                 // Linux/Unix 平台
                 if (interfaceOrChannel == "can0" || interfaceOrChannel == "can1") {
-                    return std::make_unique<CanBus>(interfaceOrChannel, bitrate, linkerHand);
+                    return std::make_unique<linkerhand::communication::CanBus>(interfaceOrChannel, bitrate, linkerHand);
                 } 
 
                 #if USE_ETHERCAT
                 else if (interfaceOrChannel == "ethercat") {
-                    return std::make_unique<EtherCAT>(handId);
+                    return std::make_unique<linkerhand::communication::EtherCAT>(handId);
                 }
                 #endif
 
