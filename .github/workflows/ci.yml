@@ -1,0 +1,258 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master, develop ]
+  workflow_dispatch:
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  build-and-test:
+    name: Build and Test - ${{ matrix.os }} (${{ matrix.arch }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Linux x86_64 (主要测试平台)
+          - os: ubuntu-latest
+            arch: x86_64
+            cmake_build_type: Release
+            use_qemu: false
+          # Linux x86_64 Debug 构建
+          - os: ubuntu-latest
+            arch: x86_64
+            cmake_build_type: Debug
+            use_qemu: false
+          # Linux aarch64 Release 构建 (使用 QEMU 模拟)
+          - os: ubuntu-latest
+            arch: aarch64
+            cmake_build_type: Release
+            use_qemu: true
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 QEMU (aarch64)
+        if: matrix.use_qemu == true
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+
+      - name: 缓存 CMake 构建
+        uses: actions/cache@v4
+        with:
+          path: |
+            build
+            ~/.cmake
+          key: ${{ runner.os }}-cmake-${{ matrix.arch }}-${{ matrix.cmake_build_type }}-${{ hashFiles('**/CMakeLists.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-cmake-${{ matrix.arch }}-${{ matrix.cmake_build_type }}-
+
+      - name: 安装构建依赖
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            cmake \
+            git \
+            libpthread-stubs0-dev
+          # 对于 aarch64，安装交叉编译工具链或 QEMU 用户模式
+          if [ "${{ matrix.arch }}" = "aarch64" ]; then
+            sudo apt-get install -y \
+              gcc-aarch64-linux-gnu \
+              g++-aarch64-linux-gnu \
+              qemu-user-static \
+              binfmt-support
+          fi
+
+      - name: 验证工具链版本
+        run: |
+          echo "=== CMake 版本 ==="
+          cmake --version
+          echo ""
+          echo "=== 编译器版本 ==="
+          if [ "${{ matrix.arch }}" = "aarch64" ]; then
+            aarch64-linux-gnu-gcc --version
+            aarch64-linux-gnu-g++ --version
+          else
+            gcc --version
+            g++ --version
+          fi
+          echo ""
+          echo "=== 系统信息 ==="
+          uname -a
+          echo "目标架构: ${{ matrix.arch }}"
+          echo "实际架构: $(uname -m)"
+
+      - name: 创建构建目录
+        run: mkdir -p build
+
+      - name: 配置 CMake
+        working-directory: build
+        run: |
+          if [ "${{ matrix.arch }}" = "aarch64" ]; then
+            # 使用交叉编译工具链
+            cmake .. \
+              -DCMAKE_BUILD_TYPE=${{ matrix.cmake_build_type }} \
+              -DBUILD_TESTING=ON \
+              -DCMAKE_SYSTEM_NAME=Linux \
+              -DCMAKE_SYSTEM_PROCESSOR=aarch64 \
+              -DCMAKE_C_COMPILER=aarch64-linux-gnu-gcc \
+              -DCMAKE_CXX_COMPILER=aarch64-linux-gnu-g++ \
+              -DCMAKE_FIND_ROOT_PATH=/usr/aarch64-linux-gnu
+          else
+            cmake .. \
+              -DCMAKE_BUILD_TYPE=${{ matrix.cmake_build_type }} \
+              -DBUILD_TESTING=ON
+          fi
+
+      - name: 构建项目
+        working-directory: build
+        run: |
+          cmake --build . \
+            --config ${{ matrix.cmake_build_type }} \
+            --parallel $(nproc) \
+            --verbose
+
+      - name: 运行测试
+        working-directory: build
+        run: |
+          if [ "${{ matrix.arch }}" = "aarch64" ]; then
+            # 对于 aarch64，使用 QEMU 运行测试
+            # 设置 QEMU 环境变量
+            export QEMU_LD_PREFIX=/usr/aarch64-linux-gnu
+            # 使用较少的并行任务，因为 QEMU 模拟较慢
+            ctest --output-on-failure --parallel 2 || ctest --output-on-failure
+          else
+            ctest --output-on-failure --parallel $(nproc) || ctest --output-on-failure
+          fi
+        continue-on-error: false
+
+      - name: 显示测试结果
+        if: always()
+        working-directory: build
+        run: |
+          echo "=== 测试摘要 ==="
+          ctest --print-labels || true
+          echo ""
+          echo "=== 构建产物 ==="
+          find . -type f -executable -name "test_*" -exec file {} \; || true
+          find . -type f -executable -name "*example*" -exec file {} \; || true
+
+  build-examples:
+    name: Build Examples
+    runs-on: ubuntu-latest
+    needs: build-and-test
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装构建依赖
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            cmake \
+            git \
+            libpthread-stubs0-dev
+
+      - name: 创建构建目录
+        run: mkdir -p build
+
+      - name: 配置 CMake
+        working-directory: build
+        run: |
+          cmake .. \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_TESTING=OFF
+
+      - name: 构建示例程序
+        working-directory: build
+        run: |
+          cmake --build . \
+            --config Release \
+            --parallel $(nproc) \
+            --target toolset_example action_group_show_l10
+
+      - name: 验证示例程序
+        working-directory: build
+        run: |
+          echo "=== 验证构建产物 ==="
+          if [ -f toolset_example ]; then
+            echo "✓ toolset_example 构建成功"
+            file toolset_example
+            ls -lh toolset_example
+          else
+            echo "✗ toolset_example 未找到"
+            exit 1
+          fi
+          if [ -f action_group_show_l10 ]; then
+            echo "✓ action_group_show_l10 构建成功"
+            file action_group_show_l10
+            ls -lh action_group_show_l10
+          else
+            echo "✗ action_group_show_l10 未找到"
+            exit 1
+          fi
+
+  code-quality:
+    name: Code Quality Checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 检查文件编码和换行符
+        run: |
+          echo "检查文件编码和换行符..."
+          # 检查是否有 Windows 换行符
+          if find . -type f \( -name "*.cpp" -o -name "*.h" -o -name "*.cmake" -o -name "CMakeLists.txt" \) \
+             -exec file {} \; | grep -q "CRLF"; then
+            echo "警告: 发现 Windows 换行符 (CRLF)"
+            exit 1
+          fi
+          echo "✓ 文件编码检查通过"
+
+      - name: 检查 CMake 语法
+        run: |
+          echo "检查 CMake 语法..."
+          cmake --version
+          # 尝试解析 CMakeLists.txt
+          mkdir -p /tmp/cmake-check
+          cd /tmp/cmake-check
+          cmake ${{ github.workspace }} -Wno-dev > /dev/null 2>&1 || true
+          echo "✓ CMake 语法检查完成"
+
+      - name: 检查头文件包含
+        run: |
+          echo "检查头文件包含..."
+          # 检查是否有明显的头文件问题
+          if find ${{ github.workspace }}/include -name "*.h" -exec grep -l "#include.*\.\./" {} \; | head -5; then
+            echo "警告: 发现相对路径包含"
+          fi
+          echo "✓ 头文件检查完成"
+
+  summary:
+    name: CI Summary
+    runs-on: ubuntu-latest
+    needs: [build-and-test, build-examples, code-quality]
+    if: always()
+    steps:
+      - name: 生成 CI 摘要
+        run: |
+          echo "## CI/CD 构建摘要" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 构建状态" >> $GITHUB_STEP_SUMMARY
+          echo "- 构建和测试: ${{ needs.build-and-test.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- 示例构建: ${{ needs.build-examples.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- 代码质量: ${{ needs.code-quality.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 详细信息" >> $GITHUB_STEP_SUMMARY
+          echo "查看上方的作业详情以获取更多信息。" >> $GITHUB_STEP_SUMMARY

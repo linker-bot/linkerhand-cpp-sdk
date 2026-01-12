@@ -3,6 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Platform](https://img.shields.io/badge/Platform-Linux-blue.svg)](https://www.linux.org/)
 [![Architecture](https://img.shields.io/badge/Arch-x86__64%20%7C%20aarch64-lightgrey.svg)]()
+[![CI/CD](https://github.com/linker-bot/linkerhand-cpp-sdk/workflows/CI/CD/badge.svg)](https://github.com/linker-bot/linkerhand-cpp-sdk/actions)
 
 > 用于灵心巧手系列灵巧手的 C++ 软件开发工具包
 
@@ -262,6 +263,7 @@ ctest --output-on-failure
 
 - **测试指南**: [测试文档](docs/TESTING.md)（待创建） - 详细的测试框架安装、编写和运行指南
 - **测试说明**: [测试目录 README](tests/README.md) - 测试结构和快速参考
+- **CI/CD 文档**: [CI/CD 文档](docs/CI-CD.md) - 持续集成和持续部署配置说明
 
 测试文档包含：
 - 测试框架安装和配置（Google Test）
