@@ -107,6 +107,39 @@ undefined reference to `LinkerHandApi::...`
 
 ---
 
+### 问题：枚举命名冲突编译错误
+
+**错误信息**:
+```
+error: 'JOINT_POSITION' conflicts with a previous declaration
+error: 'TORQUE_LIMIT' conflicts with a previous declaration
+error: 'TOUCH_SENSOR_TYPE' conflicts with a previous declaration
+```
+
+**可能原因**:
+在旧版本中，多个枚举类型（`L6FrameProperty`、`L7FrameProperty`、`L10FrameProperty` 等）使用 `typedef enum`，导致枚举值泄漏到外层命名空间，当多个头文件同时被包含时会发生命名冲突。
+
+**解决方案**:
+此问题已在最新版本中修复。所有枚举类型已改为使用 `enum class`（C++11 强类型枚举），每个枚举值都在自己的作用域内，不会发生命名冲突。
+
+**如果使用旧版本**:
+1. 升级到最新版本的 SDK
+2. 如果必须使用旧版本，可以：
+   - 避免同时包含多个型号的头文件
+   - 使用前向声明和单独编译单元
+   - 使用命名空间别名隔离不同的枚举类型
+
+**新版本使用方式**:
+```cpp
+// 使用作用域限定符访问枚举值
+linkerhand::hand::L6FrameProperty prop = linkerhand::hand::L6FrameProperty::JOINT_POSITION;
+
+// 转换为整数（用于 CAN 帧）
+uint8_t frameProperty = static_cast<uint8_t>(linkerhand::hand::L6FrameProperty::JOINT_POSITION);
+```
+
+---
+
 ### 问题：CMake 版本过低
 
 **错误信息**:

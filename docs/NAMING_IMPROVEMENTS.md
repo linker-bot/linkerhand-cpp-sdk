@@ -39,9 +39,9 @@ namespace hand {
 | L25/L21 | `LinkerHandL25::LinkerHand` | `linkerhand::hand::L25Hand` | `linkerhand::hand` |
 | Modbus L10 | `ModbusLinkerHandL10::LinkerHand` | `linkerhand::hand::ModbusL10Hand` | `linkerhand::hand` |
 
-### 3. 帧属性枚举重命名
+### 3. 帧属性枚举重命名和改进
 
-各型号的帧属性枚举已重命名，使用更清晰的命名：
+各型号的帧属性枚举已重命名，使用更清晰的命名，并改为使用 `enum class` 以避免命名冲突：
 
 | 型号 | 旧枚举名 | 新枚举名 |
 |------|---------|---------|
@@ -50,6 +50,23 @@ namespace hand {
 | L10 | `LinkerHandL10::FRAME_PROPERTY` | `linkerhand::hand::L10FrameProperty` |
 | L20 | `LinkerHandL20::FRAME_PROPERTY` | `linkerhand::hand::L20FrameProperty` |
 | L25/L21 | `LinkerHandL25::FRAME_PROPERTY` | `linkerhand::hand::L25FrameProperty` |
+
+**重要改进**：
+- 枚举类型从 `typedef enum` 改为 `enum class`（C++11 强类型枚举）
+- 解决了多个枚举类型之间的命名冲突问题
+- 枚举值现在需要使用作用域限定符访问（如 `L6FrameProperty::JOINT_POSITION`）
+
+**使用示例**：
+```cpp
+// 旧方式（已废弃，但仍可通过向后兼容别名使用）
+LinkerHandL6::FRAME_PROPERTY prop = LinkerHandL6::FRAME_PROPERTY::JOINT_POSITION;
+
+// 新方式（推荐）
+linkerhand::hand::L6FrameProperty prop = linkerhand::hand::L6FrameProperty::JOINT_POSITION;
+
+// 转换为整数（用于 CAN 帧）
+uint8_t frameProperty = static_cast<uint8_t>(linkerhand::hand::L6FrameProperty::JOINT_POSITION);
+```
 
 ### 4. 参数命名修正
 
@@ -147,7 +164,11 @@ LinkerHandL10::LinkerHand hand(0x27, "can0", 1000000);
 
 1. **工厂类**：`HandFactory` 已更新为使用新类名，但返回类型仍然是 `IHand` 接口
 2. **头文件**：头文件名暂时保持不变，未来可以考虑重命名
-3. **枚举**：帧属性枚举已重命名，但枚举值保持不变
+3. **枚举**：
+   - 帧属性枚举已重命名，枚举值保持不变
+   - 枚举类型已改为 `enum class`，需要使用作用域限定符访问枚举值
+   - 这解决了多个枚举类型之间的命名冲突问题（如 `JOINT_POSITION`、`TORQUE_LIMIT` 等）
+   - 如果需要将枚举值转换为整数，使用 `static_cast<uint8_t>()`
 
 ## 相关文件
 
