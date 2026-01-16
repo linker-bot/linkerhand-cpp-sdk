@@ -12,10 +12,11 @@
 #include "IHand.h"
 #include "CanBusFactory.h"
 
-namespace LinkerHandL6
-{				
+namespace linkerhand {
+namespace hand {
 
-typedef enum
+// L6/O6 型号的帧属性枚举
+enum class L6FrameProperty
 {                                      
     // 指令码	指令功能		        	数据长度	CAN发送DLC	CAN接收DLC	数据范围
     JOINT_POSITION = 0x01,	            // 关节1-6的关节位置		6	7	7	0-0xFF
@@ -47,17 +48,22 @@ typedef enum
     RING_TOUCH = 0xB4,                  // 无名指触觉传感
     LITTLE_TOUCH = 0xB5,                // 小拇指触觉传感
     PALM_TOUCH = 0xB6                   // 手掌触觉传感
-} FRAME_PROPERTY;
+};
 
 // 协议辅助常量
 static constexpr uint8_t TOUCH_TYPE_MATRIX = 0x02; // 矩阵型触觉类型值
 static constexpr uint8_t TOUCH_PAGE_REQ    = 0xC6; // 触觉分页读取的请求子命令
 
-class LinkerHand : public linkerhand::hand::IHand
+/**
+ * @brief L6/O6 型号灵巧手实现类
+ *
+ * 提供 L6 和 O6 型号的所有功能实现
+ */
+class L6Hand : public IHand
 {
 public:
-    LinkerHand(uint32_t handId, const std::string &canChannel, int baudrate);
-    ~LinkerHand();
+    L6Hand(uint32_t handId, const std::string &canChannel, int baudrate);
+    ~L6Hand();
 
 	// 设置关节位置
     void setJointPositions(const std::vector<uint8_t> &jointAngles) override;
@@ -142,5 +148,14 @@ private:
     void parseSerialNumber(const std::vector<uint8_t>& data);
     std::string getErrorDescription(uint8_t error_code);
 };
+
+} // namespace hand
+} // namespace linkerhand
+
+// 向后兼容：在旧命名空间中提供别名
+namespace LinkerHandL6 {
+    using FRAME_PROPERTY = linkerhand::hand::L6FrameProperty;
+    using LinkerHand = linkerhand::hand::L6Hand;
 } // namespace LinkerHandL6
+
 #endif // LINKERHAND_L6_H

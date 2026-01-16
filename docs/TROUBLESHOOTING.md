@@ -398,7 +398,7 @@ CMake 3.5 or higher is required
    ```cpp
    std::vector<uint8_t> pose;
    
-   switch (hand.handJoint_) {
+   switch (hand.handModel_) {
        case LINKER_HAND::L6:
        case LINKER_HAND::O6:
            pose.resize(6);
@@ -423,7 +423,7 @@ CMake 3.5 or higher is required
    ```cpp
    void safeFingerMove(LinkerHandApi& hand, const std::vector<uint8_t>& pose) {
        int expected_size = 0;
-       switch (hand.handJoint_) {
+       switch (hand.handModel_) {
            case LINKER_HAND::L10: expected_size = 10; break;
            case LINKER_HAND::L20: expected_size = 20; break;
            // ...
@@ -451,7 +451,7 @@ CMake 3.5 or higher is required
 1. **检查型号支持**:
    ```cpp
    // 仅 L20 支持 setCurrent
-   if (hand.handJoint_ == LINKER_HAND::L20) {
+   if (hand.handModel_ == LINKER_HAND::L20) {
        hand.setCurrent(current);
    } else {
        std::cerr << "警告: setCurrent 仅支持 L20" << std::endl;

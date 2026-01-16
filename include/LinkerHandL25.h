@@ -12,10 +12,11 @@
 #include "IHand.h"
 #include "CanBusFactory.h"
 
-namespace LinkerHandL25
-{
+namespace linkerhand {
+namespace hand {
 
-typedef enum
+// L25/L21 型号的帧属性枚举
+enum class L25FrameProperty
 {									  
     INVALID_FRAME_PROPERTY = 0x00, // 无效的can帧属性 | 无返回
     // 并行指令区域
@@ -125,13 +126,17 @@ typedef enum
     HAND_SAVE_PARAMETER = 0xCF, // 保存参数
 
     WHOLE_FRAME = 0xF0, // 整帧传输 | 返回一字节帧属性+整个结构体485及网络传输专属
-}FRAME_PROPERTY;
+};
 
-
-class LinkerHand : public linkerhand::hand::IHand {
+/**
+ * @brief L25/L21 型号灵巧手实现类
+ *
+ * 提供 L25 和 L21 型号的所有功能实现
+ */
+class L25Hand : public IHand {
 public:
-    LinkerHand(uint32_t handId, const std::string& canChannel, int baudrate, const int currentHandType = 0);
-    ~LinkerHand();
+    L25Hand(uint32_t handId, const std::string& canChannel, int baudrate, const int currentHandType = 0);
+    ~L25Hand();
 
     // 设置关节位置
     void setJointPositions(const std::vector<uint8_t> &jointAngles) override;
@@ -425,5 +430,14 @@ private:
 
     std::vector<std::vector<std::vector<uint8_t>>> touch_mats;
 };
-}
+
+} // namespace hand
+} // namespace linkerhand
+
+// 向后兼容：在旧命名空间中提供别名
+namespace LinkerHandL25 {
+    using FRAME_PROPERTY = linkerhand::hand::L25FrameProperty;
+    using LinkerHand = linkerhand::hand::L25Hand;
+} // namespace LinkerHandL25
+
 #endif // LINKERHAND_L25_H

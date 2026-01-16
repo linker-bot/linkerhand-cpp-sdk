@@ -11,10 +11,11 @@
 #include "IHand.h"
 #include "CanBusFactory.h"
 
-namespace LinkerHandL20
-{
+namespace linkerhand {
+namespace hand {
 
-typedef enum
+// L20 型号的帧属性枚举
+enum class L20FrameProperty
 {									  
     INVALID_FRAME_PROPERTY = 0x00,  // 无效的can帧属性 | 无返回
     JOINT_PITCH_R = 0x01,           // 短帧俯仰角-手指根部弯曲程度 | 返回本类型数据
@@ -59,13 +60,17 @@ typedef enum
     RING_TOUCH = 0xB4, // 无名指触觉传感
     LITTLE_TOUCH = 0xB5, //	小拇指触觉传感
     PALM_TOUCH = 0xB6 // 手掌指触觉传感
-}FRAME_PROPERTY;
+};
 
-
-class LinkerHand : public linkerhand::hand::IHand {
+/**
+ * @brief L20 型号灵巧手实现类
+ *
+ * 提供 L20 型号的所有功能实现
+ */
+class L20Hand : public IHand {
 public:
-    LinkerHand(uint32_t handId, const std::string& canChannel, int baudrate);
-    ~LinkerHand();
+    L20Hand(uint32_t handId, const std::string& canChannel, int baudrate);
+    ~L20Hand();
 
     // 设置关节位置
     void setJointPositions(const std::vector<uint8_t> &jointAngles) override;
@@ -168,5 +173,14 @@ private:
 
     uint8_t sensor_type = 0;
 };
-}
+
+} // namespace hand
+} // namespace linkerhand
+
+// 向后兼容：在旧命名空间中提供别名
+namespace LinkerHandL20 {
+    using FRAME_PROPERTY = linkerhand::hand::L20FrameProperty;
+    using LinkerHand = linkerhand::hand::L20Hand;
+} // namespace LinkerHandL20
+
 #endif // LINKERHAND_L20_H

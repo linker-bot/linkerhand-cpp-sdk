@@ -325,6 +325,52 @@ TEST(NewFeatureTest, BasicFunctionality) {
 }
 ```
 
+### 命名规范说明
+
+在编写测试时，请注意以下命名规范：
+
+1. **使用新的命名空间**（推荐）:
+```cpp
+#include "LinkerHandL10.h"
+#include "HandFactory.h"
+
+TEST(HandTest, L10HandCreation) {
+    using namespace linkerhand;
+    auto hand = factory::HandFactory::createHand(
+        LINKER_HAND::L10,
+        HAND_TYPE::RIGHT,
+        COMM_CAN_0
+    );
+    // 测试代码
+}
+```
+
+2. **向后兼容的旧命名**（可用但不推荐）:
+```cpp
+#include "LinkerHandL10.h"
+
+TEST(HandTest, L10HandCreation) {
+    // 旧命名仍然可用，但建议使用新命名
+    LinkerHandL10::LinkerHand hand(0x27, "can0", 1000000);
+    // 测试代码
+}
+```
+
+3. **接口测试**:
+```cpp
+#include "IHand.h"
+
+TEST(IHandTest, InterfaceTest) {
+    // 使用正确的命名空间
+    class TestHand : public linkerhand::hand::IHand {
+        // 实现接口
+    };
+    // 测试代码
+}
+```
+
+更多关于命名规范的详细信息，请参考 [命名规范改进文档](../docs/NAMING_IMPROVEMENTS.md)。
+
 ### 步骤 2: 更新 CMakeLists.txt
 
 在 `tests/CMakeLists.txt` 的 `TEST_SOURCES` 列表中添加新文件：
@@ -599,6 +645,7 @@ CMake Error: ...
 - **API 参考**: [API 参考文档](../docs/API-Reference.md)
 - **故障排查**: [故障排查指南](../docs/TROUBLESHOOTING.md)
 - **常见问题**: [常见问题解答](../docs/FAQ.md)
+- **命名规范**: [命名规范改进文档](../docs/NAMING_IMPROVEMENTS.md)
 
 ### Google Test 文档
 

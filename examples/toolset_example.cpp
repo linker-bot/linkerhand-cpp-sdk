@@ -281,7 +281,7 @@ void interactiveMode(LinkerHandApi &hand)
             }
             break;
         case 11:
-            if (hand.handJoint_ == LINKER_HAND::L6) {
+            if (hand.handModel_ == LINKER_HAND::L6) {
                 std::cout << "L6 - Execute action" << std::endl;
 
                 for (size_t i = 0; i < 10; i++) {
@@ -293,7 +293,7 @@ void interactiveMode(LinkerHandApi &hand)
                 }
                 
 
-            } else if (hand.handJoint_ == LINKER_HAND::L7) {
+            } else if (hand.handModel_ == LINKER_HAND::L7) {
                 hand.setSpeed(std::vector<uint8_t>(7, HAND_SPEED)); // L7 need 7 speed
                 hand.setTorque(std::vector<uint8_t>(7, HAND_TORQUE)); // L7 need 7 torque
                 //---------------------------------------------------------
@@ -309,7 +309,7 @@ void interactiveMode(LinkerHandApi &hand)
                 std::this_thread::sleep_for(std::chrono::seconds(1));
                 //---------------------------------------------------------
             }
-            else if (hand.handJoint_ == LINKER_HAND::L10)
+            else if (hand.handModel_ == LINKER_HAND::L10)
             {
                 hand.setSpeed(std::vector<uint8_t>(5, HAND_SPEED)); // L10 need 5 speed
                 hand.setTorque(std::vector<uint8_t>(5, HAND_TORQUE)); // L10 need 5 torque
@@ -344,7 +344,7 @@ void interactiveMode(LinkerHandApi &hand)
                 std::this_thread::sleep_for(std::chrono::seconds(1));
                 //---------------------------------------------------------
             }
-            else if (hand.handJoint_ == LINKER_HAND::L20)
+            else if (hand.handModel_ == LINKER_HAND::L20)
             {
                 hand.setSpeed(std::vector<uint8_t>(5, HAND_SPEED)); // L20 need 5 speed
                 //---------------------------------------------------------
@@ -358,7 +358,7 @@ void interactiveMode(LinkerHandApi &hand)
                 hand.fingerMove(L20_POSE_OPEN);
                 std::this_thread::sleep_for(std::chrono::seconds(1));
             }
-            else if (hand.handJoint_ == LINKER_HAND::L25 || hand.handJoint_ == LINKER_HAND::L21)
+            else if (hand.handModel_ == LINKER_HAND::L25 || hand.handModel_ == LINKER_HAND::L21)
             {
                 hand.setSpeed(std::vector<uint8_t>(25, HAND_SPEED));
                 hand.setTorque(std::vector<uint8_t>(25, HAND_TORQUE));

@@ -12,10 +12,15 @@
 #include "ModBus.h"
 #include "IHand.h"
 
-namespace ModbusLinkerHandL10
-{
+namespace linkerhand {
+namespace hand {
 
-class LinkerHand : public linkerhand::hand::IHand
+/**
+ * @brief Modbus L10 型号灵巧手实现类
+ *
+ * 提供通过 Modbus 协议通信的 L10 型号功能实现
+ */
+class ModbusL10Hand : public IHand
 {
 public:
     LinkerHand(uint32_t handId);
@@ -51,6 +56,14 @@ private:
     std::vector<uint8_t> torque;
 
 };
-}
+
+} // namespace hand
+} // namespace linkerhand
+
+// 向后兼容：在旧命名空间中提供别名
+namespace ModbusLinkerHandL10 {
+    using LinkerHand = linkerhand::hand::ModbusL10Hand;
+} // namespace ModbusLinkerHandL10
+
 #endif
 #endif // LINKERHAND_MODBUS_L10_H
