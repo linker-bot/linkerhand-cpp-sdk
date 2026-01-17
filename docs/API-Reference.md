@@ -55,14 +55,14 @@ LinkerHand C++ API 提供了完整的接口用于控制灵心巧手系列灵巧�
 ### LinkerHandApi
 
 ```cpp
-LinkerHandApi(const LINKER_HAND &handJoint, const HAND_TYPE &handType, const COMM_TYPE commType = COMM_CAN_0);
+LinkerHandApi(const LINKER_HAND &handModel, const HAND_TYPE &handType, const COMM_TYPE commType = COMM_CAN_0);
 ```
 
 **功能描述**
 创建并初始化 LinkerHand API 实例。
 
 **参数说明**
-- `handJoint` (LINKER_HAND): 机械手型号
+- `handModel` (LINKER_HAND): 机械手型号
   - 可选值: `LINKER_HAND::O6`, `LINKER_HAND::L6`, `LINKER_HAND::L7`, `LINKER_HAND::L10`, `LINKER_HAND::L20`, `LINKER_HAND::L21`, `LINKER_HAND::L25`
 - `handType` (HAND_TYPE): 机械手类型
   - `HAND_TYPE::LEFT` - 左手
@@ -623,7 +623,7 @@ void setCurrent(const std::vector<uint8_t> &current);
 **使用示例**
 ```cpp
 // 仅 L20 支持
-if (hand.handJoint_ == LINKER_HAND::L20) {
+if (hand.handModel_ == LINKER_HAND::L20) {
     std::vector<uint8_t> current = {100, 100, 100, 100, 100};
     hand.setCurrent(current);
 }
@@ -655,7 +655,7 @@ void setEnable(const std::vector<uint8_t> &enable = std::vector<uint8_t>(5, 0));
 **使用示例**
 ```cpp
 // 仅 L25 支持
-if (hand.handJoint_ == LINKER_HAND::L25) {
+if (hand.handModel_ == LINKER_HAND::L25) {
     std::vector<uint8_t> enable = {1, 1, 1, 1, 1}; // 使能所有手指
     hand.setEnable(enable);
 }
@@ -687,7 +687,7 @@ void setDisable(const std::vector<uint8_t> &disable = std::vector<uint8_t>(5, 1)
 **使用示例**
 ```cpp
 // 仅 L25 支持
-if (hand.handJoint_ == LINKER_HAND::L25) {
+if (hand.handModel_ == LINKER_HAND::L25) {
     std::vector<uint8_t> disable = {1, 1, 1, 1, 1}; // 禁用所有手指
     hand.setDisable(disable);
 }
@@ -718,7 +718,7 @@ void clearFaultCode(const std::vector<uint8_t> &torque = std::vector<uint8_t>(5,
 **使用示例**
 ```cpp
 // 仅 L20 支持
-if (hand.handJoint_ == LINKER_HAND::L20) {
+if (hand.handModel_ == LINKER_HAND::L20) {
     hand.clearFaultCode();
 }
 ```

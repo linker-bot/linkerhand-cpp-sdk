@@ -247,6 +247,16 @@ auto state_arc = hand.getStateArc();
 - 使用示例和注意事项
 - 版本兼容性说明
 
+### 命名规范
+
+项目已进行命名规范改进，详细信息请参考：[命名规范改进文档](docs/NAMING_IMPROVEMENTS.md)
+
+主要改进包括：
+- 统一命名空间结构（所有型号实现类迁移到 `linkerhand::hand` 命名空间）
+- 类名改进（不同型号使用不同类名，如 `L10Hand`, `L20Hand` 等）
+- 参数命名修正（`handJoint` → `handModel`）
+- 完全向后兼容（旧命名仍可使用）
+
 ## 🧪 测试
 
 ### 运行测试

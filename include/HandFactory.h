@@ -61,25 +61,25 @@ public:
         if (canChannel == "can0" || canChannel == "can1" || canChannel == "ethercat") {
             switch (type) {
                 case O6:
-                    return std::unique_ptr<hand::IHand>(std::make_unique<LinkerHandL6::LinkerHand>(handId, canChannel, baudrate));
+                    return std::unique_ptr<hand::IHand>(std::make_unique<hand::L6Hand>(handId, canChannel, baudrate));
                     break;
                 case L6:
-                    return std::unique_ptr<hand::IHand>(std::make_unique<LinkerHandL6::LinkerHand>(handId, canChannel, baudrate));
+                    return std::unique_ptr<hand::IHand>(std::make_unique<hand::L6Hand>(handId, canChannel, baudrate));
                     break;
                 case L7:
-                    return std::unique_ptr<hand::IHand>(std::make_unique<LinkerHandL7::LinkerHand>(handId, canChannel, baudrate));
+                    return std::unique_ptr<hand::IHand>(std::make_unique<hand::L7Hand>(handId, canChannel, baudrate));
                     break;
                 case L10:
-                    return std::unique_ptr<hand::IHand>(std::make_unique<LinkerHandL10::LinkerHand>(handId, canChannel, baudrate));
+                    return std::unique_ptr<hand::IHand>(std::make_unique<hand::L10Hand>(handId, canChannel, baudrate));
                     break;
                 case L20:
-                    return std::unique_ptr<hand::IHand>(std::make_unique<LinkerHandL20::LinkerHand>(handId, canChannel, baudrate));
+                    return std::unique_ptr<hand::IHand>(std::make_unique<hand::L20Hand>(handId, canChannel, baudrate));
                     break;
                 case L21:
-                    return std::unique_ptr<hand::IHand>(std::make_unique<LinkerHandL25::LinkerHand>(handId, canChannel, baudrate, 1));
+                    return std::unique_ptr<hand::IHand>(std::make_unique<hand::L25Hand>(handId, canChannel, baudrate, 1));
                     break;
                 case L25:
-                    return std::unique_ptr<hand::IHand>(std::make_unique<LinkerHandL25::LinkerHand>(handId, canChannel, baudrate, 0));
+                    return std::unique_ptr<hand::IHand>(std::make_unique<hand::L25Hand>(handId, canChannel, baudrate, 0));
                     break;
                 default:
                     throw std::invalid_argument("Unknown hand type");
@@ -88,7 +88,7 @@ public:
         	#if USE_RMAN
             switch (type) {
                 case L10:
-                    return std::unique_ptr<hand::IHand>(std::make_unique<ModbusLinkerHandL10::LinkerHand>(handId));
+                    return std::unique_ptr<hand::IHand>(std::make_unique<hand::ModbusL10Hand>(handId));
                 default:
                     throw std::invalid_argument("Unknown hand type");
                     break;

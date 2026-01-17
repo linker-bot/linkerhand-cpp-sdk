@@ -21,11 +21,11 @@ class LinkerHandApi
 public:
 	/**
 	 * @brief 构造函数
-	 * @param handJoint 手型号（LINKER_HAND 枚举）
+	 * @param handModel 手型号（LINKER_HAND 枚举）
 	 * @param handType 手类型（左手/右手）
 	 * @param commType 通信类型（默认 CAN_0）
 	 */
-	LinkerHandApi(const LINKER_HAND &handJoint, const HAND_TYPE &handType, 
+	LinkerHandApi(const LINKER_HAND &handModel, const HAND_TYPE &handType,
 	              const COMM_TYPE commType = COMM_CAN_0);
 	~LinkerHandApi();
 
@@ -80,7 +80,7 @@ private:
 	std::unique_ptr<linkerhand::hand::IHand> hand;
 	uint32_t handId;
 public:
-	LINKER_HAND handJoint_;
+	LINKER_HAND handModel_;  // 手型号（L6, L7, L10, L20, L21, L25 等）
 	HAND_TYPE handType_;
 };
 

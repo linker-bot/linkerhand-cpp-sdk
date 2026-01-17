@@ -12,10 +12,11 @@
 #include "IHand.h"
 #include "CanBusFactory.h"
 
-namespace LinkerHandL10
-{
+namespace linkerhand {
+namespace hand {
 
-typedef enum
+// L10 型号的帧属性枚举
+enum class L10FrameProperty
 {									  
 	// INVALID_FRAME_PROPERTY = 0x00,	// 无效的can帧属性
     JOINT_POSITION_RCO = 0x01,			// 关节1-6的关节位置
@@ -50,13 +51,18 @@ typedef enum
     RING_TOUCH = 0xB4, // 无名指触觉传感
     LITTLE_TOUCH = 0xB5, //	小拇指触觉传感
     PALM_TOUCH = 0xB6, // 手掌指触觉传感
-}FRAME_PROPERTY;
+};
 
-class LinkerHand : public linkerhand::hand::IHand
+/**
+ * @brief L10 型号灵巧手实现类
+ *
+ * 提供 L10 型号的所有功能实现
+ */
+class L10Hand : public IHand
 {
 public:
-    LinkerHand(uint32_t handId, const std::string &canChannel, int baudrate);
-    ~LinkerHand();
+    L10Hand(uint32_t handId, const std::string &canChannel, int baudrate);
+    ~L10Hand();
 
 	// 设置关节位置
     void setJointPositions(const std::vector<uint8_t> &jointAngles) override;
@@ -144,5 +150,14 @@ private:
 
     uint8_t sensor_type = 0;
 };
+
+} // namespace hand
+} // namespace linkerhand
+
+// 向后兼容：在旧命名空间中提供别名
+namespace LinkerHandL10 {
+    using FRAME_PROPERTY = linkerhand::hand::L10FrameProperty;
+    using LinkerHand = linkerhand::hand::L10Hand;
 } // namespace LinkerHandL10
+
 #endif // LINKERHAND_L10_H
