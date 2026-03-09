@@ -76,6 +76,26 @@ LinkerHandApi(const LINKER_HAND &handModel, const HAND_TYPE &handType, const COM
 **返回值**
 无
 
+```cpp
+LinkerHandApi(const LINKER_HAND &handModel, const HAND_TYPE &handType,
+	             const std::string canChannel, const int baudrate);
+```
+
+**功能描述**
+创建并初始化 LinkerHand API 实例。
+
+**参数说明**
+- `handModel` (LINKER_HAND): 机械手型号
+  - 可选值: `LINKER_HAND::O6`, `LINKER_HAND::L6`, `LINKER_HAND::L7`, `LINKER_HAND::L10`, `LINKER_HAND::L20`, `LINKER_HAND::L21`, `LINKER_HAND::L25`
+- `handType` (HAND_TYPE): 机械手类型
+  - `HAND_TYPE::LEFT` - 左手
+  - `HAND_TYPE::RIGHT` - 右手
+- `canChannel` (std::string): can 通道名称
+- `baudrate` (int): can 波特率
+
+**返回值**
+无
+
 **使用示例**
 ```cpp
 #include "LinkerHandApi.h"
@@ -86,6 +106,31 @@ int main() {
 
     // 创建 L20 型号左手实例，使用 CAN1 通信
     LinkerHandApi hand(LINKER_HAND::L20, HAND_TYPE::LEFT, COMM_CAN_1);
+
+    return 0;
+}
+```
+
+```cpp
+#include "LinkerHandApi.h"
+
+int main() {
+
+    // 调用API接口
+    LinkerHandApi hand(LINKER_HAND::O6, HAND_TYPE::LEFT, "can0", 115200);
+
+    // 获取版本信息
+    std::cout << hand.getVersion() << std::endl;
+
+    // 四指握拳
+    std::vector<uint8_t> fist_pose = {255, 255, 0, 0, 0, 0};
+    hand.fingerMove(fist_pose);
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+
+    // 四指张开
+    std::vector<uint8_t> open_pose = {255, 255, 255, 255, 255, 255};
+    hand.fingerMove(open_pose);
+    std::this_thread::sleep_for(std::chrono::seconds(1));
 
     return 0;
 }

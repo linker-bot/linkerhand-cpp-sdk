@@ -1,6 +1,11 @@
 #ifndef LINKERHAND_HAND_FACTORY_H
 #define LINKERHAND_HAND_FACTORY_H
 
+#include <iostream>
+#include <string>
+#include <algorithm>
+#include <cctype>
+
 #include "IHand.h"
 #include "LinkerHandL6.h"
 #include "LinkerHandL7.h"
@@ -9,6 +14,8 @@
 #include "LinkerHandL25.h"
 #include "ModbusLinkerHandL10.h"
 #include "Common.h"
+
+
 
 namespace linkerhand {
 namespace factory {
@@ -99,6 +106,70 @@ public:
         }
 
         return nullptr;
+    }
+    
+    
+    static std::unique_ptr<hand::IHand> createHand(LINKER_HAND type, uint32_t handId, const std::string canChannel, const int baudrate) {
+
+        if (handId != static_cast<uint32_t>(LEFT) && 
+            handId != static_cast<uint32_t>(RIGHT))
+        {
+            throw std::invalid_argument("Unsupported hand type");
+        }
+
+        if (containsIgnoreCase(canChannel, "can")) {
+            switch (type) {
+                case O6:
+                    return std::unique_ptr<hand::IHand>(std::make_unique<hand::L6Hand>(handId, canChannel, baudrate));
+                    break;
+                case L6:
+                    return std::unique_ptr<hand::IHand>(std::make_unique<hand::L6Hand>(handId, canChannel, baudrate));
+                    break;
+                case L7:
+                    return std::unique_ptr<hand::IHand>(std::make_unique<hand::L7Hand>(handId, canChannel, baudrate));
+                    break;
+                case L10:
+                    return std::unique_ptr<hand::IHand>(std::make_unique<hand::L10Hand>(handId, canChannel, baudrate));
+                    break;
+                case L20:
+                    return std::unique_ptr<hand::IHand>(std::make_unique<hand::L20Hand>(handId, canChannel, baudrate));
+                    break;
+                case L21:
+                    return std::unique_ptr<hand::IHand>(std::make_unique<hand::L25Hand>(handId, canChannel, baudrate, 1));
+                    break;
+                case L25:
+                    return std::unique_ptr<hand::IHand>(std::make_unique<hand::L25Hand>(handId, canChannel, baudrate, 0));
+                    break;
+                default:
+                    throw std::invalid_argument("Unknown hand type");
+            }
+        } else if (canChannel == "modbus") {
+        	#if USE_RMAN
+            switch (type) {
+                case L10:
+                    return std::unique_ptr<hand::IHand>(std::make_unique<hand::ModbusL10Hand>(handId));
+                default:
+                    throw std::invalid_argument("Unknown hand type");
+                    break;
+            }
+            #else
+            	throw std::runtime_error("ModBus support is disabled (USE_RMAN=0)");
+			#endif
+        }
+
+        return nullptr;
+    }
+    
+private:
+
+    static std::string toLower(const std::string& str) {
+        std::string result = str;
+        std::transform(result.begin(), result.end(), result.begin(), ::tolower);
+        return result;
+    }
+
+    static bool containsIgnoreCase(const std::string& str, const std::string& target) {
+        return toLower(str).find(toLower(target)) != std::string::npos;
     }
 };
 
