@@ -173,7 +173,7 @@ sudo modprobe can_raw
 sudo modprobe vcan  # 虚拟 CAN（用于测试）
 
 # 配置 CAN 接口
-sudo ip link set can0 type can bitrate 500000
+sudo ip link set can0 type can bitrate 1000000
 sudo ip link set can0 up
 
 # 查看 CAN 接口状态

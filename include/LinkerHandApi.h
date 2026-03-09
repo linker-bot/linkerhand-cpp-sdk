@@ -27,6 +27,8 @@ public:
 	 */
 	LinkerHandApi(const LINKER_HAND &handModel, const HAND_TYPE &handType,
 	              const COMM_TYPE commType = COMM_CAN_0);
+	LinkerHandApi(const LINKER_HAND &handModel, const HAND_TYPE &handType,
+	             const std::string canChannel, const int baudrate);
 	~LinkerHandApi();
 
 	// 设置关节位置

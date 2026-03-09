@@ -1,3 +1,11 @@
+/*
+ * @Author: liangshaoteng liangshaoteng2012@163.com
+ * @Date: 2026-01-29 17:01:44
+ * @LastEditors: liangshaoteng liangshaoteng2012@163.com
+ * @LastEditTime: 2026-03-09 13:19:16
+ * @FilePath: /linkerhand/include/CanBusFactory.h
+ * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+ */
 #ifndef LINKERHAND_CAN_BUS_FACTORY_H
 #define LINKERHAND_CAN_BUS_FACTORY_H
 
@@ -34,10 +42,7 @@ namespace communication {
                 return std::make_unique<linkerhand::communication::PCANBus>(channel, baudrate, linkerHand);
 
             #else
-                // Linux/Unix 平台
-                if (interfaceOrChannel == "can0" || interfaceOrChannel == "can1") {
-                    return std::make_unique<linkerhand::communication::CanBus>(interfaceOrChannel, bitrate, linkerHand);
-                } 
+                return std::make_unique<linkerhand::communication::CanBus>(interfaceOrChannel, bitrate, linkerHand);
 
                 #if USE_ETHERCAT
                 else if (interfaceOrChannel == "ethercat") {
