@@ -1,0 +1,9 @@
+
+
+# 将文件放到 /etc/udev/rules.d/
+# 然后重启系统
+
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="a8fa", ATTRS{idProduct}=="8598", GROUP="plugdev", MODE="0666"
+
+
+

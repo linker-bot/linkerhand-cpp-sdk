@@ -1,0 +1,31 @@
+﻿
+将libcanbus用命令解压到/usr/local/lib/目录下面
+
+tar -xvf libcanbus.tar -C /usr/local/lib/
+
+配置环境变量:      export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
+
+libcanbus.a为静态库，libcanbus.so为共享库
+
+libcanbus_arm        编译器为    arm-linux-gnueabihf-gcc
+libcanbus_arm64      编译器为    aarch64-linux-gnu-gcc
+libcanbus(ubuntu20)  编译器为    gcc version 9.4.0
+libcanbus(ubuntu22)  编译器为    gcc version 11.3.0
+
+
+编译时先加载libcanbus库，再加载libusb库(源码注释里面有编译方法)。
+
+如果编译提示pthread相关错误，说明libcanbus.tar
+自带的libusb库不匹配， 请安装libusb库        sudo apt-get install libusb-1.0-0-dev 并删掉/usr/local/lib目录下的libusb相关库文件
+
+如果提示ludev错误，请安装libudev-dev：       sudo apt-get install libudev-dev
+
+如果编译过程中找不到cc1plus 请安装           sudo apt-get install --reinstall build-essential
+
+
+注意：root用户可直接读写usbcan设备，非root用户，需要修改usbcan模块的操作权限，可百度搜索修改方法。
+或者尝试将hcanbus.rules文件放到 /etc/udev/rules.d/， 然后重启系统。
+
+各函数使用方法与windows版本的动态库使用一致，只是一些函数，多了一个通道参数。
+(linux下面不能识别为独立双通道，一个双通道设备，有两个通道0和1，0对应can1，1对应can2)
+

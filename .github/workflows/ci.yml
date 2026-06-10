@@ -179,26 +179,26 @@ jobs:
           cmake --build . \
             --config Release \
             --parallel $(nproc) \
-            --target toolset_example action_group_show_l10
+            --target test test_o6_can_0
 
       - name: 验证示例程序
         working-directory: build
         run: |
           echo "=== 验证构建产物 ==="
-          if [ -f toolset_example ]; then
-            echo "✓ toolset_example 构建成功"
-            file toolset_example
-            ls -lh toolset_example
+          if [ -f bin/test ]; then
+            echo "✓ test 构建成功"
+            file bin/test
+            ls -lh bin/test
           else
-            echo "✗ toolset_example 未找到"
+            echo "✗ test 未找到"
             exit 1
           fi
-          if [ -f action_group_show_l10 ]; then
-            echo "✓ action_group_show_l10 构建成功"
-            file action_group_show_l10
-            ls -lh action_group_show_l10
+          if [ -f bin/test_o6_can_0 ]; then
+            echo "✓ test_o6_can_0 构建成功"
+            file bin/test_o6_can_0
+            ls -lh bin/test_o6_can_0
           else
-            echo "✗ action_group_show_l10 未找到"
+            echo "✗ test_o6_can_0 未找到"
             exit 1
           fi
 
