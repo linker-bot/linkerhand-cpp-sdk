@@ -1,123 +1,81 @@
-cmake_minimum_required(VERSION 3.15)
-project(LinkerHand-CPP-SDK
-    VERSION 1.1.7
-    LANGUAGES CXX
-    DESCRIPTION "LinkerHand C++ SDK for robotic hand control"
-)
+cmake_minimum_required(VERSION 3.10)
+project(LinkerHandSDKExamples LANGUAGES CXX)
 
-if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64")
-    set(LIB_SUBDIR "x86_64")
-elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|arm64")
-    set(LIB_SUBDIR "aarch64")
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+option(BUILD_EXAMPLES "Build example applications" ON)
+option(BUILD_HAND_TEACH_PENDANT "Build hand teach pendant application" OFF)
+
+if(BUILD_EXAMPLES)
+    add_subdirectory(examples)
+endif()
+
+if(BUILD_HAND_TEACH_PENDANT)
+    add_subdirectory(hand_teach_pendant)
+endif()
+
+message(STATUS "=== LinkerHand C++ SDK Examples ===")
+message(STATUS "Version: 2.0.0")
+message(STATUS "Build Examples: ${BUILD_EXAMPLES}")
+message(STATUS "Build Hand Teach Pendant: ${BUILD_HAND_TEACH_PENDANT}")
+message(STATUS "=====================================")
+
+# ---------------------------------------------------------------------------
+# 安装规则（发布包模式）
+# 本目录是 pack.sh 产出的发布包：SDK 已是预编译产物，源码不在此处。
+# cmake --install 时把 include/ 头与对应平台的 lib 铺到 prefix，与 build.sh
+# 期望的目录布局保持一致：
+#   $PREFIX/include/linkerhand-cpp-sdk/{api,core,communication}/*.h
+#   $PREFIX/lib/linkerhand-cpp-sdk/lib/<预编译库>
+# build.sh 随后在 $PREFIX/lib/ 建符号链接 + ldconfig。
+# ---------------------------------------------------------------------------
+
+set(LH_INSTALL_INCLUDE_DIR "include/linkerhand-cpp-sdk")
+set(LH_INSTALL_LIB_ROOT    "lib/linkerhand-cpp-sdk")
+
+# 头：按子目录白名单发布
+install(DIRECTORY include/api/          DESTINATION "${LH_INSTALL_INCLUDE_DIR}/api"           FILES_MATCHING PATTERN "*.h")
+install(DIRECTORY include/core/         DESTINATION "${LH_INSTALL_INCLUDE_DIR}/core"          FILES_MATCHING PATTERN "*.h")
+install(DIRECTORY include/communication/ DESTINATION "${LH_INSTALL_INCLUDE_DIR}/communication" FILES_MATCHING PATTERN "*.h")
+
+# 平台/架构选库：与 lib/ 实际目录布局一致
+set(LH_LIB_SRC_DIR "")
+if(WIN32)
+    if(MSVC)
+        set(LH_LIB_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/lib/win64/msvc")
+    else()
+        set(LH_LIB_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/lib/win64/mingw")
+    endif()
+elseif(UNIX AND NOT APPLE)
+    if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|amd64|AMD64)$")
+        set(LH_LIB_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/lib/linux/x86_64")
+    elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64|arm64)$")
+        set(LH_LIB_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/lib/linux/arm64")
+    endif()
+endif()
+
+if(LH_LIB_SRC_DIR AND EXISTS "${LH_LIB_SRC_DIR}")
+    # 用 install(DIRECTORY) 而非 install(FILES)：保留 .so → .so.2 → .so.2.0.0 的软链
+    install(DIRECTORY "${LH_LIB_SRC_DIR}/" DESTINATION "${LH_INSTALL_LIB_ROOT}/lib" USE_SOURCE_PERMISSIONS)
+    message(STATUS "Install lib source: ${LH_LIB_SRC_DIR}")
 else()
-    message(WARNING "Unknown architecture, defaulting to x86_64")
-    set(LIB_SUBDIR "x86_64")
+    message(WARNING "No prebuilt lib matched (system=${CMAKE_SYSTEM_NAME} arch=${CMAKE_SYSTEM_PROCESSOR}); install will skip libs.")
 endif()
 
-#-----------------------------------------------------------------------------
-# LINKER_HAND_CPP_SDK
-#-----------------------------------------------------------------------------
-find_library(LINKER_HAND_LIB
-    NAMES linkerhand_cpp_sdk linkerhand_cpp
-    PATHS ${CMAKE_CURRENT_SOURCE_DIR}/lib/${LIB_SUBDIR}
-        /usr/local/lib/linkerhand-cpp-sdk/${LIB_SUBDIR}
-        /usr/lib/linkerhand-cpp-sdk/${LIB_SUBDIR}
-        ${CMAKE_INSTALL_PREFIX}/lib/linkerhand-cpp-sdk/${LIB_SUBDIR}
-    NO_DEFAULT_PATH
-)
-
-set(LINKER_HAND_INCLUDE_DIR
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
-    /usr/local/include/linkerhand-cpp-sdk
-    /usr/include/linkerhand-cpp-sdk
-    ${CMAKE_INSTALL_PREFIX}/include/linkerhand-cpp-sdk
-)
-
-if(NOT LINKER_HAND_LIB)
-    message(FATAL_ERROR "linkerhand_cpp_sdk library not found!")
-endif()
-
-if(NOT LINKER_HAND_INCLUDE_DIR)
-    message(FATAL_ERROR "LinkerHand headers not found!")
-endif()
-
-message(STATUS "Found linkerhand_cpp_sdk library: ${LINKER_HAND_LIB}")
-message(STATUS "Found LinkerHand headers: ${LINKER_HAND_INCLUDE_DIR}")
-
-#-----------------------------------------------------------------------------
-# INCLUDE_DIRECTORIES
-#-----------------------------------------------------------------------------
-include_directories(
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
-    ${LINKER_HAND_INCLUDE_DIR}
-)
-
-#-----------------------------------------------------------------------------
-# EXECUTABLE
-#-----------------------------------------------------------------------------
-add_executable(my_project src/main.cpp)
-target_link_libraries(my_project ${LINKER_HAND_LIB} pthread)
-
-add_executable(toolset_example examples/toolset_example.cpp)
-target_link_libraries(toolset_example ${LINKER_HAND_LIB} pthread)
-
-add_executable(action_group_show_l10 examples/action_group_show_l10.cpp)
-target_link_libraries(action_group_show_l10 ${LINKER_HAND_LIB} pthread)
-
-#-----------------------------------------------------------------------------
-# INSTALL TARGETS
-#-----------------------------------------------------------------------------
-# 安装头文件
-install(DIRECTORY include/
-    DESTINATION include/linkerhand-cpp-sdk
-    FILES_MATCHING PATTERN "*.h"
-)
-
-# 安装库文件
-if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/lib/${LIB_SUBDIR})
-    install(DIRECTORY lib/${LIB_SUBDIR}/
-        DESTINATION lib/linkerhand-cpp-sdk/${LIB_SUBDIR}
-        FILES_MATCHING PATTERN "*.so*"
-    )
-endif()
-
-#-----------------------------------------------------------------------------
-# PACKAGE CONFIGURATION
-#-----------------------------------------------------------------------------
-include(CMakePackageConfigHelpers)
-
-# 创建包配置文件
-write_basic_package_version_file(
-    "${CMAKE_CURRENT_BINARY_DIR}/LinkerHandCPPSDKConfigVersion.cmake"
-    VERSION ${PROJECT_VERSION}
-    COMPATIBILITY AnyNewerVersion
-)
-
-# 设置包配置变量（用于 configure_file）
-set(PACKAGE_INCLUDE_INSTALL_DIR "include/linkerhand-cpp-sdk")
-set(PACKAGE_LIB_INSTALL_DIR "lib/linkerhand-cpp-sdk/${LIB_SUBDIR}")
-
-# 创建包配置文件模板
-configure_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/LinkerHandCPPSDKConfig.cmake.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/LinkerHandCPPSDKConfig.cmake"
-    @ONLY
-)
-
-# 安装包配置文件
+# CMake config 包：让下游用 find_package(linkerhand-cpp-sdk CONFIG REQUIRED)
+# 配置文件相对路径自定位（见 cmake/linkerhand-cpp-sdk-config.cmake），
+# prefix 改了无需重新生成。
 install(FILES
-    "${CMAKE_CURRENT_BINARY_DIR}/LinkerHandCPPSDKConfig.cmake"
-    "${CMAKE_CURRENT_BINARY_DIR}/LinkerHandCPPSDKConfigVersion.cmake"
-    DESTINATION lib/cmake/LinkerHandCPPSDK
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/linkerhand-cpp-sdk-config.cmake"
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/linkerhand-cpp-sdk-config-version.cmake"
+    DESTINATION "lib/cmake/linkerhand-cpp-sdk"
 )
 
-#-----------------------------------------------------------------------------
-# TESTING
-#-----------------------------------------------------------------------------
-# 添加选项以启用/禁用测试
-option(BUILD_TESTING "Build the testing tree" ON)
-
-# 如果启用测试，包含测试子目录
-if(BUILD_TESTING)
-    add_subdirectory(tests)
+# third_party 头：CanFD.h / PCANBus.h / CanFrame.h 公共头泄漏了 Hcanbus.h / PCANBasic.h，
+# 任何 include 它们的下游都得有这条路径，所以随包发布。
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/third_party")
+    install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/third_party/"
+            DESTINATION "${LH_INSTALL_LIB_ROOT}/third_party")
 endif()
