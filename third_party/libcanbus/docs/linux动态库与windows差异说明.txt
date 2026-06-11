@@ -1,0 +1,8 @@
+linux动态库与windows动态库差异
+
+1 linux动态库是libcanbus.so，配合libusb.so使用；windows动态库是Hcanbus.dll。
+
+2 linux下一个双通道can只能扫描出一个设备，有0和1两个通道，可分别打开；windows是独立双通道，可扫描出2个设备，每个设备一个通道。
+
+3 linux动态库使用方法与windows的动态库基本一致，只是一些函数多了一个通道参数。可用参考windows版本动态库使用说明书来使用这些函数。使用
+  方法也可用参考linux测试源码。
