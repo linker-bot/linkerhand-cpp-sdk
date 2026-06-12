@@ -98,14 +98,19 @@ void setTorque(const std::vector<uint8_t> &torque);
 
 ---
 
-### 获取法向压力、切向压力、切向方向、接近感应
+### 获取传感器数据
 ```cpp
 std::vector<std::vector<std::vector<uint8_t>>> getForce();
 ```
 **Description**:  
-获取手部传感器的综合数据，包括法向压力、切向压力、切向方向和接近感应。  
+获取五个手指的触觉力传感器数据。每个手指的传感器分布为一个 6 行 × 12 列的二维矩阵（共 72 个传感单元），本函数将全部五个手指的数据封装在一个三维向量中返回。  
 **Returns**:  
-- 返回一个三维向量：第一维为传感器类型，第二维为手指，第三维为该手指对应的数据。
+- 返回一个三维向量：std::vector<std::vector<std::vector<uint8_t>>>
+    外层 vector 大小 = 5（五根手指）。
+    中层 vector（每根手指）大小 = 6（行）。
+    内层 vector（每行）大小 = 12（列）。
+    每个元素为 uint8_t 类型的值。
+> 注：O6型号的灵巧手矩阵数据为 4 行 × 10 列。
 
 ---
 
@@ -139,12 +144,6 @@ std::vector<double> getStateArc();
 获取当前关节的状态信息。  
 **Returns**:  
 - 返回一个 `std::vector<double>`，包含当前关节的状态数据。
-
----
-
-### 获取大拇指、食指、中指、无名指、小指的所有压力数据
-
-压感数据统一通过 `getForce()` 获取，返回三维向量 `[传感器类型][手指][数据]`，传感器类型依次为法向压力、切向压力、切向方向、接近感应。`LinkerHandApi` 不再提供 `getPressure()` 接口。
 
 ---
 
@@ -214,7 +213,7 @@ void setDisable(const std::vector<uint8_t> &disable);
 
 ---
 
-### 清除电机故障码（目前仅支持 L20）
+### 清除电机故障码
 ```cpp
 void clearFaultCode();
 ```
