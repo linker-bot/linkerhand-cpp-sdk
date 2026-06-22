@@ -428,7 +428,7 @@ int main() {
 
     while (running) {
 	    std::vector<uint8_t> action = showLeft();
-        hand.fingerMove(action);
+        hand.setPosition(action);
 		std::this_thread::sleep_for(std::chrono::milliseconds(33));
 	}
 

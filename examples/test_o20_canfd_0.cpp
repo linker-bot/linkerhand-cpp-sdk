@@ -55,8 +55,8 @@ int main() {
         std::cout << "Version: " << version << std::endl;
 
         std::vector<uint8_t> pos(34, 0);
-        std::cout << "Calling fingerMove()..." << std::endl;
-        api.fingerMove(pos);
+        std::cout << "Calling setPosition()..." << std::endl;
+        api.setPosition(pos);
 
         std::cout << "Calling getSpeed()..." << std::endl;
         std::vector<uint8_t> speed = api.getSpeed();

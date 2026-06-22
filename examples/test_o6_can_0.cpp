@@ -95,12 +95,12 @@ int main() {
 
             // 握拳
             std::vector<uint8_t> fist_pose = {255, 255, 0, 0, 0, 0};
-            hand->fingerMove(fist_pose);
+            hand->setPosition(fist_pose);
             std::this_thread::sleep_for(std::chrono::seconds(1));
 
             // 张开
             std::vector<uint8_t> open_pose = {255, 104, 255, 255, 255, 255};
-            hand->fingerMove(open_pose);
+            hand->setPosition(open_pose);
             std::this_thread::sleep_for(std::chrono::seconds(1));
 
             for (size_t k = 0; k < 3; k++) {
@@ -120,8 +120,8 @@ int main() {
                 }
                 std::cout << std::endl;
 
-                std::cout << "getState----------------------------------------" << std::endl;
-                std::vector<uint8_t> state = hand->getState();
+                std::cout << "getPosition----------------------------------------" << std::endl;
+                std::vector<uint8_t> state = hand->getPosition();
                 std::cout << "state size:" << state.size() << std::endl;
                 for (size_t j = 0; j < state.size(); j++) {
                     std::cout << (int)state[j] << " ";

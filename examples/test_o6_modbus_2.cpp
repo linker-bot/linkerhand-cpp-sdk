@@ -80,7 +80,7 @@ int main(int argc, char* argv[]) {
             std::cout << "测试 4: 读取当前状态" << std::endl;
             std::cout << "----------------------------------------" << std::endl;
             for (int i = 0; i < 5; ++i) {
-                std::vector<uint8_t> state = hand.getState();
+                std::vector<uint8_t> state = hand.getPosition();
                 if (!state.empty()) {
                     printVector("当前关节位置", state);
                 } else {
@@ -216,7 +216,7 @@ int main(int argc, char* argv[]) {
             for (size_t i = 0; i < poses.size(); ++i) {
                 std::cout << "动作 " << (i + 1) << "/" << poses.size() << ": ";
                 printVector("位置", poses[i]);
-                hand.fingerMove(poses[i]);
+                hand.setPosition(poses[i]);
                 std::this_thread::sleep_for(std::chrono::milliseconds(500));
             }
             std::cout << std::endl;

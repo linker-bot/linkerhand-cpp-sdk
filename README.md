@@ -235,12 +235,12 @@ cmake --build . -j
 ### 主要 API 接口
 
 **控制接口**
-- `fingerMove()` — 设置关节位置
+- `setPosition()` — 设置关节位置
 - `setSpeed()` — 设置运动速度
 - `setTorque()` — 设置扭矩限制
 
 **状态查询**
-- `getState()` — 获取关节状态
+- `getPosition()` — 获取关节状态
 - `getSpeed()` — 获取当前速度
 - `getTorque()` — 获取当前扭矩
 
@@ -418,3 +418,4 @@ Copyright (c) 2026 灵心巧手（北京）科技有限公司
 ---
 
 **注意**：使用前请确保设备已正确连接并配置好通信接口。
+

@@ -281,7 +281,7 @@ void interactiveMode(LinkerHandApi &hand)
         case 8:
             for (size_t i = 0; i < 10; i++)
             {
-                std::cout << bytesToHex(hand.getState()) << std::endl;
+                std::cout << bytesToHex(hand.getPosition()) << std::endl;
                 std::this_thread::sleep_for(std::chrono::milliseconds(100));
             }
             break;
@@ -290,7 +290,7 @@ void interactiveMode(LinkerHandApi &hand)
                 std::cout << "L6 - Execute action" << std::endl;
                 for (size_t i = 0; i < 10; i++) {
                     for (const auto &pose : L6_POSE_1) {
-                        hand.fingerMove(pose);
+                        hand.setPosition(pose);
                         std::this_thread::sleep_for(std::chrono::milliseconds(150));
                     }
                     std::this_thread::sleep_for(std::chrono::milliseconds(150));
@@ -298,7 +298,7 @@ void interactiveMode(LinkerHandApi &hand)
             } else if (hand.handJoint_ == LINKER_HAND::O6) {
                 std::cout << "O6 - Execute action" << std::endl;
                 for (const auto &pose : L6_POSE_1) {
-                    hand.fingerMove(pose);
+                    hand.setPosition(pose);
                     std::this_thread::sleep_for(std::chrono::milliseconds(1200));
                 }
             } else if (hand.handJoint_ == LINKER_HAND::L7) {
@@ -308,12 +308,12 @@ void interactiveMode(LinkerHandApi &hand)
                 std::cout << "L7 - Execute action - Make a fist" << std::endl;
                 for (const auto &pose : L7_POSE_1)
                 {
-                    hand.fingerMove(pose);
+                    hand.setPosition(pose);
                     std::this_thread::sleep_for(std::chrono::seconds(1)); // 等待1秒
                 }
                 //---------------------------------------------------------
                 std::cout << "L7 - Execute action - Open hand" << std::endl;
-                hand.fingerMove(L7_POSE_OPEN);
+                hand.setPosition(L7_POSE_OPEN);
                 std::this_thread::sleep_for(std::chrono::seconds(1));
                 //---------------------------------------------------------
             }
@@ -325,30 +325,30 @@ void interactiveMode(LinkerHandApi &hand)
                 std::cout << "L10 - Execute action - Finger cycle bending" << std::endl;
                 for (const auto &pose : L10_POSE_1)
                 {
-                    hand.fingerMove(pose);
+                    hand.setPosition(pose);
                     std::this_thread::sleep_for(std::chrono::seconds(1));
                 }
                 //---------------------------------------------------------
                 std::cout << "L10 - Execute action - Thumb and Circular Fingers" << std::endl;
                 for (const auto &pose : L10_POSE_2)
                 {
-                    hand.fingerMove(pose);
+                    hand.setPosition(pose);
                     std::this_thread::sleep_for(std::chrono::seconds(1));
                 }
                 //---------------------------------------------------------
                 std::cout << "L10 - Execute action - Finger side swing" << std::endl;
                 for (const auto &pose : L10_POSE_3)
                 {
-                    hand.fingerMove(pose);
+                    hand.setPosition(pose);
                     std::this_thread::sleep_for(std::chrono::seconds(1));
                 }
                 //---------------------------------------------------------
                 std::cout << "L10 - Execute action - Make a fist" << std::endl;
-                hand.fingerMove(L10_POSE_CLOSE);
+                hand.setPosition(L10_POSE_CLOSE);
                 std::this_thread::sleep_for(std::chrono::seconds(1));
                 //---------------------------------------------------------
                 std::cout << "L10 - Execute action - Open hand" << std::endl;
-                hand.fingerMove(L10_POSE_OPEN);
+                hand.setPosition(L10_POSE_OPEN);
                 std::this_thread::sleep_for(std::chrono::seconds(1));
                 //---------------------------------------------------------
             }
@@ -358,12 +358,12 @@ void interactiveMode(LinkerHandApi &hand)
                 //---------------------------------------------------------
                 std::cout << "L20 - Execute action - Make a fist" << std::endl;
                 std::vector<uint8_t> L20_POSE_CLOSE = {69, 0, 0, 0, 0, 32, 10, 100, 180, 240, 145, 255, 255, 255, 255, 0, 0, 0, 0, 0};
-                hand.fingerMove(L20_POSE_CLOSE);
+                hand.setPosition(L20_POSE_CLOSE);
                 std::this_thread::sleep_for(std::chrono::seconds(1));
                 //---------------------------------------------------------
                 std::cout << "L20 - Execute action - Open hand" << std::endl;
                 std::vector<uint8_t> L20_POSE_OPEN = {255, 255, 230, 255, 255, 255, 10, 100, 180, 240, 245, 255, 255, 255, 255, 255, 255, 255, 255, 255};
-                hand.fingerMove(L20_POSE_OPEN);
+                hand.setPosition(L20_POSE_OPEN);
                 std::this_thread::sleep_for(std::chrono::seconds(1));
             }
             else if (hand.handJoint_ == LINKER_HAND::L25 || hand.handJoint_ == LINKER_HAND::L21)
@@ -382,18 +382,18 @@ void interactiveMode(LinkerHandApi &hand)
                 std::vector<uint8_t> pos2_2 = {230, 0, 0, 15, 5, 42, 55, 80, 210, 202, 85, 0, 0, 0, 0, 90, 0, 40, 35, 5, 120, 0, 5, 0, 0};
 
                 std::cout << "L25/L21 - Execute action - Make a fist" << std::endl;
-                hand.fingerMove(pos2_1);
+                hand.setPosition(pos2_1);
                 std::this_thread::sleep_for(std::chrono::seconds(1));
-                hand.fingerMove(pos2_2);
+                hand.setPosition(pos2_2);
                 std::this_thread::sleep_for(std::chrono::seconds(1));
 
                 std::cout << "L25/L21 - Execute action - Open hand" << std::endl;
-                hand.fingerMove(pos1_1);
+                hand.setPosition(pos1_1);
                 std::this_thread::sleep_for(std::chrono::seconds(1));
-                // hand.fingerMove(pos1_2);
+                // hand.setPosition(pos1_2);
                 // std::this_thread::sleep_for(std::chrono::seconds(1));
 
-                hand.fingerMove(pos1_3);
+                hand.setPosition(pos1_3);
                 std::this_thread::sleep_for(std::chrono::seconds(1));
             }
             else if (hand.handJoint_ == LINKER_HAND::G20)
@@ -402,15 +402,15 @@ void interactiveMode(LinkerHandApi &hand)
                 //---------------------------------------------------------
                 std::cout << "G20 - Execute action - Make a fist" << std::endl;
                 std::vector<uint8_t> G20_POSE_CLOSE_1 = {255, 0, 0, 0, 0,255,255,178,84,0,255,255,0,0,0,0};
-                hand.fingerMove(G20_POSE_CLOSE_1);
+                hand.setPosition(G20_POSE_CLOSE_1);
                 std::this_thread::sleep_for(std::chrono::milliseconds(50));
                 std::vector<uint8_t> G20_POSE_CLOSE_2 = {117, 0, 0, 0, 0,47,255,178,84,0,115,104,0,0,0,0};
-                hand.fingerMove(G20_POSE_CLOSE_2);
+                hand.setPosition(G20_POSE_CLOSE_2);
                 std::this_thread::sleep_for(std::chrono::seconds(1));
                 //---------------------------------------------------------
                 std::cout << "G20 - Execute action - Open hand" << std::endl;
                 std::vector<uint8_t> G20_POSE_OPEN = {255, 255, 255, 255, 255, 255, 255, 172, 74, 0, 255, 255, 255, 255, 255, 255};
-                hand.fingerMove(G20_POSE_OPEN);
+                hand.setPosition(G20_POSE_OPEN);
                 std::this_thread::sleep_for(std::chrono::seconds(1));
             }
             else if (hand.handJoint_ == LINKER_HAND::O20)

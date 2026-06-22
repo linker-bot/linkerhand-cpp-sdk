@@ -37,13 +37,13 @@ int main() {
 
         std::cout << "执行动作：握拳" << std::endl;
         std::vector<uint8_t> fist_pose = {120, 60, 0, 0, 0, 0, 255, 255, 255, 51};
-        hand.fingerMove(fist_pose);
+        hand.setPosition(fist_pose);
         std::this_thread::sleep_for(std::chrono::seconds(1));
         std::cout << "-------------------------------------------" << std::endl;
 
         std::cout << "执行动作：张开" << std::endl;
         std::vector<uint8_t> open_pose = {255, 104, 255, 255, 255, 255, 255, 255, 255, 71};
-        hand.fingerMove(open_pose);
+        hand.setPosition(open_pose);
         std::this_thread::sleep_for(std::chrono::seconds(1));
         std::cout << "-------------------------------------------" << std::endl;
 

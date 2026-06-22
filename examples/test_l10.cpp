@@ -35,11 +35,11 @@ int main() {
 
         // 执行一次握拳动作
         std::vector<uint8_t> fist_pose = {101, 60, 0, 0, 0, 0, 255, 255, 255, 51};
-        hand.fingerMove(fist_pose);
+        hand.setPosition(fist_pose);
         std::this_thread::sleep_for(std::chrono::seconds(1));
 
         // 读取并打印当前状态
-        std::vector<uint8_t> state = hand.getState();
+        std::vector<uint8_t> state = hand.getPosition();
         std::cout << "state size: " << state.size() << std::endl;
         for (size_t i = 0; i < state.size(); ++i) {
             std::cout << (int)state[i] << " ";

@@ -40,7 +40,7 @@ LinkerHandApi 类的构造函数，用于初始化 Linker 机械手 API。
 
 ### 设置关节位置
 ```cpp
-void fingerMove(const std::vector<uint8_t> &pose);
+void setPosition(const std::vector<uint8_t> &pose);
 ```
 **Description**:  
 设置关节的目标位置，用于控制手指的运动。  
@@ -66,7 +66,7 @@ void fingerMove(const std::vector<uint8_t> &pose);
 
 ### 设置关节位置
 ```cpp
-void fingerMoveArc(const std::vector<double> &pose);
+void setPositionArc(const std::vector<double> &pose);
 ```
 **Description**:  
 设置关节的目标位置，用于控制手指的运动。  
@@ -127,7 +127,7 @@ std::vector<uint8_t> getSpeed();
 
 ### 获取当前关节状态
 ```cpp
-std::vector<uint8_t> getState();
+std::vector<uint8_t> getPosition();
 ```
 **Description**:  
 获取当前关节的状态信息。  
@@ -138,7 +138,7 @@ std::vector<uint8_t> getState();
 
 ### 获取当前关节状态
 ```cpp
-std::vector<double> getStateArc();
+std::vector<double> getPositionArc();
 ```
 **Description**:  
 获取当前关节的状态信息。  
@@ -269,13 +269,13 @@ int main() {
 
     std::cout << "执行动作：握拳" << std::endl;
     std::vector<uint8_t> fist_pose = {120, 60, 0, 0, 0, 0, 255, 255, 255, 51};
-    hand.fingerMove(fist_pose);
+    hand.setPosition(fist_pose);
     std::this_thread::sleep_for(std::chrono::seconds(1));
     std::cout << "-------------------------------------------" << std::endl;
 
     std::cout << "执行动作：张开" << std::endl;
     std::vector<uint8_t> open_pose = {255, 104, 255, 255, 255, 255, 255, 255, 255, 71};
-    hand.fingerMove(open_pose);
+    hand.setPosition(open_pose);
     std::this_thread::sleep_for(std::chrono::seconds(1));
     std::cout << "-------------------------------------------" << std::endl;
     
@@ -297,3 +297,4 @@ int main() {
 - 如果有任何问题或需要进一步支持，请联系 [https://linkerbot.cn/aboutUs](https://linkerbot.cn/aboutUs)。
 
 ---
+
