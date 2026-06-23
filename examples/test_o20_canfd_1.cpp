@@ -81,7 +81,7 @@ int main() {
         for (size_t i = 0; i < 17; ++i) {
             std::vector<uint8_t> poses_temp = poses_seq;
             poses_temp[i] = 255;
-            api.fingerMove(poses_temp);
+            api.setPosition(poses_temp);
             std::this_thread::sleep_for(std::chrono::seconds(1));
         }
 

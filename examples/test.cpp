@@ -93,7 +93,7 @@ int main() {
             }
             std::cout << std::endl;
 
-            std::vector<uint8_t> state = hand.getState();
+            std::vector<uint8_t> state = hand.getPosition();
             std::cout << "state size:" << state.size() << std::endl;
             for (size_t j = 0; j < state.size(); j++) {
                 std::cout << (int)state[j] << " ";

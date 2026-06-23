@@ -112,7 +112,7 @@ void threadGetParameters(LinkerHandApi& hand, int iteration) {
         });
         
         auto future_state = std::async(std::launch::async, [&hand]() {
-            return hand.getState();
+            return hand.getPosition();
         });
         
         // 等待所有结果
@@ -198,16 +198,16 @@ void threadMotionControl(LinkerHandApi& hand, int iteration) {
         
         // G20 握拳动作（两步）
         std::vector<uint8_t> G20_POSE_CLOSE_1 = {255, 0, 0, 0, 0, 255, 255, 178, 84, 0, 255, 255, 0, 0, 0, 0};
-        hand.fingerMove(G20_POSE_CLOSE_1);
+        hand.setPosition(G20_POSE_CLOSE_1);
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
         
         std::vector<uint8_t> G20_POSE_CLOSE_2 = {117, 0, 0, 0, 0, 47, 255, 178, 84, 0, 115, 104, 0, 0, 0, 0};
-        hand.fingerMove(G20_POSE_CLOSE_2);
+        hand.setPosition(G20_POSE_CLOSE_2);
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         
         // G20 张开动作
         std::vector<uint8_t> G20_POSE_OPEN = {255, 255, 255, 255, 255, 255, 255, 172, 74, 0, 255, 255, 255, 255, 255, 255};
-        hand.fingerMove(G20_POSE_OPEN);
+        hand.setPosition(G20_POSE_OPEN);
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         
         auto end = std::chrono::steady_clock::now();

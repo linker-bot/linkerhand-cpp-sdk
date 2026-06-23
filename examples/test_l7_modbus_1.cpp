@@ -49,7 +49,7 @@ void handStateMonitorThread(LinkerHandApi& hand) {
         
         try {
             // 读取关节位置
-            std::vector<uint8_t> state = hand.getState();
+            std::vector<uint8_t> state = hand.getPosition();
             if (!state.empty()) {
                 std::lock_guard<std::mutex> console_lock(g_console_mutex);
                 std::cout << "\033[1;36m[状态监控 " << std::setw(4) << iteration << "] ";
@@ -198,7 +198,7 @@ void gestureControlThread(LinkerHandApi& hand) {
                 std::cout << "\033[1;34m[手势控制] 执行手势: " << "\033[0m" << std::endl;
             }
             
-            hand.fingerMove(pose);
+            hand.setPosition(pose);
             
             // 下一个手势
             gesture_index = (gesture_index + 1) % gestures.size();
@@ -252,7 +252,7 @@ void faultDetectionThread(LinkerHandApi& hand) {
                 if (last_fault_state) {
                     std::cout << "\033[1;33m[故障恢复] 尝试恢复: 发送张开手势\033[0m" << std::endl;
                     std::vector<uint8_t> recovery_pose = {255, 255, 255, 255, 255, 255, 255};
-                    hand.fingerMove(recovery_pose);
+                    hand.setPosition(recovery_pose);
                 }
                 
             } else if (last_fault_state) {
@@ -314,7 +314,7 @@ void performanceTestThread(LinkerHandApi& hand) {
             
             {
                 std::lock_guard<std::mutex> hand_lock(g_hand_mutex);
-                hand.fingerMove(position);
+                hand.setPosition(position);
             }
             
             // 控制频率
@@ -427,7 +427,7 @@ int main(int argc, char* argv[]) {
     {
         std::lock_guard<std::mutex> hand_lock(g_hand_mutex);
         std::vector<uint8_t> stop_pose = {255, 255, 255, 255, 255, 255, 255};
-        hand.fingerMove(stop_pose);
+        hand.setPosition(stop_pose);
         safePrint("发送停止手势");
     }
     

@@ -115,7 +115,8 @@ else()
     link_directories(${LIBCANBUS_DIR})
     
     # 设置运行时库路径，确保运行时能找到 libcanbus.so 与 SDK .so
-    set(CMAKE_INSTALL_RPATH "${LIBCANBUS_DIR}")
+    # $ORIGIN: 让 exe 在自身所在目录(bin/)查找,从而拿到 copy_dependencies 复制过来的 SDK .so
+    set(CMAKE_INSTALL_RPATH "\$ORIGIN" "${LIBCANBUS_DIR}")
     if(LINKERHAND_LIB_DIR)
         list(APPEND CMAKE_INSTALL_RPATH "${LINKERHAND_LIB_DIR}")
     endif()
@@ -153,6 +154,18 @@ function(copy_dependencies target)
                 "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}"
             COMMENT "Copying linkerhand_cpp_sdk runtime to output directory"
         )
+        # Unix: 复制只拿到 .so.<VERSION>,exe NEEDED 的是 .so.<SOVERSION>(由 SONAME 决定),
+        # 必须在 bin/ 里同步建出 SONAME 软链,否则 ld.so 找不到。
+        if(UNIX AND NOT APPLE)
+            add_custom_command(TARGET ${target} POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E remove -f
+                    "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<TARGET_SONAME_FILE_NAME:linkerhand_cpp_sdk>"
+                COMMAND ${CMAKE_COMMAND} -E create_symlink
+                    "$<TARGET_FILE_NAME:linkerhand_cpp_sdk>"
+                    "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<TARGET_SONAME_FILE_NAME:linkerhand_cpp_sdk>"
+                COMMENT "Creating SONAME symlink for linkerhand_cpp_sdk in output directory"
+            )
+        endif()
     elseif(LINKERHAND_DLL AND EXISTS "${LINKERHAND_DLL}")
         add_custom_command(TARGET ${target} POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_if_different

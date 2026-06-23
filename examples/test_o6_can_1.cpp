@@ -112,7 +112,7 @@ void threadGetParameters(LinkerHandApi& hand, int iteration) {
         });
         
         auto future_state = std::async(std::launch::async, [&hand]() {
-            return hand.getState();
+            return hand.getPosition();
         });
         
         // 等待所有结果
@@ -211,12 +211,12 @@ void threadMotionControl(LinkerHandApi& hand, int iteration) {
 
         // 握拳
         std::vector<uint8_t> fist_pose = {101, 60, 0, 0, 0, 0};
-        hand.fingerMove(fist_pose);
+        hand.setPosition(fist_pose);
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
         // 张开
         std::vector<uint8_t> open_pose = {255, 104, 255, 255, 255, 255};
-        hand.fingerMove(open_pose);
+        hand.setPosition(open_pose);
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
         auto end = std::chrono::steady_clock::now();

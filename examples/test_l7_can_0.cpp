@@ -52,7 +52,7 @@ int main() {
 
         // 获取当前状态
         std::cout << "Getting current status..." << std::endl;
-        auto currentStatus = hand.getState();
+        auto currentStatus = hand.getPosition();
         std::cout << "Current status: ";
         for (auto pos : currentStatus) {
             std::cout << (int)pos << " ";

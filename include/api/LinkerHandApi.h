@@ -49,11 +49,12 @@ public:
     void setModbusRxCallback(ModbusRxCallback modbus_rx_callback);
 
 	// 设置关节位置
-	void fingerMove(const std::vector<uint8_t> &pose);
-	void fingerMoveArc(const std::vector<double> &pose);
+	void setPosition(const std::vector<uint8_t> &pose);
+	void setPositionArc(const std::vector<double> &pose);
 	// 获取关节位置
-	std::vector<uint8_t> getState();
-	std::vector<double> getStateArc();
+	std::vector<uint8_t> getPosition();
+	std::vector<double> getPositionArc();
+	std::vector<double> testPositionArc(const std::vector<uint8_t> &pose);
 
 	// 设置速度
 	void setSpeed(const std::vector<uint8_t> &speed);

@@ -125,7 +125,7 @@ int main(int argc, char* argv[]) {
                 for (size_t j = 0; j < poses.size(); ++j) {
                     std::cout << "动作 " << (j + 1) << "/" << poses.size() << ": ";
                     printVector("位置", poses[j]);
-                    hand.fingerMove(poses[j]);
+                    hand.setPosition(poses[j]);
                     std::this_thread::sleep_for(std::chrono::milliseconds(500));
                 }
                 std::cout << std::endl;

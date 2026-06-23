@@ -17,8 +17,8 @@ pkg-config --modversion libusb-1.0
 如果构建网页示教器，还要确认 `Boost::system` 可用。只想先验证 SDK 本体时，可显式关闭示例和示教器：
 
 ```bash
-cmake -S linkerhand -B linkerhand/build -DBUILD_EXAMPLES=OFF -DBUILD_PENDANT=OFF
-cmake --build linkerhand/build -j
+cmake -S . -B build -DBUILD_EXAMPLES=OFF -DBUILD_PENDANT=OFF
+cmake --build build -j
 ```
 
 ### 2. 找不到 `LinkerHandApi.h` 或 `CommFactory.h`（旧名 `CanBusFactory.h`）
@@ -96,7 +96,7 @@ O20 的 CAN-FD 主要面向 Linux `x86_64`。在 ARM + Ubuntu 18 及以下环境
 `USE_ETHERCAT` 默认关闭。只有在现场确实需要时再打开：
 
 ```bash
-cmake -S linkerhand -B linkerhand/build -DUSE_ETHERCAT=ON
+cmake -S . -B build -DUSE_ETHERCAT=ON
 ```
 
 打开后仍失败，先检查系统是否已安装 `libethercat` 和对应 `pkg-config` 信息，而不是直接修改源码。
@@ -123,10 +123,10 @@ cmake -S linkerhand -B linkerhand/build -DUSE_ETHERCAT=ON
 
 ### 11. 为什么不再从旧版参考目录复制文档？
 
-旧版目录长期手工维护，很多内容与当前仓库状态不再一致。现在的发布文档都应从 `linkerhand/docs/` 输出，由 `pack.sh` 直接复制，避免一边改代码、一边忘记同步旧目录。
+旧版目录长期手工维护，很多内容与当前仓库状态不再一致。现在的发布文档都应从 `docs/` 输出，由 `pack.sh` 直接复制，避免一边改代码、一边忘记同步旧目录。
 
 ## 排查原则
 
 - 连续编译或运行失败两次以上，先回看日志和环境，不继续盲试。
 - 先检查平台、依赖、设备名、库路径，再怀疑源码逻辑。
-- 对外发布只以 `linkerhand/` 当前内容和 `pack.sh` 生成物为准。
+- 对外发布只以 repository root 当前内容和 `pack.sh` 生成物为准。

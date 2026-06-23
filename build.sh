@@ -250,7 +250,7 @@ if [ "$INSTALL" = true ]; then
     purge_install_artifacts "$SUDO"
 
     # 通过 CMake 的 install 规则安装。对外公共头白名单、库文件、third_party 运行时
-    # 依赖、cmake config target 等都由 linkerhand/CMakeLists.txt 统一控制，
+    # 依赖、cmake config target 等都由 CMakeLists.txt 统一控制，
     # 不要在这里再手动 cp 头文件——会绕过白名单把全部内部头释放出去。
     print_info "执行 cmake --install (受白名单约束)..."
     $SUDO cmake --install . --prefix "$INSTALL_PREFIX"
@@ -288,7 +288,7 @@ if [ "$INSTALL" = true ]; then
     echo "使用示例（推荐 find_package）："
     echo "  find_package(linkerhand-cpp-sdk CONFIG REQUIRED)"
     echo "  target_link_libraries(<tgt> PRIVATE LinkerHand::linkerhand_cpp_sdk)"
-    echo "  参考工程: linkerhand/examples/standalone/"
+    echo "  参考工程: examples/standalone/"
     echo ""
     INC="$INSTALL_PREFIX/include/linkerhand-cpp-sdk"
     echo "或手动指定（头按子目录发布）："

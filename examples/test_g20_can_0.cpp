@@ -55,17 +55,17 @@ int main(int argc, char *argv[]) {
         // G20 握拳动作
         std::cout << "G20 - Execute action - Make a fist" << std::endl;
         std::vector<uint8_t> G20_POSE_CLOSE_1 = {255, 0, 0, 0, 0, 255, 255, 178, 84, 0, 255, 255, 0, 0, 0, 0};
-        hand.fingerMove(G20_POSE_CLOSE_1);
+        hand.setPosition(G20_POSE_CLOSE_1);
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
         std::vector<uint8_t> G20_POSE_CLOSE_2 = {117, 0, 0, 0, 0, 47, 255, 178, 84, 0, 115, 104, 0, 0, 0, 0};
-        hand.fingerMove(G20_POSE_CLOSE_2);
+        hand.setPosition(G20_POSE_CLOSE_2);
         std::this_thread::sleep_for(std::chrono::seconds(1));
 
         // G20 张开动作
         std::cout << "G20 - Execute action - Open hand" << std::endl;
         std::vector<uint8_t> G20_POSE_OPEN = {255, 255, 255, 255, 255, 255, 255, 172, 74, 0, 255, 255, 255, 255, 255, 255};
-        hand.fingerMove(G20_POSE_OPEN);
+        hand.setPosition(G20_POSE_OPEN);
         std::this_thread::sleep_for(std::chrono::seconds(1));
 
         // 循环测试
@@ -74,14 +74,14 @@ int main(int argc, char *argv[]) {
 
             // 握拳
             std::cout << "Make a fist..." << std::endl;
-            hand.fingerMove(G20_POSE_CLOSE_1);
+            hand.setPosition(G20_POSE_CLOSE_1);
             std::this_thread::sleep_for(std::chrono::milliseconds(50));
-            hand.fingerMove(G20_POSE_CLOSE_2);
+            hand.setPosition(G20_POSE_CLOSE_2);
             std::this_thread::sleep_for(std::chrono::seconds(1));
 
             // 张开
             std::cout << "Open hand..." << std::endl;
-            hand.fingerMove(G20_POSE_OPEN);
+            hand.setPosition(G20_POSE_OPEN);
             std::this_thread::sleep_for(std::chrono::seconds(1));
         }
 
