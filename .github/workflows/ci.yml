@@ -9,32 +9,67 @@ on:
 
 env:
   BUILD_TYPE: Release
+  DEBIAN_FRONTEND: noninteractive
+  TZ: Asia/Shanghai
 
 jobs:
   build-and-test:
-    name: Build and Test - ${{ matrix.os }} (${{ matrix.arch }})
+    name: Build and Test - ${{ matrix.container || matrix.os }} (${{ matrix.arch }}, ${{ matrix.cmake_build_type }})
     runs-on: ${{ matrix.os }}
+    container: ${{ matrix.container }}
     strategy:
       fail-fast: false
       matrix:
         include:
-          # Linux x86_64 (主要测试平台)
+          # Linux x86_64 (主要测试平台, runner 原生环境)
           - os: ubuntu-latest
+            container: ''
             arch: x86_64
             cmake_build_type: Release
             use_qemu: false
           # Linux x86_64 Debug 构建
           - os: ubuntu-latest
+            container: ''
             arch: x86_64
             cmake_build_type: Debug
             use_qemu: false
           # Linux aarch64 Release 构建 (使用 QEMU 模拟)
           - os: ubuntu-latest
+            container: ''
             arch: aarch64
             cmake_build_type: Release
             use_qemu: true
+          # Ubuntu 22.04 容器 (Docker)
+          - os: ubuntu-latest
+            container: 'ubuntu:22.04'
+            arch: x86_64
+            cmake_build_type: Release
+            use_qemu: false
+          # Ubuntu 20.04 容器 (Docker)
+          - os: ubuntu-latest
+            container: 'ubuntu:20.04'
+            arch: x86_64
+            cmake_build_type: Release
+            use_qemu: false
 
     steps:
+      - name: 准备容器环境 (Ubuntu 20.04/22.04)
+        if: matrix.container != ''
+        shell: bash
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            sudo \
+            ca-certificates \
+            tzdata \
+            git \
+            build-essential \
+            cmake \
+            make \
+            libpthread-stubs0-dev \
+            tar \
+            gzip
+
       - name: 检出代码
         uses: actions/checkout@v4
 
@@ -50,9 +85,9 @@ jobs:
           path: |
             build
             ~/.cmake
-          key: ${{ runner.os }}-cmake-${{ matrix.arch }}-${{ matrix.cmake_build_type }}-${{ hashFiles('**/CMakeLists.txt') }}
+          key: ${{ runner.os }}-${{ matrix.container || 'native' }}-cmake-${{ matrix.arch }}-${{ matrix.cmake_build_type }}-${{ hashFiles('**/CMakeLists.txt') }}
           restore-keys: |
-            ${{ runner.os }}-cmake-${{ matrix.arch }}-${{ matrix.cmake_build_type }}-
+            ${{ runner.os }}-${{ matrix.container || 'native' }}-cmake-${{ matrix.arch }}-${{ matrix.cmake_build_type }}-
 
       - name: 安装构建依赖
         run: |

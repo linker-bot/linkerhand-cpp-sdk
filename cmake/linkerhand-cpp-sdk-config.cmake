@@ -123,19 +123,31 @@ if(NOT TARGET LinkerHand::linkerhand_cpp_sdk)
         set_target_properties(LinkerHand::linkerhand_cpp_sdk PROPERTIES
             IMPORTED_IMPLIB "${_lh_imported_implib}")
     endif()
-    # 公共头 CanFD.h / PCANBus.h / CanFrame.h 引用了 third_party 头（Hcanbus.h /
-    # PCANBasic.h）。把对应 include 目录补到 imported target，下游 link 后无需手动配。
+    # 是否启用 CAN-FD：release-package 由 CI 在 USE_CANFD=ON 下打包,默认 ON;
+    # 下游可显式 -DLINKERHAND_USE_CANFD=OFF 覆盖,跳过 libcanbus 头依赖。
+    if(NOT DEFINED LINKERHAND_USE_CANFD)
+        if(EXISTS "${_lh_thirdparty_root}/libcanbus")
+            set(LINKERHAND_USE_CANFD ON)
+        else()
+            set(LINKERHAND_USE_CANFD OFF)
+        endif()
+    endif()
+    set_property(TARGET LinkerHand::linkerhand_cpp_sdk APPEND PROPERTY
+        INTERFACE_COMPILE_DEFINITIONS "LINKERHAND_USE_CANFD=$<IF:$<BOOL:${LINKERHAND_USE_CANFD}>,1,0>")
+    # 公共头 PCANBus.h / CanFrame.h（以及 CANFD 开启时的 CanFD.h）引用了 third_party
+    # 头（PCANBasic.h / Hcanbus.h）。把对应 include 目录补到 imported target,下游 link
+    # 后无需手动配。
     if(_lh_thirdparty_root)
         if(WIN32)
-            if(EXISTS "${_lh_thirdparty_root}/libcanbus/include/windows")
-                set_property(TARGET LinkerHand::linkerhand_cpp_sdk APPEND PROPERTY
-                    INTERFACE_INCLUDE_DIRECTORIES "${_lh_thirdparty_root}/libcanbus/include/windows")
-            endif()
             if(EXISTS "${_lh_thirdparty_root}/PCAN_Basic/Include")
                 set_property(TARGET LinkerHand::linkerhand_cpp_sdk APPEND PROPERTY
                     INTERFACE_INCLUDE_DIRECTORIES "${_lh_thirdparty_root}/PCAN_Basic/Include")
             endif()
-        elseif(UNIX AND EXISTS "${_lh_thirdparty_root}/libcanbus/include/linux")
+            if(LINKERHAND_USE_CANFD AND EXISTS "${_lh_thirdparty_root}/libcanbus/include/windows")
+                set_property(TARGET LinkerHand::linkerhand_cpp_sdk APPEND PROPERTY
+                    INTERFACE_INCLUDE_DIRECTORIES "${_lh_thirdparty_root}/libcanbus/include/windows")
+            endif()
+        elseif(UNIX AND LINKERHAND_USE_CANFD AND EXISTS "${_lh_thirdparty_root}/libcanbus/include/linux")
             set_property(TARGET LinkerHand::linkerhand_cpp_sdk APPEND PROPERTY
                 INTERFACE_INCLUDE_DIRECTORIES "${_lh_thirdparty_root}/libcanbus/include/linux")
         endif()

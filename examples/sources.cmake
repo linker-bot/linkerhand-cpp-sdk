@@ -26,9 +26,10 @@ set(LINKERHAND_EXAMPLES
     test_o6_modbus_2
     L10/action_group_show
     range_to_arc/range_to_arc
+    test_conversion
 )
 
-# 需要 CanFD 支持的示例：仅在非 aarch64 的 Linux 上构建（与顶层 ENABLE_CANFD 逻辑一致）
+# 需要 CanFD 支持的示例：仅在非 aarch64 的 Linux 且 USE_CANFD=ON 时构建
 set(LINKERHAND_EXAMPLES_CANFD
     test_o20_canfd_0
     test_o20_canfd_1

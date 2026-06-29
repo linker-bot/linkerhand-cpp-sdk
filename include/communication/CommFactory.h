@@ -9,8 +9,10 @@
 #include "communication/ICanBus.h"
 #include "communication/CanBus.h"
 #include "communication/PCANBus.h"
+#if LINKERHAND_USE_CANFD
 #include "communication/ICanFD.h"
 #include "communication/CanFD.h"
+#endif
 #include "communication/IModbus.h"
 #include "communication/Modbus.h"
 #if USE_ETHERCAT
@@ -101,6 +103,8 @@ namespace communication
 
         // ====================== CAN FD ======================
         // CanFD 类跨平台；构造参数 (dev_num, ch_num) 由 third_party libcanbus 定义。
+        // 仅在 SDK 构建时 USE_CANFD=ON 才声明；OFF 时调用站点编译期可见缺失,便于排错。
+        #if LINKERHAND_USE_CANFD
         static std::unique_ptr<ICanFD> createCanFD(uint32_t dev_num, uint32_t ch_num)
         {
             return std::unique_ptr<ICanFD>(new CanFD(dev_num, ch_num));
@@ -117,6 +121,7 @@ namespace communication
             }
             return std::unique_ptr<ICanFD>(new CanFD(0, ch));
         }
+        #endif // LINKERHAND_USE_CANFD
 
         // ====================== Modbus RTU ======================
 
