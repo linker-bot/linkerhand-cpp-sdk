@@ -60,6 +60,37 @@ LinkerHand-CPP-SDK 由灵心巧手（北京）科技有限公司开发，提供�
 
 ## 🚀 快速开始
 
+### 0. 一条命令安装（推荐）
+
+从 [GitHub Releases](https://github.com/linker-bot/linkerhand-cpp-sdk/releases) 拉取匹配平台的预编译包并自动安装。适合只需要"集成 SDK"的下游用户，不必克隆整个仓库。
+
+```bash
+# Linux（x86_64 / aarch64，默认装到 /usr/local）
+curl -fsSL https://raw.githubusercontent.com/linker-bot/linkerhand-cpp-sdk/main/scripts/install.sh | bash
+
+# 指定版本 / 自定义前缀
+curl -fsSL https://raw.githubusercontent.com/linker-bot/linkerhand-cpp-sdk/main/scripts/install.sh \
+  | bash -s -- --version v2.1.8 --prefix $HOME/.local
+```
+
+```powershell
+# Windows x64（PowerShell 以管理员运行；默认装到 %ProgramFiles%\LinkerHand\cpp-sdk）
+iwr https://raw.githubusercontent.com/linker-bot/linkerhand-cpp-sdk/main/scripts/install.ps1 -UseBasicParsing | iex
+```
+
+安装完成即可在下游工程中：
+
+```cmake
+find_package(linkerhand-cpp-sdk CONFIG REQUIRED)
+target_link_libraries(your_app PRIVATE LinkerHand::linkerhand_cpp_sdk)
+```
+
+详细的版本锁定、离线安装、卸载方式见 [`INSTALL.md`](INSTALL.md)。
+
+---
+
+如果你需要**从源码构建示例**或参与开发，继续下面的步骤：
+
 ### 1. 克隆仓库
 
 ```bash

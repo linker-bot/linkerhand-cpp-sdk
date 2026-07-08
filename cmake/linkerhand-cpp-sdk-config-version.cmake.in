@@ -1,7 +1,7 @@
 # linkerhand-cpp-sdk-config-version.cmake
 # CMake find_package 版本兼容性检查。语义：同主版本号兼容（SOVERSION=2）。
 
-set(PACKAGE_VERSION "2.0.0")
+set(PACKAGE_VERSION "@LINKERHAND_SDK_VERSION@")
 
 if(PACKAGE_FIND_VERSION_RANGE)
     # 区间形式 find_package(... 2.0...3.0)：交给 CMake 自己判断

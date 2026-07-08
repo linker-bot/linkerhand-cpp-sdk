@@ -1,0 +1,186 @@
+name: Release
+
+# 触发条件：推送形如 vX.Y.Z 的 tag。手动触发也可（用于验证打包流程）。
+on:
+  push:
+    tags: [ 'v*' ]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: '发布版本号（不含 v 前缀，如 2.1.8）；仅 workflow_dispatch 时生效'
+        required: true
+        default: '0.0.0-test'
+
+env:
+  DEBIAN_FRONTEND: noninteractive
+  TZ: Asia/Shanghai
+
+jobs:
+  # 从 tag 或手动输入解析版本号，供后续 job 复用
+  meta:
+    name: Resolve version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.ver.outputs.version }}
+    steps:
+      - id: ver
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VER="${{ github.event.inputs.version }}"
+          else
+            VER="${GITHUB_REF_NAME#v}"
+          fi
+          echo "version=$VER" >> "$GITHUB_OUTPUT"
+          echo "解析出的发布版本：$VER"
+
+  # Linux x86_64：runner 原生构建，产物是 build.sh 期望布局的 staging 目录
+  package-linux-x86_64:
+    name: Package linux-x86_64
+    needs: meta
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安装构建依赖
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends build-essential cmake
+
+      - name: CMake 配置 & 安装到 staging
+        run: |
+          mkdir -p build
+          cd build
+          cmake .. \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_EXAMPLES=OFF \
+            -DLINKERHAND_SDK_VERSION=${{ needs.meta.outputs.version }}
+          cmake --install . --prefix "${GITHUB_WORKSPACE}/stage/linkerhand-cpp-sdk-${{ needs.meta.outputs.version }}-linux-x86_64"
+
+      - name: 打包 tar.gz
+        run: |
+          cd stage
+          PKG="linkerhand-cpp-sdk-${{ needs.meta.outputs.version }}-linux-x86_64"
+          tar -czf "${PKG}.tar.gz" "$PKG"
+          sha256sum "${PKG}.tar.gz" | tee "${PKG}.tar.gz.sha256"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-x86_64
+          path: stage/*.tar.gz*
+          if-no-files-found: error
+
+  # Linux aarch64：交叉编译。SDK 内部产物已是预编译库，此处只做 install 阶段的拷贝，
+  # 不需要真正在 aarch64 上运行任何代码，因此不需要 QEMU。
+  package-linux-aarch64:
+    name: Package linux-aarch64
+    needs: meta
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安装交叉工具链
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential cmake \
+            gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+
+      - name: CMake 配置 & 安装到 staging
+        run: |
+          mkdir -p build
+          cd build
+          cmake .. \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_EXAMPLES=OFF \
+            -DLINKERHAND_SDK_VERSION=${{ needs.meta.outputs.version }} \
+            -DCMAKE_SYSTEM_NAME=Linux \
+            -DCMAKE_SYSTEM_PROCESSOR=aarch64 \
+            -DCMAKE_C_COMPILER=aarch64-linux-gnu-gcc \
+            -DCMAKE_CXX_COMPILER=aarch64-linux-gnu-g++
+          cmake --install . --prefix "${GITHUB_WORKSPACE}/stage/linkerhand-cpp-sdk-${{ needs.meta.outputs.version }}-linux-aarch64"
+
+      - name: 打包 tar.gz
+        run: |
+          cd stage
+          PKG="linkerhand-cpp-sdk-${{ needs.meta.outputs.version }}-linux-aarch64"
+          tar -czf "${PKG}.tar.gz" "$PKG"
+          sha256sum "${PKG}.tar.gz" | tee "${PKG}.tar.gz.sha256"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-aarch64
+          path: stage/*.tar.gz*
+          if-no-files-found: error
+
+  # Windows x64：使用 MSVC 布局
+  package-windows-x64:
+    name: Package windows-x64
+    needs: meta
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: CMake 配置 & 安装到 staging
+        shell: pwsh
+        run: |
+          mkdir build | Out-Null
+          cd build
+          cmake .. `
+            -A x64 `
+            -DBUILD_EXAMPLES=OFF `
+            -DLINKERHAND_SDK_VERSION=${{ needs.meta.outputs.version }}
+          $stage = "$env:GITHUB_WORKSPACE\stage\linkerhand-cpp-sdk-${{ needs.meta.outputs.version }}-windows-x64"
+          cmake --install . --config Release --prefix "$stage"
+
+      - name: 打包 zip
+        shell: pwsh
+        run: |
+          $pkg = "linkerhand-cpp-sdk-${{ needs.meta.outputs.version }}-windows-x64"
+          Compress-Archive -Path "stage\$pkg" -DestinationPath "stage\$pkg.zip"
+          (Get-FileHash "stage\$pkg.zip" -Algorithm SHA256).Hash.ToLower() + "  $pkg.zip" | Out-File -Encoding ascii "stage\$pkg.zip.sha256"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-x64
+          path: stage/*.zip*
+          if-no-files-found: error
+
+  # 汇总产物 → 汇总 SHA256SUMS → 发布 GitHub Release
+  release:
+    name: Publish Release
+    needs: [meta, package-linux-x86_64, package-linux-aarch64, package-windows-x64]
+    runs-on: ubuntu-22.04
+    # workflow_dispatch 只做打包烟测，不真的发 Release
+    if: github.event_name == 'push'
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: 生成汇总 SHA256SUMS
+        working-directory: dist
+        run: |
+          # 单文件的 .sha256 只是给用户单独校验用的，Release 页仍以 SHA256SUMS 为准
+          rm -f SHA256SUMS
+          for f in *.tar.gz *.zip; do
+            [ -f "$f" ] || continue
+            sha256sum "$f" >> SHA256SUMS
+          done
+          echo "=== SHA256SUMS ==="
+          cat SHA256SUMS
+
+      - name: 创建 GitHub Release 并上传产物
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: LinkerHand C++ SDK ${{ needs.meta.outputs.version }}
+          generate_release_notes: true
+          files: |
+            dist/*.tar.gz
+            dist/*.zip
+            dist/SHA256SUMS

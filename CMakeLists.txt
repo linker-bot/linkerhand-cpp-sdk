@@ -5,6 +5,10 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# 发布版本号。默认与 SOVERSION 主版本对齐（2.x）；发布 CI 通过
+# -DLINKERHAND_SDK_VERSION=<tag> 覆盖，保证 tag / tarball / config 三者一致。
+set(LINKERHAND_SDK_VERSION "2.0.0" CACHE STRING "LinkerHand C++ SDK release version")
+
 option(BUILD_EXAMPLES "Build example applications" ON)
 option(BUILD_HAND_TEACH_PENDANT "Build hand teach pendant application" OFF)
 
@@ -17,7 +21,7 @@ if(BUILD_HAND_TEACH_PENDANT)
 endif()
 
 message(STATUS "=== LinkerHand C++ SDK Examples ===")
-message(STATUS "Version: 2.0.0")
+message(STATUS "Version: ${LINKERHAND_SDK_VERSION}")
 message(STATUS "Build Examples: ${BUILD_EXAMPLES}")
 message(STATUS "Build Hand Teach Pendant: ${BUILD_HAND_TEACH_PENDANT}")
 message(STATUS "=====================================")
@@ -66,10 +70,15 @@ endif()
 
 # CMake config 包：让下游用 find_package(linkerhand-cpp-sdk CONFIG REQUIRED)
 # 配置文件相对路径自定位（见 cmake/linkerhand-cpp-sdk-config.cmake），
-# prefix 改了无需重新生成。
+# prefix 改了无需重新生成。版本文件由模板注入 LINKERHAND_SDK_VERSION。
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/linkerhand-cpp-sdk-config-version.cmake.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/linkerhand-cpp-sdk-config-version.cmake"
+    @ONLY
+)
 install(FILES
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/linkerhand-cpp-sdk-config.cmake"
-    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/linkerhand-cpp-sdk-config-version.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/linkerhand-cpp-sdk-config-version.cmake"
     DESTINATION "lib/cmake/linkerhand-cpp-sdk"
 )
 
