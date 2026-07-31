@@ -18,6 +18,7 @@ set(LINKERHAND_EXAMPLES
     test_l21_can_0
     test_g20_can_0
     test_g20_can_1
+    o6_web_bridge
     test_o6_can_0
     test_o6_can_1
     test_o6_can_3
