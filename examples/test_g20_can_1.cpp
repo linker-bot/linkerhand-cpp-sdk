@@ -175,14 +175,32 @@ void threadGetTouchData(LinkerHandApi& hand, int iteration) {
         for (size_t n = 0; n < touch_mats.size(); ++n) {
             if (!touch_mats[n].empty()) {
                 std::stringstream ss2;
-                ss2 << "  " << finger_name[n] << " 矩阵 " 
-                    << touch_mats[n].size() << "x" 
+                ss2 << "  " << finger_name[n] << " 矩阵 "
+                    << touch_mats[n].size() << "x"
                     << (touch_mats[n].empty() ? 0 : touch_mats[n][0].size())
                     << " 第一个值: " << (int)touch_mats[n][0][0];
                 printWithLock(ss2.str());
             }
         }
-        
+
+        // 手掌点阵（TSSP_JZG/TSSP_HWK）
+        auto palm = hand.getPalmForce();
+        if (!palm.empty()) {
+            std::stringstream ssp;
+            ssp << "  PALM 矩阵 " << palm.size() << "x" << palm[0].size();
+            printWithLock(ssp.str());
+        }
+
+        // 合力值（五指 + 手掌）
+        auto finger_sum = hand.getFingerForceSum();
+        auto palm_sum = hand.getPalmForceSum();
+        if (!finger_sum.empty() || !palm_sum.empty()) {
+            std::stringstream ssf;
+            ssf << "  合力值 五指组数=" << finger_sum.size()
+                << " 手掌合力个数=" << palm_sum.size();
+            printWithLock(ssf.str());
+        }
+
     } catch (const std::exception& e) {
         std::stringstream ss;
         ss << "[Thread4-Iter" << iteration << "] 压感获取失败: " << e.what();

@@ -252,7 +252,7 @@ void interactiveMode(LinkerHandApi &hand)
             std::cout << "Obtain speed: " << bytesToHex(hand.getSpeed()) << std::endl;
             break;
         case 6:
-            for (size_t i = 0; i < 30; i++)
+            for (size_t i = 0; i < 60; i++)
             {
                 std::vector<std::vector<std::vector<uint8_t>>> touch_mats = hand.getForce();
                 // 手指名称表，顺序对应 touch_mats[0..4]
@@ -263,6 +263,19 @@ void interactiveMode(LinkerHandApi &hand)
                 for (size_t n = 0; n < touch_mats.size(); ++n) {
                     std::cout << finger_name[n] << ":\n";
                     for (const auto &row : touch_mats[n])
+                    {
+                        for (uint8_t val : row)
+                            std::cout << std::setw(3) << static_cast<int>(val) << ' ';
+                        std::cout << '\n';
+                    }
+                    std::cout << '\n';
+                }
+
+                // 掌心矩阵（TSSP_JZG 20x28 / TSSP_HWK 14x16）
+                std::vector<std::vector<uint8_t>> palm_mat = hand.getPalmForce();
+                if (!palm_mat.empty()) {
+                    std::cout << "PALM_TOUCH:\n";
+                    for (const auto &row : palm_mat)
                     {
                         for (uint8_t val : row)
                             std::cout << std::setw(3) << static_cast<int>(val) << ' ';
