@@ -69,6 +69,13 @@ public:
 	// 获取压感
 	std::vector<std::vector<std::vector<uint8_t>>> getForce();
 
+	// 获取手掌点阵（TSSP_JZG 20x28 / TSSP_HWK 14x16）
+	std::vector<std::vector<uint8_t>> getPalmForce();
+	// 获取五指合力值（TSSP_JZG 每指3 / TSSP_HWK 每指1）
+	std::vector<std::vector<uint8_t>> getFingerForceSum();
+	// 获取手掌合力值（TSSP_JZG 2 / TSSP_HWK 1）
+	std::vector<uint8_t> getPalmForceSum();
+
 	// 获取版本号
 	std::string getVersion();
 	// ----------------------------------------------------------

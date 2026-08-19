@@ -1,0 +1,202 @@
+:root{
+  --bg:#0f1117; --panel:#1b1e26; --panel2:#161922;
+  --text:#e8eaed; --muted:#8b93a1; --accent:#2f6f8f; --accent2:#3a86ab;
+  --track:#2a2f3a; --track2:#333a47;
+  --border:#242833; --ok:#10b981; --warn:#f59e0b; --err:#ef4444;
+  --radius:14px; --shadow:0 1px 3px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.22);
+  color-scheme:dark;
+}
+[data-theme="light"]{
+  --bg:#eef1f5; --panel:#ffffff; --panel2:#f2f5f9;
+  --text:#1c2430; --muted:#5b6472; --accent:#2f6f8f; --accent2:#3a86ab;
+  --track:#e2e7ee; --track2:#cbd3de;
+  --border:#e6eaf0; --ok:#10b981; --warn:#f59e0b; --err:#ef4444;
+  --shadow:0 1px 2px rgba(20,30,50,.06),0 6px 18px rgba(20,30,50,.07);
+  color-scheme:light;
+}
+
+*{box-sizing:border-box}
+body{font-family:system-ui,sans-serif;margin:0;min-height:100vh;background:var(--bg);color:var(--text);
+     -webkit-font-smoothing:antialiased;transition:background .2s,color .2s}
+
+/* ---- 顶栏 ---- */
+.topbar{position:sticky;top:0;z-index:10;display:flex;justify-content:space-between;align-items:center;
+        gap:12px;padding:14px 28px;background:var(--panel);
+        background:color-mix(in srgb,var(--panel) 88%,transparent);
+        backdrop-filter:blur(8px);border-bottom:1px solid var(--border)}
+.brand{display:flex;align-items:center;gap:11px}
+.brand .logo{height:36px;width:auto;display:block;flex:0 0 auto}
+.topbar .actions{display:flex;align-items:center;gap:14px}
+/* logo 黑字在暗黑模式看不清:反亮度再转回色相,黑字变白、彩色大致保留 */
+[data-theme="dark"] .brand .logo{filter:invert(1) hue-rotate(180deg)}
+.topbar h1{font-size:22px;margin:0;font-weight:650;letter-spacing:.01em}
+.conn{display:inline-flex;align-items:center;color:var(--muted);transition:color .2s}
+.conn svg{width:18px;height:18px;display:block}
+.conn.on{color:var(--ok)}          /* 已连接:整条链变绿 */
+.conn.on .slash{display:none}      /* 已连接:隐藏断开斜杠 */
+.ghost{background:transparent;border:1px solid var(--track2);font-size:18px;line-height:1;
+       padding:7px 10px;border-radius:10px;cursor:pointer;color:var(--text);transition:background .15s,border-color .15s}
+.ghost:hover{background:var(--track);border-color:var(--accent)}
+/* 顶栏按钮固定盒子尺寸并居中，避免切换后字形宽高不同导致按钮忽大忽小 */
+.topbar .actions .ghost{display:inline-flex;align-items:center;justify-content:center;width:42px;height:38px;padding:0}
+.topbar .actions .ghost svg{width:18px;height:18px;display:block}
+
+/* ---- 布局:整宽纵向堆叠,充分利用宽度 ---- */
+.wrap{max-width:1200px;margin:0 auto;padding:22px 28px 76px;display:flex;flex-direction:column;gap:16px}
+@media(max-width:720px){.wrap{padding:16px 14px 72px}.topbar{padding:12px 16px}}
+
+/* ---- 卡片 ---- */
+.panel{background:var(--panel);padding:18px 20px;border-radius:var(--radius);
+       border:1px solid var(--border);box-shadow:var(--shadow)}
+.panel h3{margin:0 0 15px;font-size:17px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;
+          color:var(--muted);display:flex;align-items:center;gap:9px}
+.panel h3::before{content:"";width:3px;height:14px;border-radius:2px;background:var(--accent)}
+
+/* ---- 版本信息:横向排布 ---- */
+.info{display:flex;flex-direction:column;gap:8px;font-size:15px}
+.info-row{flex-direction:row;flex-wrap:wrap;align-items:center;gap:10px 30px}
+.info .kv{display:flex;align-items:center;gap:9px}
+.info-row .kv{justify-content:flex-start}
+.info .ver{display:flex;align-items:center;gap:12px}
+.info-row .ver{flex:1;min-width:240px}
+.info span{color:var(--muted)}
+.info b{font-weight:650;font-variant-numeric:tabular-nums}
+.info #infoVer{display:flex;flex-wrap:wrap;gap:6px 18px}
+.vrow{display:flex;align-items:center;gap:7px}
+.vrow b{font-weight:600;word-break:break-all}
+
+/* ---- 滑块 ---- */
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:6px;
+                  background:var(--track);outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;
+       background:var(--accent);border:2px solid var(--panel);box-shadow:0 1px 3px rgba(0,0,0,.35);transition:background .15s}
+input[type=range]:hover::-webkit-slider-thumb{background:var(--accent2)}
+input[type=range]::-moz-range-thumb{width:15px;height:15px;border:2px solid var(--panel);border-radius:50%;
+       background:var(--accent);cursor:pointer}
+.val{font-variant-numeric:tabular-nums;text-align:right;font-size:15px;color:var(--text);min-width:34px}
+
+/* ---- 速度/力矩:双列 ---- */
+.st-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 34px}
+@media(max-width:640px){.st-grid{grid-template-columns:1fr}}
+.line{display:flex;gap:14px;align-items:center;margin:2px 0}
+.line label{width:44px;font-size:15px;color:var(--muted);flex:0 0 auto}
+.line input[type=range]{flex:1;min-width:120px}
+
+/* ---- 滑块统一外观（惠及刷新率页、速度/扭矩、关节控制）---- */
+input[type=range]{-webkit-appearance:none;appearance:none;height:20px;background:transparent;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:2px;background:var(--track2)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:15px;height:15px;
+  margin-top:-5.5px;border-radius:50%;background:var(--accent);border:2px solid var(--panel);
+  box-shadow:0 1px 3px rgba(0,0,0,.35);transition:background .15s}
+input[type=range]:hover::-webkit-slider-thumb{background:var(--accent2)}
+input[type=range]::-moz-range-track{height:4px;border-radius:2px;background:var(--track2)}
+input[type=range]::-moz-range-thumb{width:15px;height:15px;border-radius:50%;background:var(--accent);
+  border:2px solid var(--panel);box-shadow:0 1px 3px rgba(0,0,0,.35)}
+input[type=range]:hover::-moz-range-thumb{background:var(--accent2)}
+
+/* ---- 按钮 ---- */
+button{font-size:16px;padding:9px 13px;border:0;border-radius:9px;cursor:pointer;
+       background:var(--track);color:var(--text);transition:background .15s}
+button:hover{background:var(--track2)}
+button.pri{background:var(--accent);color:#fff}
+button.pri:hover{background:var(--accent2)}
+
+/* ---- 状态栏 ---- */
+.statusbar{display:none;position:fixed;left:0;right:0;bottom:0;padding:7px 28px;font-size:15px;z-index:10;
+           color:var(--muted);background:var(--panel);
+           background:color-mix(in srgb,var(--panel) 92%,transparent);
+           backdrop-filter:blur(8px);border-top:1px solid var(--border)}
+
+/* ---- 触觉压感 ---- */
+#waveWrap{margin-bottom:16px}
+#wave{width:100%;height:150px;background:var(--panel2);border-radius:8px;display:block}
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:8px;font-size:14px;color:var(--muted);justify-content:center}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:middle}
+#forceWrap{display:flex;flex-wrap:wrap;gap:16px 24px;align-items:flex-start;justify-content:center}
+#palmWrap{margin-top:16px;display:flex;justify-content:center}
+.fblock{margin:0;display:flex;flex-direction:column;align-items:center}
+.flabel{font-size:14px;color:var(--muted);margin-bottom:6px;font-weight:600}
+canvas{background:var(--panel2);border-radius:6px;image-rendering:pixelated}
+.fblock canvas{border-radius:0}   /* 触觉矩阵是像素网格，圆角会裁掉四角边框线 */
+
+/* ---- 预设 chip ---- */
+.chip{display:inline-flex;gap:6px;align-items:center;background:var(--panel2);border:1px solid var(--border);
+      border-radius:20px;padding:4px 6px 4px 12px;margin:8px 8px 0 0;font-size:15px}
+.chip button{padding:2px 8px;font-size:14px;border-radius:14px}
+.muted{color:var(--muted);font-size:14px}
+
+/* ---- 关节监控与控制表 ---- */
+#joints{overflow-x:auto}
+.mon{width:100%;border-collapse:collapse;font-size:15px}
+.mon th,.mon td{padding:8px 12px;text-align:center;white-space:nowrap}
+.mon thead th{color:var(--muted);font-weight:650;font-size:13px;letter-spacing:.04em;text-transform:uppercase;
+              border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--panel)}
+.mon tbody tr{border-bottom:1px solid var(--track)}
+.mon tbody tr:last-child{border-bottom:0}
+.mon tbody tr:hover{background:var(--panel2)}
+.mon tbody td{height:36px}
+.mon th.num,.mon td.num{font-variant-numeric:tabular-nums}
+.mon td.ok{color:var(--ok)} .mon td.warn{color:var(--warn)} .mon td.err{color:var(--err)}
+.jt td.ctl{min-width:150px;width:35%}
+.jt td.ctl input[type=range]{display:inline-block;width:100%;margin:0;vertical-align:middle}
+
+/* ---- 连接设置弹窗 ---- */
+.modal{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.5);backdrop-filter:blur(2px)}
+.modal[hidden]{display:none}
+.modal-card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);
+  box-shadow:var(--shadow);width:min(94vw,560px);overflow:hidden}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;
+  border-bottom:1px solid var(--border)}
+.modal-head h3{margin:0;font-size:16px;font-weight:650;letter-spacing:.05em;text-transform:uppercase}
+/* 左侧竖排 TAB + 右侧内容区 */
+.modal-split{display:flex}
+.tabs{display:flex;flex-direction:column;gap:2px;flex:0 0 128px;padding:12px 8px;
+  border-right:1px solid var(--border)}
+.tab{background:transparent;border:0;border-left:2px solid transparent;color:var(--muted);
+  text-align:left;padding:10px 14px;border-radius:0 8px 8px 0;font-size:15px;font-weight:600;
+  letter-spacing:.02em;cursor:pointer;transition:color .15s,background .15s,border-color .15s}
+.tab:hover{color:var(--text);background:var(--panel2)}
+.tab.active{color:var(--accent);border-left-color:var(--accent);background:var(--panel2)}
+.tabmain{flex:1;min-width:0;display:flex;flex-direction:column}
+.modal-body{padding:18px 20px;display:grid;grid-template-columns:1fr}
+/* 三个 tabpane 层叠进同一网格单元：弹窗高度恒等于最高的一页，切 TAB 不跳变。
+   非激活页保留占位（display 仍为 flex），仅用 visibility 隐藏，故不可见也不拦点击。 */
+.tabpane{grid-column:1;grid-row:1;display:flex;flex-direction:column;gap:14px}
+.tabpane[hidden]{visibility:hidden}
+.frow{display:flex;align-items:center;justify-content:space-between;gap:14px;font-size:15px}
+.frow>span{color:var(--muted);flex:0 0 84px}
+.frow select,.frow input{flex:1;background:var(--panel2);color:var(--text);border:1px solid var(--track2);
+  border-radius:9px;padding:9px 11px;font-size:15px}
+.frow select:focus,.frow input:focus{outline:none;border-color:var(--accent)}
+
+/* 关于页：软件名 + SDK 版本 + 简介 */
+.about{display:flex;flex-direction:column;gap:12px}
+.about-name{font-size:18px;font-weight:700;color:var(--text)}
+.about-row{display:flex;justify-content:space-between;gap:14px;font-size:15px;color:var(--muted)}
+.about-row b{color:var(--text);font-variant-numeric:tabular-nums}
+.about-row a{color:var(--accent);text-decoration:none}
+.about-row a:hover{text-decoration:underline}
+.about-desc{margin:0;font-size:14px;line-height:1.6;color:var(--muted)}
+
+/* 窄屏：TAB 回落顶部横排 */
+@media(max-width:520px){
+  .modal-split{flex-direction:column}
+  .tabs{flex-direction:row;flex:none;padding:0 8px;border-right:0;border-bottom:1px solid var(--border)}
+  .tab{flex:1;text-align:center;border-left:0;border-bottom:2px solid transparent;border-radius:0}
+  .tab.active{border-left-color:transparent;border-bottom-color:var(--accent)}
+}
+
+/* 刷新率页：标签(定宽) | 滑块(自适应) | 大号数值 + 小字单位 */
+.raterow{display:flex;align-items:center;gap:16px}
+.rlabel{flex:0 0 76px;color:var(--muted);font-size:14px;white-space:nowrap}
+.rate{flex:1;min-width:0}
+.rval{flex:0 0 auto;min-width:56px;display:flex;align-items:baseline;justify-content:flex-end;gap:3px}
+.rval b{font-size:20px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
+.rval i{font-size:11px;font-style:normal;color:var(--muted)}
+.conn-msg{min-height:20px;font-size:14px;color:var(--err)}
+.conn-msg.ok{color:var(--ok)}
+.modal-foot{padding:0 20px 20px;display:flex;justify-content:flex-end;gap:10px}
+.modal-foot button{min-width:96px}
+.modal-foot #disconnectBtn{margin-right:auto}   /* 断开靠左，连接始终靠右 */
+.modal-foot #disconnectBtn[hidden]{display:none}

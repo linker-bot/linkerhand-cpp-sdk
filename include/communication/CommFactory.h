@@ -9,8 +9,11 @@
 #include "communication/ICanBus.h"
 #include "communication/CanBus.h"
 #include "communication/PCANBus.h"
-#if LINKERHAND_USE_CANFD
 #include "communication/ICanFD.h"
+#ifdef __linux__
+#include "communication/CanFDSocket.h"
+#endif
+#if LINKERHAND_USE_CANFD
 #include "communication/CanFD.h"
 #endif
 #include "communication/IModbus.h"
@@ -122,6 +125,19 @@ namespace communication
             return std::unique_ptr<ICanFD>(new CanFD(0, ch));
         }
         #endif // LINKERHAND_USE_CANFD
+
+        // ============ CAN FD (SocketCAN 原生, 仅 Linux) ============
+        // 内核 SocketCAN 后端，不依赖 third_party/libcanbus，故不受 USE_CANFD 门控。
+        // 波特率需先在内核侧配置：
+        //   sudo ip link set canX type can bitrate <b> dbitrate <d> fd on
+        #ifdef __linux__
+        static std::unique_ptr<ICanFD> createCanFDSocket(const std::string& interface = "can0")
+        {
+            auto fd = std::unique_ptr<CanFDSocket>(new CanFDSocket(interface));
+            fd->init();
+            return std::unique_ptr<ICanFD>(std::move(fd));
+        }
+        #endif
 
         // ====================== Modbus RTU ======================
 

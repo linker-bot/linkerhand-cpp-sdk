@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LinkerHand CPP Web</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <img class="logo" src="logo.png" alt="LinkerHand">
+    <h1 id="title"></h1>
+  </div>
+  <div class="actions">
+    <span class="conn" id="conn" data-i18n-title="conn_title" title="连接状态">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M9 17H7A5 5 0 0 1 7 7h2"/>
+        <path d="M15 7h2a5 5 0 1 1 0 10h-2"/>
+        <line x1="8" y1="12" x2="16" y2="12"/>
+        <line class="slash" x1="3" y1="3" x2="21" y2="21"/>
+      </svg>
+    </span>
+    <button id="setBtn" class="ghost" data-i18n-title="set_title" title="设置" aria-label="设置">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>
+    </button>
+    <button id="langBtn" class="ghost" data-i18n-title="lang_title" title="切换语言">EN</button>
+    <button id="themeBtn" class="ghost" data-i18n-title="theme_title" title="切换主题">🌙</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="panel">
+    <h3 data-i18n="ver_info">版本信息</h3>
+    <div class="info info-row">
+      <div id="infoVer">--</div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h3 data-i18n="joints_panel">关节监控与控制</h3>
+    <div id="joints"></div>
+    <div id="saved"></div>
+  </section>
+
+  <section class="panel">
+    <h3 data-i18n="sp_tq_panel">速度 / 力矩</h3>
+    <div class="st-grid">
+      <div class="line">
+        <label data-i18n="speed">速度</label>
+        <input type="range" id="speed" min="0" max="255" value="180">
+        <span class="val" id="speedVal">180</span>
+      </div>
+      <div class="line">
+        <label data-i18n="torque">力矩</label>
+        <input type="range" id="torque" min="0" max="255" value="180">
+        <span class="val" id="torqueVal">180</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel force-panel">
+    <h3 data-i18n="force_panel">触觉压感</h3>
+    <div id="waveWrap"><canvas id="wave"></canvas><div id="waveLegend" class="legend"></div></div>
+    <div id="forceWrap"><span class="muted" data-i18n="no_force">暂无触觉数据（该型号无传感器或未接入）。</span></div>
+    <div id="palmWrap"></div>
+  </section>
+</main>
+
+<div id="status" class="statusbar" data-i18n="ready">就绪</div>
+
+<div id="setModal" class="modal" hidden>
+  <div class="modal-card">
+    <div class="modal-head">
+      <h3 data-i18n="set_title">设置</h3>
+      <button id="setClose" class="ghost" title="关闭">×</button>
+    </div>
+    <div class="modal-split">
+    <div class="tabs">
+      <button class="tab active" data-pane="conn" data-i18n="tab_conn">连接</button>
+      <button class="tab" data-pane="rate" data-i18n="rate">刷新率</button>
+      <button class="tab" data-pane="about" data-i18n="tab_about">关于</button>
+    </div>
+    <div class="tabmain">
+    <div class="modal-body">
+      <div class="tabpane" data-pane="conn">
+        <label class="frow"><span data-i18n="f_model">型号</span><select id="mModel"></select></label>
+        <label class="frow"><span data-i18n="f_comm">通信方式</span><select id="mComm"></select></label>
+        <label class="frow"><span data-i18n="f_side">左右手</span>
+          <select id="mSide">
+            <option value="left" data-i18n="side_left">左手</option>
+            <option value="right" data-i18n="side_right">右手</option>
+          </select>
+        </label>
+        <label class="frow"><span data-i18n="f_chan">设备</span><input id="mChan" type="text" placeholder="can0"></label>
+        <div id="connMsg" class="conn-msg"></div>
+      </div>
+      <div class="tabpane" data-pane="rate" hidden>
+        <div class="raterow">
+          <span class="rlabel" data-i18n="rate_pos">位置</span>
+          <input type="range" class="rate" data-chan="pos" min="1" max="100" value="10">
+          <span class="rval"><b>10</b><i>Hz</i></span>
+        </div>
+        <div class="raterow">
+          <span class="rlabel" data-i18n="rate_st">速度/扭矩</span>
+          <input type="range" class="rate" data-chan="st" min="1" max="100" value="5">
+          <span class="rval"><b>5</b><i>Hz</i></span>
+        </div>
+        <div class="raterow">
+          <span class="rlabel" data-i18n="rate_force">触觉</span>
+          <input type="range" class="rate" data-chan="force" min="1" max="100" value="30">
+          <span class="rval"><b>30</b><i>Hz</i></span>
+        </div>
+        <div class="raterow">
+          <span class="rlabel" data-i18n="rate_temp">温度</span>
+          <input type="range" class="rate" data-chan="temp" min="1" max="100" value="1">
+          <span class="rval"><b>1</b><i>Hz</i></span>
+        </div>
+        <div class="raterow">
+          <span class="rlabel" data-i18n="rate_fault">故障码</span>
+          <input type="range" class="rate" data-chan="fault" min="1" max="100" value="1">
+          <span class="rval"><b>1</b><i>Hz</i></span>
+        </div>
+      </div>
+      <div class="tabpane" data-pane="about" hidden>
+        <div class="about">
+          <div class="about-name" data-i18n="about_name">LinkerHand Web</div>
+          <!-- SDK 版本随 CMakeLists project(VERSION) 手动同步 -->
+          <div class="about-row"><span data-i18n="about_sdk">SDK 版本</span><b>2.0.0</b></div>
+          <div class="about-row"><span data-i18n="about_site">官网</span><a href="https://linkerbot.cn/" target="_blank" rel="noopener">linkerbot.cn</a></div>
+          <p class="about-desc" data-i18n="about_desc">开源灵巧手 C++ SDK 的 Web 控制界面。</p>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button id="disconnectBtn" data-i18n="disconnect" hidden>断开连接</button>
+      <button id="connectBtn" class="pri" data-i18n="connect">连接</button>
+    </div>
+    </div>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

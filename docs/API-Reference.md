@@ -114,6 +114,42 @@ std::vector<std::vector<std::vector<uint8_t>>> getForce();
 
 ---
 
+### 获取全掌压感点阵
+```cpp
+std::vector<std::vector<uint8_t>> getPalmForce();
+```
+**Description**:  
+获取手掌区域的触觉压感点阵。矩阵维度随掌部传感器类型而定：`TSSP_JZG` 为 20 行 × 28 列，`TSSP_HWK` 为 14 行 × 16 列。  
+**支持型号**：L6 / O6 / G20（其余型号返回空并提示不支持）。  
+**Returns**:  
+- 返回二维向量 `std::vector<std::vector<uint8_t>>`：外层为行、内层为列，每个元素为该传感单元的压感值（uint8_t）。
+
+---
+
+### 获取五指合力值
+```cpp
+std::vector<std::vector<uint8_t>> getFingerForceSum();
+```
+**Description**:  
+获取五根手指的法向合力值。每指分量数随传感器类型而定：`TSSP_JZG` 每指 3 个，`TSSP_HWK` 每指 1 个。  
+**支持型号**：G20（其余型号返回空并提示不支持）。  
+**Returns**:  
+- 返回二维向量 `std::vector<std::vector<uint8_t>>`：外层大小 = 5（五根手指），内层为该指的合力分量。
+
+---
+
+### 获取全掌合力值
+```cpp
+std::vector<uint8_t> getPalmForceSum();
+```
+**Description**:  
+获取整个手掌的法向合力值。分量数随传感器类型而定：`TSSP_JZG` 为 2 个，`TSSP_HWK` 为 1 个。  
+**支持型号**：G20（其余型号返回空并提示不支持）。  
+**Returns**:  
+- 返回一个 `std::vector<uint8_t>`，为手掌合力分量。
+
+---
+
 ### 获取速度
 ```cpp
 std::vector<uint8_t> getSpeed();

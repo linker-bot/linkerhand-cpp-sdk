@@ -18,6 +18,7 @@ set(LINKERHAND_EXAMPLES
     test_l21_can_0
     test_g20_can_0
     test_g20_can_1
+    test_l6_can_0
     test_o6_can_0
     test_o6_can_1
     test_o6_can_3
@@ -33,5 +34,12 @@ set(LINKERHAND_EXAMPLES
 set(LINKERHAND_EXAMPLES_CANFD
     test_o20_canfd_0
     test_o20_canfd_1
+    test_o20_canfd_double
     linker_hand_example
+)
+
+# 仅 Linux 构建：SocketCAN 原生 CANFD（CanFDSocket），只用内核 linux/can.h，
+# 无需 libcanbus，不受 USE_CANFD 门控。
+set(LINKERHAND_EXAMPLES_LINUX
+    test_o20_canfd_socket_0
 )

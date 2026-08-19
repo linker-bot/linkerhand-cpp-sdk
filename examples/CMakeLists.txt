@@ -398,6 +398,9 @@ if(BUILD_TESTS)
     if(USE_CANFD AND NOT CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
         list(APPEND EXAMPLE_STEMS ${LINKERHAND_EXAMPLES_CANFD})
     endif()
+    if(UNIX AND NOT APPLE)
+        list(APPEND EXAMPLE_STEMS ${LINKERHAND_EXAMPLES_LINUX})
+    endif()
 
     foreach(stem ${EXAMPLE_STEMS})
         if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${stem}.cpp")
@@ -408,6 +411,18 @@ if(BUILD_TESTS)
             copy_dependencies(${target})
         endif()
     endforeach()
+
+    # web_bridge：无依赖 Python web 前端（webui/run.py）的后端桥，全平台构建。
+    # 非 O20 型号走普通 CAN，处处可用；O20 需 CAN-FD——有厂商 CAN-FD 时定义
+    # WEB_BRIDGE_HAS_CANFD 编入支持，否则仅 Linux 下可用 socketcan 原生 CAN-FD。
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/web_bridge.cpp")
+        add_executable(web_bridge web_bridge.cpp)
+        target_link_libraries(web_bridge PRIVATE ${COMMON_LIBS})
+        if(USE_CANFD AND NOT CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
+            target_compile_definitions(web_bridge PRIVATE WEB_BRIDGE_HAS_CANFD=1)
+        endif()
+        copy_dependencies(web_bridge)
+    endif()
 endif()
 
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
