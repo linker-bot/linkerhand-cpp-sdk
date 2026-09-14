@@ -1,4 +1,4 @@
-// L10 / CAN / 左手 —— 多线程并发测试（版本/参数/触觉/运动并行）
+// L20_Lite / CAN / 左手 —— 多线程并发测试（版本/参数/触觉/运动并行）
 #include <array>
 #include <iostream>
 #include <thread>
@@ -238,7 +238,7 @@ int main() {
     try {
 
     // 调用API接口
-    LinkerHandApi hand(LINKER_HAND::L10, HAND_TYPE::LEFT);
+    LinkerHandApi hand(LINKER_HAND::L20_Lite, HAND_TYPE::LEFT);
 
     // 创建CAN总线对象用于通信
     std::shared_ptr<Communication::ICanBus> bus = Communication::CommFactory::createCanBus("can0", 1000000);

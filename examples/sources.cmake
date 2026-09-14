@@ -6,18 +6,18 @@
 set(LINKERHAND_EXAMPLES
     test
     test_0
-    test_l10
-    test_l10_can_0
-    test_l10_can_1
-    test_l10_modbus
+    test_l20_lite
+    test_l20_lite_can_0
+    test_l20_lite_can_1
+    test_l20_lite_modbus
     test_l7_can_0
     test_l7_can_1
     test_l7_modbus_0
     test_l7_modbus_1
     test_l20_can_0
     test_l21_can_0
-    test_g20_can_0
-    test_g20_can_1
+    test_l20_10_can_0
+    test_l20_10_can_1
     test_l6_can_0
     test_o6_can_0
     test_o6_can_1
@@ -25,7 +25,7 @@ set(LINKERHAND_EXAMPLES
     test_o6_modbus_0
     test_o6_modbus_1
     test_o6_modbus_2
-    L10/action_group_show
+    L20_Lite/action_group_show
     range_to_arc/range_to_arc
     test_conversion
 )
@@ -35,6 +35,7 @@ set(LINKERHAND_EXAMPLES_CANFD
     test_o20_canfd_0
     test_o20_canfd_1
     test_o20_canfd_double
+    test_l30_canfd_0
     linker_hand_example
 )
 
@@ -42,4 +43,6 @@ set(LINKERHAND_EXAMPLES_CANFD
 # 无需 libcanbus，不受 USE_CANFD 门控。
 set(LINKERHAND_EXAMPLES_LINUX
     test_o20_canfd_socket_0
+    test_l30_canfd_socket_0
+    test_l30_canfd_socket_auto_0
 )

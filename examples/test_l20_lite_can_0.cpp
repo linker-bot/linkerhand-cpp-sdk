@@ -1,4 +1,4 @@
-// L10 / CAN / 左手 —— 读取版本、力矩、速度、状态与触觉（带 TX/RX 日志）
+// L20_Lite / CAN / 左手 —— 读取版本、力矩、速度、状态与触觉（带 TX/RX 日志）
 #include <array>
 #include <cstdint>
 
@@ -31,7 +31,7 @@ std::string getCurrentTime() {
 int main() {
     try {
         // 初始化灵巧手
-        LinkerHandApi hand(LINKER_HAND::L10, HAND_TYPE::LEFT);
+        LinkerHandApi hand(LINKER_HAND::L20_Lite, HAND_TYPE::LEFT);
 
         // 创建 CAN 总线对象
         std::shared_ptr<Communication::ICanBus> bus = Communication::CommFactory::createCanBus("can0", 1000000);

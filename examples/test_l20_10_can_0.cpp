@@ -1,4 +1,4 @@
-// G20 / CAN / 左手 —— 握拳/张开动作循环
+// L20_10 / CAN / 左手 —— 握拳/张开动作循环
 #include <iostream>
 #include <vector>
 #include <chrono>
@@ -13,7 +13,7 @@
 int main(int argc, char *argv[]) {
     try {
         std::cout << "=========================\n";
-        std::cout << "    G20 CAN Test\n";
+        std::cout << "    L20_10 CAN Test\n";
         std::cout << "=========================\n";
 
         std::string channel_name = "can0";
@@ -24,8 +24,8 @@ int main(int argc, char *argv[]) {
         // 创建 CAN 总线对象（工厂按平台分流 SocketCAN / PCAN）
         std::shared_ptr<Communication::ICanBus> bus = Communication::CommFactory::createCanBus(channel_name, 1000000);
 
-        // 创建 G20 手对象
-        LinkerHandApi hand(LINKER_HAND::G20, HAND_TYPE::LEFT, COMM_TYPE::CAN);
+        // 创建 L20_10 手对象
+        LinkerHandApi hand(LINKER_HAND::L20_10, HAND_TYPE::LEFT, COMM_TYPE::CAN);
 
         // 设置 CAN 发送回调
         hand.setCanTxCallback([bus](uint32_t can_id, const uint8_t *data, uintptr_t data_len) -> int32_t {
@@ -52,20 +52,20 @@ int main(int argc, char *argv[]) {
         // 获取版本信息
         std::cout << "Version: " << hand.getVersion() << std::endl;
 
-        // G20 握拳动作
-        std::cout << "G20 - Execute action - Make a fist" << std::endl;
-        std::vector<uint8_t> G20_POSE_CLOSE_1 = {255, 0, 0, 0, 0, 255, 255, 178, 84, 0, 255, 255, 0, 0, 0, 0};
-        hand.setPosition(G20_POSE_CLOSE_1);
+        // L20_10 握拳动作
+        std::cout << "L20_10 - Execute action - Make a fist" << std::endl;
+        std::vector<uint8_t> L20_10_POSE_CLOSE_1 = {255, 0, 0, 0, 0, 255, 255, 178, 84, 0, 255, 255, 0, 0, 0, 0};
+        hand.setPosition(L20_10_POSE_CLOSE_1);
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
-        std::vector<uint8_t> G20_POSE_CLOSE_2 = {117, 0, 0, 0, 0, 47, 255, 178, 84, 0, 115, 104, 0, 0, 0, 0};
-        hand.setPosition(G20_POSE_CLOSE_2);
+        std::vector<uint8_t> L20_10_POSE_CLOSE_2 = {117, 0, 0, 0, 0, 47, 255, 178, 84, 0, 115, 104, 0, 0, 0, 0};
+        hand.setPosition(L20_10_POSE_CLOSE_2);
         std::this_thread::sleep_for(std::chrono::seconds(1));
 
-        // G20 张开动作
-        std::cout << "G20 - Execute action - Open hand" << std::endl;
-        std::vector<uint8_t> G20_POSE_OPEN = {255, 255, 255, 255, 255, 255, 255, 172, 74, 0, 255, 255, 255, 255, 255, 255};
-        hand.setPosition(G20_POSE_OPEN);
+        // L20_10 张开动作
+        std::cout << "L20_10 - Execute action - Open hand" << std::endl;
+        std::vector<uint8_t> L20_10_POSE_OPEN = {255, 255, 255, 255, 255, 255, 255, 172, 74, 0, 255, 255, 255, 255, 255, 255};
+        hand.setPosition(L20_10_POSE_OPEN);
         std::this_thread::sleep_for(std::chrono::seconds(1));
 
         // 循环测试
@@ -74,14 +74,14 @@ int main(int argc, char *argv[]) {
 
             // 握拳
             std::cout << "Make a fist..." << std::endl;
-            hand.setPosition(G20_POSE_CLOSE_1);
+            hand.setPosition(L20_10_POSE_CLOSE_1);
             std::this_thread::sleep_for(std::chrono::milliseconds(50));
-            hand.setPosition(G20_POSE_CLOSE_2);
+            hand.setPosition(L20_10_POSE_CLOSE_2);
             std::this_thread::sleep_for(std::chrono::seconds(1));
 
             // 张开
             std::cout << "Open hand..." << std::endl;
-            hand.setPosition(G20_POSE_OPEN);
+            hand.setPosition(L20_10_POSE_OPEN);
             std::this_thread::sleep_for(std::chrono::seconds(1));
         }
 

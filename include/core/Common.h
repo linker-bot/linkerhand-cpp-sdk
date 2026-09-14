@@ -12,7 +12,11 @@ enum LINKER_HAND {
     L25,
     O6,
     G20,
-    O20
+    O20,
+    L30,
+    L20_10 = G20,
+    L20_11 = G20,
+    L20_Lite = L10
 };
 
 enum HAND_TYPE {
@@ -40,7 +44,11 @@ enum class HandModel : uint8_t {
     L25,
     G20,
     O6,
-    O20
+    O20,
+    L30,
+    L20_10 = G20,
+    L20_11 = G20,
+    L20_Lite = L10
 };
 
 enum class HandType : uint8_t {
@@ -65,6 +73,7 @@ inline LINKER_HAND to_legacy(HandModel m) {
         case HandModel::G20: return LINKER_HAND::G20;
         case HandModel::O6:  return LINKER_HAND::O6;
         case HandModel::O20: return LINKER_HAND::O20;
+        case HandModel::L30: return LINKER_HAND::L30;
     }
     return LINKER_HAND::L10;
 }
