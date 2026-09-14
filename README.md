@@ -7,7 +7,8 @@
 
 > 专注于人工智能和机器人解决方案，帮助开发者、企业、科研机构快速实现真实场景落地
 
-LinkerHand-CPP-SDK 由灵心巧手（北京）科技有限公司开发，提供完整的 C++ API，用于控制 L6、L7、L10、L20、L21、L25、O6、O20、G20等型号的灵巧手设备，支持 CAN / CAN-FD / Modbus 多种总线。
+灵心巧手（北京）科技有限公司提供的一套 C++ API，用于控制（L6、L7、L20_Lite、L20、L20_10/11、L21、L25、L30v6、O6、O20）灵巧手设备，支持 CAN / CAN-FD / Modbus 多种总线。
+
 
 ---
 
@@ -18,7 +19,7 @@ LinkerHand-CPP-SDK 由灵心巧手（北京）科技有限公司开发，提供�
 - [快速开始](#-快速开始)
 - [API 文档](#-api-文档)
 - [通信协议](#-通信协议)
-- [支持的型号](#-支持的型号)
+- [支持的协议](#-支持的协议)
 - [网页示教器](#-网页示教器)
 - [项目结构](#-项目结构)
 - [示例程序列表](#-示例程序列表)
@@ -31,7 +32,7 @@ LinkerHand-CPP-SDK 由灵心巧手（北京）科技有限公司开发，提供�
 
 ## ✨ 特性
 
-- 🎯 **多型号支持** — L6 / L7 / L10 / L20 / L21 / L25 / O6 / O20 / G20
+- 🎯 **多型号支持** — L6、L7、L20_Lite、L20、L20_10/11、L21、L25、L30v6、O6、O20
 - 🔌 **多总线** — CAN、CAN-FD、Modbus
 - 🚀 **易用** — 简洁的 C++ API，回调注入式通信层，便于嵌入到自有应用
 - 📊 **传感数据** — 实时获取压力、温度、电流等传感器读数
@@ -122,12 +123,12 @@ sudo BITRATE=1000000 DBITRATE=2000000 ./can-autocfg.sh  # 改 FD 数据段波特
 cd build/bin
 ./linker_hand_example          # CLI 工具
 ./test_o6_can_0
-./test_l10_can_0
+./test_l20_lite_can_0
 ./test_o20_canfd_0
 
 # Windows
 build\bin\linker_hand_example.exe
-build\bin\test_l10_can_0.exe
+build\bin\test_l20_lite_can_0.exe
 ```
 
 更多示例见 [`examples/`](examples/) 目录。
@@ -263,30 +264,31 @@ cmake --build . -j
 |------|--------|---------|
 | CAN | `COMM_TYPE::CAN` | 全系列 |
 | CAN-FD | `COMM_TYPE::CAN`（搭配 `CanFD` 实现） | O20（不支持Linux aarch64） |
-| Modbus | `COMM_TYPE::MODBUS` | L7 / L10 / O6 |
+| Modbus | `COMM_TYPE::MODBUS` | L7 / L20_Lite / O6 |
 
 
 通信层通过 `Communication::CommFactory` 构造（旧名 `CanBusFactory` 保留为兼容别名），调用方通过 `LinkerHandApi::setCanTxCallback` / `setCanRxCallback`（或 Modbus 等价回调）注入收发逻辑，SDK 本身不持有任何 socket。
 
-## 🤖 支持的型号
+## 🤖 支持的协议
 
-| 型号 | 通信方式 | 备注 |
-|------|----------|------|
-| LinkerHand G20 | CAN | G20 series robotic hand |
-| LinkerHand L6 | CAN | L6 series robotic hand |
-| LinkerHand L7 | CAN / Modbus | L7 series robotic hand |
-| LinkerHand L10 | CAN / Modbus | L10 series robotic hand |
-| LinkerHand L20 | CAN | L20 series robotic hand |
-| LinkerHand L21 | CAN | L21 series robotic hand |
-| LinkerHand L25 | CAN | L25 series robotic hand |
-| LinkerHand O6 | CAN / Modbus | O6 series robotic hand |
-| LinkerHand O20 | CAN-FD | O20 series robotic hand（不支持Linux aarch64） |
+| 机械手型号 | CAN 协议 | Modbus 协议 | CAN-FD 协议 |
+| :--- | :---: | :---: | :---: |
+| LinkerHand O6 | ✅ | ✅ |  |
+| LinkerHand L6 / L6S | ✅ |  |  |
+| LinkerHand O7 | ✅ | ✅ |  |
+| LinkerHand L20 Lite | ✅ | ✅ |  |
+| LinkerHand L20 | ✅ |  |  |
+| LinkerHand L20 V10+ | ✅ |  |  |
+| LinkerHand L21 | ✅ |  |  |
+| LinkerHand L25 | ✅ |  |  |
+| LinkerHand O20 |  |  | ✅ |
+| LinkerHand L30 V6 |  |  | ✅ |
 
 ## 🌐 网页示教器
 
-`webui/` 是一套开箱即用的网页控制界面，全型号（L6 / L7 / L10 / L20 / L21 / L25 / G20 / O6 / O20）通用，O20 走 CAN-FD。
+`webui/` 是一套开箱即用的网页控制界面，全型号（L6 / L7 / L20_Lite / L20 / L20_10/11 / L21 / L25 / L30v6 / O6 / O20）通用，O20 走 CAN-FD。
 
-> **`./build.sh -b` 编译完成后即可直接使用**，无需额外构建，`python3 webui/run.py` 起服务即用。
+> **一条命令即用**：`./start-webui.sh` 会自动检测 `web_bridge` 是否已编译，未编译则先跑 `./build.sh -b`，随后拉起服务；也可 `./build.sh -b` 后直接 `python3 webui/run.py`。
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/webui-overview-dark.png">
@@ -297,29 +299,36 @@ cmake --build . -j
 
 - 按型号动态渲染**关节滑块**，实时位置回读
 - **速度 / 力矩**设置与回读
-- **触觉压感热力图**（含掌心，O6 / G20），维度按型号自适应
+- **触觉压感热力图**（含掌心，O6 / L20_10/11），维度按型号自适应
 - **温度 / 故障**监控表（温度 >50 黄、>60 红，故障码非 0 红）
 - 版本信息展示、明暗主题切换
 - 在线连接：前端「设置」面板选择型号 / 侧别 / 通信方式，支持热重连与主动断开
 
 ### 运行
 
-编译完成后，拉起对应总线、给手上电，启动服务即可：
+拉起对应总线、给手上电，启动服务即可。推荐用 `start-webui.sh`，它在启动前自动确保 `web_bridge` 已编译（缺失则先构建）：
+
+```bash
+sudo ip link set can0 up type can bitrate 1000000   # CAN 型号；Modbus 见下
+./start-webui.sh                                    # 未编译则自动构建再起服务，参数透传给 run.py
+```
+
+或手动分步（已编译时）：
 
 ```bash
 ./build.sh -b                                       # 一次编译，webui 随之就绪
-sudo ip link set can0 up type can bitrate 1000000   # CAN 型号；Modbus 见下
 python3 webui/run.py                                # 起服务，型号/通信在前端「设置」里选
 ```
 
-浏览器打开 `http://<本机IP>:8080/`。也可命令行直连指定型号：
+浏览器打开 `http://<本机IP>:8080/`。也可命令行直连指定型号（`start-webui.sh` 与 `run.py` 参数一致，可直接透传）：
 
 ```bash
+./start-webui.sh --model O6  --side left
 python3 webui/run.py --model O6  --side left
-python3 webui/run.py --model L10 --side left  --channel can0
+python3 webui/run.py --model L20_LITE --side left  --channel can0
 python3 webui/run.py --model O20 --side right                 # 厂商 CAN-FD 设备
 python3 webui/run.py --model O20 --side right --channel socketcan:can0
-python3 webui/run.py --model L10 --comm modbus --channel /dev/ttyUSB0
+python3 webui/run.py --model L20_LITE --comm modbus --channel /dev/ttyUSB0
 ```
 
 主要参数：`--model`（不填则在前端在线连接）、`--side left|right`、`--comm can|canfd|modbus`（缺省按型号自动）、`--channel`（CAN 接口名 / Modbus 串口）、`--host`（默认 `0.0.0.0`）、`--port`（默认 `8080`）。更多用法见 [`webui/README.md`](webui/README.md)。
@@ -372,15 +381,15 @@ linkerhand-cpp-sdk/
 | 示例文件 | 说明 |
 |----------|------|
 | `linker_hand_example.cpp` | 多型号 / 多协议巡检 |
-| `test_g20_can_0.cpp` | G20 CAN 基础示例 |
-| `test_g20_can_1.cpp` | G20 CAN 进阶示例（直连具体类） |
+| `test_l20_10_can_0.cpp` | L20_10/11 CAN 基础示例 |
+| `test_l20_10_can_1.cpp` | L20_10/11 CAN 进阶示例（直连具体类） |
 | `test_l7_can_0.cpp` | L7 CAN 基础示例 |
 | `test_l7_can_1.cpp` | L7 CAN 进阶示例 |
 | `test_l7_modbus_0.cpp` | L7 Modbus 基础示例 |
 | `test_l7_modbus_1.cpp` | L7 Modbus 进阶示例 |
-| `test_l10_can_0.cpp` | L10 CAN 基础示例 |
-| `test_l10_can_1.cpp` | L10 CAN 进阶示例 |
-| `test_l10_modbus.cpp` | L10 Modbus 示例 |
+| `test_l20_lite_can_0.cpp` | L20_Lite CAN 基础示例 |
+| `test_l20_lite_can_1.cpp` | L20_Lite CAN 进阶示例 |
+| `test_l20_lite_modbus.cpp` | L20_Lite Modbus 示例 |
 | `test_l20_can_0.cpp` | L20 CAN 示例 |
 | `test_l21_can_0.cpp` | L21 CAN 示例 |
 | `test_o6_can_0.cpp` | O6 CAN 基础示例 |
@@ -391,7 +400,7 @@ linkerhand-cpp-sdk/
 | `test_o6_modbus_2.cpp` | O6 Modbus 高级示例 |
 | `test_o20_canfd_0.cpp` | O20 CAN-FD 基础示例（不支持Linux aarch64） |
 | `test_o20_canfd_1.cpp` | O20 CAN-FD 进阶示例（不支持Linux aarch64） |
-| `L10/action_group_show.cpp` | L10 动作组演示 |
+| `L20_Lite/action_group_show.cpp` | L20_Lite 动作组演示 |
 
 ## 📖 关节映射表
 
@@ -405,13 +414,13 @@ linkerhand-cpp-sdk/
 ["大拇指弯曲", "大拇指横摆", "食指弯曲", "中指弯曲", "无名指弯曲", "小拇指弯曲", "拇指旋转"]
 ```
 
-- L10
+- L20_Lite
 ```
 ["拇指根部", "拇指侧摆", "食指根部", "中指根部", "无名指根部", "小指根部",
  "食指侧摆", "无名指侧摆", "小指侧摆", "拇指旋转"]
 ```
 
-- G20
+- L20_10/11
 ```
 ["大拇指根部", "食指根部", "中指根部","无名指根部","小拇指根部",
   "大拇指侧摆","食指侧摆","中指侧摆","无名指侧摆","小拇指侧摆",

@@ -36,7 +36,7 @@ double scale_value(double original_value, double a_min, double a_max, double b_m
 int main() {
     try {
         // 初始化灵巧手
-        LinkerHandApi hand(LINKER_HAND::G20, HAND_TYPE::LEFT);
+        LinkerHandApi hand(LINKER_HAND::L20_10, HAND_TYPE::LEFT);
 
         // 创建 CAN 总线对象
         std::shared_ptr<Communication::ICanBus> bus = Communication::CommFactory::createCanBus("can0", 1000000);

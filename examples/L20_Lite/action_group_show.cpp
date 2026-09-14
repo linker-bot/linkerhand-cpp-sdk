@@ -1,4 +1,4 @@
-// L10 / CAN / 右手 —— 动作组状态机演示（球形拇指根部关节版本）
+// L20_Lite / CAN / 右手 —— 动作组状态机演示（球形拇指根部关节版本）
 // 如需左手，请将 HAND_TYPE::RIGHT 改为 HAND_TYPE::LEFT
 
 #include <vector>
@@ -422,7 +422,7 @@ vector<uint8_t> showLeft() {
 int main() {
 
     // 调用API接口
-    LinkerHandApi hand(LINKER_HAND::L10, HAND_TYPE::RIGHT);
+    LinkerHandApi hand(LINKER_HAND::L20_Lite, HAND_TYPE::RIGHT);
     hand.setSpeed({100, 100, 100, 100, 100});
     hand.setTorque({200, 200, 200, 200, 200});
 

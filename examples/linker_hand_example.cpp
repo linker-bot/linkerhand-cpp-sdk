@@ -409,21 +409,21 @@ void interactiveMode(LinkerHandApi &hand)
                 hand.setPosition(pos1_3);
                 std::this_thread::sleep_for(std::chrono::seconds(1));
             }
-            else if (hand.handJoint_ == LINKER_HAND::G20)
+            else if (hand.handJoint_ == LINKER_HAND::L20_10)
             {
                 hand.setSpeed(std::vector<uint8_t>(5, HAND_SPEED)); // L20 need 5 speed
                 //---------------------------------------------------------
-                std::cout << "G20 - Execute action - Make a fist" << std::endl;
-                std::vector<uint8_t> G20_POSE_CLOSE_1 = {255, 0, 0, 0, 0,255,255,178,84,0,255,255,0,0,0,0};
-                hand.setPosition(G20_POSE_CLOSE_1);
+                std::cout << "L20_10 - Execute action - Make a fist" << std::endl;
+                std::vector<uint8_t> L20_10_POSE_CLOSE_1 = {255, 0, 0, 0, 0,255,255,178,84,0,255,255,0,0,0,0};
+                hand.setPosition(L20_10_POSE_CLOSE_1);
                 std::this_thread::sleep_for(std::chrono::milliseconds(50));
-                std::vector<uint8_t> G20_POSE_CLOSE_2 = {117, 0, 0, 0, 0,47,255,178,84,0,115,104,0,0,0,0};
-                hand.setPosition(G20_POSE_CLOSE_2);
+                std::vector<uint8_t> L20_10_POSE_CLOSE_2 = {117, 0, 0, 0, 0,47,255,178,84,0,115,104,0,0,0,0};
+                hand.setPosition(L20_10_POSE_CLOSE_2);
                 std::this_thread::sleep_for(std::chrono::seconds(1));
                 //---------------------------------------------------------
-                std::cout << "G20 - Execute action - Open hand" << std::endl;
-                std::vector<uint8_t> G20_POSE_OPEN = {255, 255, 255, 255, 255, 255, 255, 172, 74, 0, 255, 255, 255, 255, 255, 255};
-                hand.setPosition(G20_POSE_OPEN);
+                std::cout << "L20_10 - Execute action - Open hand" << std::endl;
+                std::vector<uint8_t> L20_10_POSE_OPEN = {255, 255, 255, 255, 255, 255, 255, 172, 74, 0, 255, 255, 255, 255, 255, 255};
+                hand.setPosition(L20_10_POSE_OPEN);
                 std::this_thread::sleep_for(std::chrono::seconds(1));
             }
             else if (hand.handJoint_ == LINKER_HAND::O20)
@@ -473,7 +473,7 @@ int main(int argc, char *argv[])
         printColorLine1();
         std::cout << BLUE << "[7]: O6\n" << RESET;
         printColorLine1();
-        std::cout << BLUE << "[8]: G20\n" << RESET;
+        std::cout << BLUE << "[8]: L20_10\n" << RESET;
         printColorLine1();
         std::cout << BLUE << "[9]: O20\n" << RESET;
         printColorLine1();
@@ -506,7 +506,7 @@ int main(int argc, char *argv[])
             linkerhand = LINKER_HAND::O6;
             break;
         case 8:
-            linkerhand = LINKER_HAND::G20;
+            linkerhand = LINKER_HAND::L20_10;
             break;
         case 9:
             linkerhand = LINKER_HAND::O20;

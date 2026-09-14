@@ -3,11 +3,13 @@
 // 姿势/速度/力矩，周期性把实测位置、速度、力矩、触觉压感（含掌心）以文本/JSON 行写到 stdout。
 //
 // 用法：  web_bridge <MODEL> <side> [comm] [channel]
-//   MODEL    L6/L7/L10/L20/L21/L25/G20/O6/O20
+//   MODEL    L6/L7/L20_LITE/L20/L21/L25/L20_10/O6/O20
 //   side     left|right
 //   comm     可选，缺省 can。can | canfd | modbus。
-//            modbus 仅支持 O6/L7/L10；O20 请用 canfd。
+//            modbus 仅支持 O6/L7/L20_Lite；O20 请用 canfd。
 //   channel  可选。can：CAN 接口名（如 can0），留空按 side 自动探测。
+//            canfd（L30）：留空按 side 自动检测左右手所在的 CANFD 通道（socketcan 自检）；
+//                         "socketcan:can0" 指定内核原生接口；"socketcan:" 留空同样自检。
 //            canfd（O20）：留空用厂商 CAN-FD 设备(0,0)；"socketcan:can0" 用内核原生 CAN-FD。
 //            modbus：串口路径（如 /dev/ttyUSB0），留空按 side 自动探测。
 //
@@ -23,7 +25,7 @@
 //   POS  v0..vN                 关节实测位置，~10Hz
 //   SPD  v0..vN / TRQ v0..vN    当前速度/力矩回读，低频
 //   FORCE {"fingers":[[[..]]]}  触觉矩阵（维度按型号自适应），有传感器时持续 ~5Hz（全 0 也发）
-//   PALM  {"palm":[[..]]}       掌心矩阵（O6/G20），有传感器时持续 ~5Hz（全 0 也发）
+//   PALM  {"palm":[[..]]}       掌心矩阵（O6/L20_10），有传感器时持续 ~5Hz（全 0 也发）
 //   TEMP  v0..vN                逐关节温度(°C)，~1Hz，非空才发
 //   FAULT v0..vN                逐关节故障码，~1Hz，非空才发
 //
@@ -54,17 +56,18 @@ static std::mutex g_qmtx;
 static std::deque<std::string> g_queue;
 static std::atomic<bool> g_running{true};
 
-// 型号字符串 -> 枚举（与 hand_teach_pendant/src/main.cpp 的 -t 解析保持一致）。
+// 型号字符串 -> 枚举（对外用 L20_10 / L20_LITE 标识；示教器 -t 仍兼容旧的 G20 / L10 别名，二者同值）。
 static bool parse_model(const std::string& s, LINKER_HAND& out) {
     if (s == "L6")  out = LINKER_HAND::L6;
     else if (s == "L7")  out = LINKER_HAND::L7;
-    else if (s == "L10") out = LINKER_HAND::L10;
+    else if (s == "L20_LITE" || s == "L20_Lite" || s == "L10") out = LINKER_HAND::L20_Lite;
     else if (s == "L20") out = LINKER_HAND::L20;
     else if (s == "L21") out = LINKER_HAND::L21;
     else if (s == "L25") out = LINKER_HAND::L25;
-    else if (s == "G20") out = LINKER_HAND::G20;
+    else if (s == "L20_10") out = LINKER_HAND::L20_10;
     else if (s == "O6")  out = LINKER_HAND::O6;
     else if (s == "O20") out = LINKER_HAND::O20;
+    else if (s == "L30") out = LINKER_HAND::L30;
     else return false;
     return true;
 }
@@ -78,8 +81,9 @@ static int dof_of(LINKER_HAND m) {
         case L10:           return 10;
         case L20:           return 20;
         case L21: case L25: return 25;
-        case G20:           return 16;
+        case L20_10:           return 16;
         case O20:           return 16;
+        case L30:           return 17;
         default:            return 10;
     }
 }
@@ -135,16 +139,18 @@ int main(int argc, char** argv) {
 
     // canfd 是 CAN 之上的传输变体（仅 O20 有意义），SDK 仍以 COMM_TYPE::CAN 构造。
     const bool is_modbus = (comm == "modbus");
-    const bool is_canfd  = (comm == "canfd") || (model == LINKER_HAND::O20 && comm != "modbus");
+    const bool is_canfd  = (comm == "canfd")
+                           || (model == LINKER_HAND::O20 && comm != "modbus")
+                           || (model == LINKER_HAND::L30 && comm != "modbus");
 
     try {
         COMM_TYPE ct = is_modbus ? COMM_TYPE::MODBUS : COMM_TYPE::CAN;
         auto hand = std::make_shared<LinkerHandApi>(model, side, ct);
 
         if (is_modbus) {
-            // Modbus 仅 O6/L7/L10 有对应 hand 实现（HandFactory 其余会抛异常）。
-            if (model != LINKER_HAND::O6 && model != LINKER_HAND::L7 && model != LINKER_HAND::L10) {
-                std::cerr << "BRIDGE_ERROR: Modbus 仅支持 O6/L7/L10（当前 " << model_str << "）" << std::endl;
+            // Modbus 仅 O6/L7/L20_Lite 有对应 hand 实现（HandFactory 其余会抛异常）。
+            if (model != LINKER_HAND::O6 && model != LINKER_HAND::L7 && model != LINKER_HAND::L20_Lite) {
+                std::cerr << "BRIDGE_ERROR: Modbus 仅支持 O6/L7/L20_Lite（当前 " << model_str << "）" << std::endl;
                 return 1;
             }
             // channel 为串口路径；留空按 side 自动探测。
@@ -165,14 +171,26 @@ int main(int argc, char** argv) {
                 return 0;
             });
         } else if (is_canfd) {
-            // O20 走 CAN-FD。默认厂商 libcanbus；channel="socketcan:can0" 时用内核原生。
+            // O20/L30 走 CAN-FD。channel 语义：
+            //   "socketcan:canX" 或留空 -> 内核原生 CanFDSocket；留空/"socketcan:" 后无接口名时
+            //   自动检测左右手所在通道（CanFDSocket(side) 自检，仅 L30 协议可自检）。
+            //   其余非空字符串 -> 厂商 libcanbus CAN-FD（O20 默认设备(0,0) 走此路，写 "0" 即可）。
             bool use_socketcan = channel.rfind("socketcan:", 0) == 0;
-            if (use_socketcan) {
+            // 留空：L30 走 socketcan 自动检测；O20 无 socketcan 自检协议，仍回退厂商默认(0,0)。
+            bool auto_socketcan = channel.empty() && (model == LINKER_HAND::L30);
+            if (use_socketcan || auto_socketcan) {
 #if defined(__linux__)
-                std::string iface = channel.substr(std::string("socketcan:").size());
-                if (iface.empty()) iface = "can0";
-                auto cf = std::make_shared<Communication::CanFDSocket>(iface);
-                if (!cf->init()) { std::cerr << "BRIDGE_ERROR: CanFDSocket init failed (" << iface << ")" << std::endl; return 1; }
+                std::string iface;
+                if (use_socketcan) iface = channel.substr(std::string("socketcan:").size());
+                std::shared_ptr<Communication::CanFDSocket> cf;
+                if (iface.empty()) {
+                    // 未指定接口名：自动检测左右手所在的 CANFD 通道（内部遍历已启动接口，
+                    // 发 0xC3 读请求校验左右手，命中后打开；失败抛异常→BRIDGE_ERROR）。
+                    cf = std::make_shared<Communication::CanFDSocket>(side);
+                } else {
+                    cf = std::make_shared<Communication::CanFDSocket>(iface);
+                    if (!cf->init()) { std::cerr << "BRIDGE_ERROR: CanFDSocket init failed (" << iface << ")" << std::endl; return 1; }
+                }
                 hand->setCanTxCallback([cf](uint32_t id, const uint8_t* d, uintptr_t n) -> int32_t {
                     try { std::vector<uint8_t> v(d, d + n); cf->send(v, id, true); } catch (...) { return -1; }
                     return 0;
@@ -236,8 +254,18 @@ int main(int argc, char** argv) {
         }
 
         // 保守初始化：中等速度/力矩，长度 = DOF。
-        hand->setSpeed(std::vector<uint8_t>(dof, 180));
-        hand->setTorque(std::vector<uint8_t>(dof, 180));
+        // L30(L30V6) 使能为边沿触发：先失能再使能制造 0→1 边沿，电机方能真正上电；
+        // 并取较低速，减小把小行程关节顶到机械极限而堵转的概率。
+        if (model == LINKER_HAND::L30) {
+            hand->setDisable(std::vector<uint8_t>(dof, 0));
+            std::this_thread::sleep_for(std::chrono::milliseconds(200));
+            hand->setEnable(std::vector<uint8_t>(dof, 1));
+            std::this_thread::sleep_for(std::chrono::milliseconds(200));
+            hand->setSpeed(std::vector<uint8_t>(dof, 60));
+        } else {
+            hand->setSpeed(std::vector<uint8_t>(dof, 180));
+            hand->setTorque(std::vector<uint8_t>(dof, 180));
+        }
 
         // 版本串各字段以换行分隔；压进单行 JSON 用 ';' 保留字段边界（前端按 ';' 切段），引号替空格。
         auto sanitize = [](std::string v) {
@@ -249,13 +277,32 @@ int main(int argc, char** argv) {
         int pos_ms = 100, st_ms = 200, force_ms = 33, temp_ms = 1000, fault_ms = 1000;
 
         auto hz_of = [](int period_ms) { return period_ms > 0 ? 1000 / period_ms : 0; };
+
+        // 原始值直控：若手型提供各关节原始量程，则前端滑块按真实 int16 行程铺满、
+        // 发送原始值（绕过 0-255 量化，大行程关节低速更平顺）。目前 L30 支持。
+        std::vector<std::pair<int16_t, int16_t>> raw_ranges = hand->getPositionRangeRaw();
+        const bool raw_mode = !raw_ranges.empty() && (int)raw_ranges.size() >= dof;
+        // 速度/扭矩实际量程（raw 模式下前端滑块按此铺满、发原始值）
+        std::pair<int16_t, int16_t> spd_range = hand->getSpeedRangeRaw();
+        std::pair<int16_t, int16_t> trq_range = hand->getTorqueRangeRaw();
+
         auto emit_meta = [&](const std::string& v) {
             std::cout << "META {\"model\":\"" << model_str << "\",\"dof\":" << dof
                       << ",\"version\":\"" << v << "\""
                       << ",\"rates\":{\"pos\":" << hz_of(pos_ms) << ",\"st\":" << hz_of(st_ms)
                       << ",\"force\":" << hz_of(force_ms) << ",\"temp\":" << hz_of(temp_ms)
-                      << ",\"fault\":" << hz_of(fault_ms) << "}"
-                      << "}" << std::endl;
+                      << ",\"fault\":" << hz_of(fault_ms) << "}";
+            if (raw_mode) {
+                std::cout << ",\"raw\":true,\"ranges\":[";
+                for (int i = 0; i < dof; ++i) {
+                    if (i) std::cout << ",";
+                    std::cout << "[" << (int)raw_ranges[i].first << "," << (int)raw_ranges[i].second << "]";
+                }
+                std::cout << "]";
+                std::cout << ",\"speed_range\":[" << (int)spd_range.first << "," << (int)spd_range.second << "]";
+                std::cout << ",\"torque_range\":[" << (int)trq_range.first << "," << (int)trq_range.second << "]";
+            }
+            std::cout << "}" << std::endl;
         };
 
         // getVersion 发请求后读缓存，版本回帧由 rx 线程异步填充；刚上电时手在预热，可能迟迟不到。
@@ -302,6 +349,23 @@ int main(int argc, char** argv) {
                 return;
             }
             if (cmd != "P" && cmd != "S" && cmd != "T") return;
+            // 原始模式：位置/速度/扭矩均按 int16 原始值下发（允许负值，不做 0-255 限幅）
+            if (raw_mode) {
+                std::vector<int16_t> raw;
+                int x;
+                while (ss >> x) {
+                    if (x < -32768) x = -32768;
+                    if (x > 32767) x = 32767;
+                    raw.push_back(static_cast<int16_t>(x));
+                }
+                if ((int)raw.size() != dof) return;
+                try {
+                    if (cmd == "P") hand->setPositionRaw(raw);
+                    else if (cmd == "S") hand->setSpeedRaw(raw);
+                    else hand->setTorqueRaw(raw);
+                } catch (const std::exception& e) { std::cerr << "BRIDGE_WARN: apply raw failed: " << e.what() << std::endl; }
+                return;
+            }
             std::vector<uint8_t> vals;
             int x;
             while (ss >> x) {
@@ -346,15 +410,27 @@ int main(int argc, char** argv) {
             try {
                 if (now >= next_pos) {                     // 位置回读（周期可调）
                     next_pos = now + ms(pos_ms);
-                    std::vector<uint8_t> pos = hand->getPosition();
-                    if (!pos.empty()) { std::ostringstream o; o << "POS"; for (auto v : pos) o << ' ' << (int)v; std::cout << o.str() << std::endl; }
+                    if (raw_mode) {
+                        std::vector<int16_t> pos = hand->getPositionRaw();
+                        if (!pos.empty()) { std::ostringstream o; o << "POS"; for (auto v : pos) o << ' ' << (int)v; std::cout << o.str() << std::endl; }
+                    } else {
+                        std::vector<uint8_t> pos = hand->getPosition();
+                        if (!pos.empty()) { std::ostringstream o; o << "POS"; for (auto v : pos) o << ' ' << (int)v; std::cout << o.str() << std::endl; }
+                    }
                 }
                 if (now >= next_st) {                      // 速度/力矩回读（周期可调）
                     next_st = now + ms(st_ms);
-                    std::vector<uint8_t> sp = hand->getSpeed();
-                    std::vector<uint8_t> tq = hand->getTorque();
-                    if (!sp.empty()) { std::ostringstream o; o << "SPD"; for (auto v : sp) o << ' ' << (int)v; std::cout << o.str() << std::endl; }
-                    if (!tq.empty()) { std::ostringstream o; o << "TRQ"; for (auto v : tq) o << ' ' << (int)v; std::cout << o.str() << std::endl; }
+                    if (raw_mode) {
+                        std::vector<int16_t> sp = hand->getSpeedRaw();
+                        std::vector<int16_t> tq = hand->getTorqueRaw();
+                        if (!sp.empty()) { std::ostringstream o; o << "SPD"; for (auto v : sp) o << ' ' << (int)v; std::cout << o.str() << std::endl; }
+                        if (!tq.empty()) { std::ostringstream o; o << "TRQ"; for (auto v : tq) o << ' ' << (int)v; std::cout << o.str() << std::endl; }
+                    } else {
+                        std::vector<uint8_t> sp = hand->getSpeed();
+                        std::vector<uint8_t> tq = hand->getTorque();
+                        if (!sp.empty()) { std::ostringstream o; o << "SPD"; for (auto v : sp) o << ' ' << (int)v; std::cout << o.str() << std::endl; }
+                        if (!tq.empty()) { std::ostringstream o; o << "TRQ"; for (auto v : tq) o << ' ' << (int)v; std::cout << o.str() << std::endl; }
+                    }
                 }
                 if (now >= next_force) {                   // 触觉/掌心，周期由前端可调
                     next_force = now + ms(force_ms);
@@ -380,6 +456,15 @@ int main(int argc, char** argv) {
             }
 
             std::this_thread::sleep_for(ms(5));
+        }
+
+        // webui 退出/断开时主动失能，释放手部（仅 webui 后端行为，SDK 库本身不自动失能）。
+        // L30 使能为边沿触发，此处显式下发全失能；留时间让发送线程把帧发出后再退出。
+        if (model == LINKER_HAND::L30) {
+            try {
+                hand->setDisable(std::vector<uint8_t>(dof, 0));
+                std::this_thread::sleep_for(ms(80));
+            } catch (...) {}
         }
     } catch (const std::exception& e) {
         std::cerr << "BRIDGE_ERROR: " << e.what() << std::endl;

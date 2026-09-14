@@ -1,4 +1,4 @@
-// L10 / CAN / 左手 —— 入门最小示例（版本、单次动作、状态）
+// L20_Lite / CAN / 左手 —— 入门最小示例（版本、单次动作、状态）
 #include "_win_console_utf8.h"
 #include "LinkerHandApi.h"
 #include "CommFactory.h"
@@ -6,7 +6,7 @@
 int main() {
     try {
         // 初始化灵巧手
-        LinkerHandApi hand(LINKER_HAND::L10, HAND_TYPE::LEFT, COMM_TYPE::CAN);
+        LinkerHandApi hand(LINKER_HAND::L20_Lite, HAND_TYPE::LEFT, COMM_TYPE::CAN);
 
         // 创建 CAN 总线对象
         std::shared_ptr<Communication::ICanBus> bus = Communication::CommFactory::createCanBus("can0", 1000000);

@@ -1,4 +1,4 @@
-// G20 / CAN / 左手 —— 多线程并发测试（直连具体总线类的进阶示例）
+// L20_10 / CAN / 左手 —— 多线程并发测试（直连具体总线类的进阶示例）
 #include <array>
 #include <iostream>
 #include <thread>
@@ -72,7 +72,7 @@ void threadSetParameters(LinkerHandApi& hand, int iteration) {
     try {
         auto start = std::chrono::steady_clock::now();
         
-        // G20 需要 5 个速度/扭矩值
+        // L20_10 需要 5 个速度/扭矩值
         std::vector<uint8_t> torque_values = {200, 200, 200, 200, 200};
         std::vector<uint8_t> speed_values = {200, 200, 200, 200, 200};
         
@@ -209,30 +209,30 @@ void threadGetTouchData(LinkerHandApi& hand, int iteration) {
 }
 }
 
-// 线程5：G20运动控制（握拳和张开）
+// 线程5：L20_10运动控制（握拳和张开）
 void threadMotionControl(LinkerHandApi& hand, int iteration) {
     try {
         auto start = std::chrono::steady_clock::now();
         
-        // G20 握拳动作（两步）
-        std::vector<uint8_t> G20_POSE_CLOSE_1 = {255, 0, 0, 0, 0, 255, 255, 178, 84, 0, 255, 255, 0, 0, 0, 0};
-        hand.setPosition(G20_POSE_CLOSE_1);
+        // L20_10 握拳动作（两步）
+        std::vector<uint8_t> L20_10_POSE_CLOSE_1 = {255, 0, 0, 0, 0, 255, 255, 178, 84, 0, 255, 255, 0, 0, 0, 0};
+        hand.setPosition(L20_10_POSE_CLOSE_1);
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
         
-        std::vector<uint8_t> G20_POSE_CLOSE_2 = {117, 0, 0, 0, 0, 47, 255, 178, 84, 0, 115, 104, 0, 0, 0, 0};
-        hand.setPosition(G20_POSE_CLOSE_2);
+        std::vector<uint8_t> L20_10_POSE_CLOSE_2 = {117, 0, 0, 0, 0, 47, 255, 178, 84, 0, 115, 104, 0, 0, 0, 0};
+        hand.setPosition(L20_10_POSE_CLOSE_2);
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         
-        // G20 张开动作
-        std::vector<uint8_t> G20_POSE_OPEN = {255, 255, 255, 255, 255, 255, 255, 172, 74, 0, 255, 255, 255, 255, 255, 255};
-        hand.setPosition(G20_POSE_OPEN);
+        // L20_10 张开动作
+        std::vector<uint8_t> L20_10_POSE_OPEN = {255, 255, 255, 255, 255, 255, 255, 172, 74, 0, 255, 255, 255, 255, 255, 255};
+        hand.setPosition(L20_10_POSE_OPEN);
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         
         auto end = std::chrono::steady_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
         
         std::stringstream ss;
-        ss << "[Thread5-Iter" << iteration << "] G20运动控制完成 (" << duration.count() << "ms)";
+        ss << "[Thread5-Iter" << iteration << "] L20_10运动控制完成 (" << duration.count() << "ms)";
         printWithLock(ss.str());
         
     } catch (const std::exception& e) {
@@ -245,7 +245,7 @@ void threadMotionControl(LinkerHandApi& hand, int iteration) {
 int main() {
     try {
     std::cout << "=========================\n";
-    std::cout << "   G20 CAN 多线程测试\n";
+    std::cout << "   L20_10 CAN 多线程测试\n";
     std::cout << "=========================\n";
 
     // 创建 CAN 总线对象
@@ -255,8 +255,8 @@ int main() {
     std::shared_ptr<Communication::CanBus> bus = std::make_shared<Communication::CanBus>("can0", 1000000);
 #endif
 
-    // 创建 G20 手对象
-    LinkerHandApi hand(LINKER_HAND::G20, HAND_TYPE::LEFT, COMM_TYPE::CAN);
+    // 创建 L20_10 手对象
+    LinkerHandApi hand(LINKER_HAND::L20_10, HAND_TYPE::LEFT, COMM_TYPE::CAN);
 
     // 设置 CAN 发送回调
     hand.setCanTxCallback([bus](uint32_t can_id, const uint8_t *data, uintptr_t data_len) -> int32_t {

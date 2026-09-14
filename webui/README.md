@@ -1,8 +1,8 @@
 # Web 示教器（webui/）
 
-一套开箱即用的灵巧手网页控制界面，全型号通用，`./build.sh -b` 编译后 `python3 webui/run.py` 即可使用。
+一套开箱即用的灵巧手网页控制界面，全型号通用，`./build.sh -b` 编译后 `python3 webui/run.py` 即可使用；也可用仓库根目录的 `./start-webui.sh` 一条命令启动（未编译会自动先构建）。
 
-支持型号：L6 / L7 / L10 / L20 / L21 / L25 / G20 / O6 / O20（O20 走 CAN-FD）。
+支持型号：L6 / L7 / L20_Lite / L20 / L21 / L25 / L20_10 / O6 / O20（O20 走 CAN-FD）。
 
 ## 前置
 
@@ -28,20 +28,27 @@
 
 两种方式，任选其一。
 
-**① 在线连接（推荐）**：不带 `--model` 启动，浏览器打开后在页面「设置」面板里选择型号 / 侧别 / 通信方式并连接，支持热重连与主动断开。
+**① 一条命令（推荐）**：仓库根目录的 `./start-webui.sh` 会先检测 `build/bin/web_bridge` 是否已编译，未编译则自动跑 `./build.sh -b`，再启动服务。所有参数原样透传给 `run.py`：
+
+```bash
+./start-webui.sh                       # 在前端「设置」面板在线连接
+./start-webui.sh --model O6 --side left
+```
+
+**② 在线连接**：不带 `--model` 启动，浏览器打开后在页面「设置」面板里选择型号 / 侧别 / 通信方式并连接，支持热重连与主动断开。
 
 ```bash
 python3 webui/run.py
 ```
 
-**② 命令行直连**：启动即按参数连接指定型号。
+**③ 命令行直连**：启动即按参数连接指定型号。
 
 ```bash
 python3 webui/run.py --model O6  --side left
-python3 webui/run.py --model L10 --side left  --channel can0
+python3 webui/run.py --model L20_LITE --side left  --channel can0
 python3 webui/run.py --model O20 --side right                    # 厂商 CAN-FD 设备
 python3 webui/run.py --model O20 --side right --channel socketcan:can0
-python3 webui/run.py --model L10 --comm modbus --channel /dev/ttyUSB0
+python3 webui/run.py --model L20_LITE --comm modbus --channel /dev/ttyUSB0
 ```
 
 启动后浏览器打开 `http://<本机IP>:8080/`。
@@ -50,7 +57,7 @@ python3 webui/run.py --model L10 --comm modbus --channel /dev/ttyUSB0
 
 | 参数 | 说明 | 默认 |
 |------|------|------|
-| `--model` | 启动即连的型号（L6/O6/L7/L10/L20/G20/L21/L25/O20）；不填则在前端在线连接 | 无 |
+| `--model` | 启动即连的型号（L6/O6/L7/L20_LITE/L20/L20_10/L21/L25/O20）；不填则在前端在线连接 | 无 |
 | `--side` | `left` / `right` | `left` |
 | `--comm` | `can` / `canfd` / `modbus`；缺省按型号自动（O20→canfd，其余→can） | 自动 |
 | `--channel` | CAN 接口名（如 `can0`）/ Modbus 串口（如 `/dev/ttyUSB0`）；O20 可用 `socketcan:can0` | 自动 |
@@ -61,7 +68,7 @@ python3 webui/run.py --model L10 --comm modbus --channel /dev/ttyUSB0
 
 - 按型号动态渲染关节滑块，实时位置回读
 - 速度 / 力矩设置与回读
-- 触觉压感热力图（含掌心，O6 / G20）
+- 触觉压感热力图（含掌心，O6 / L20_10）
 - 温度 / 故障监控（温度 >50 黄、>60 红，故障码非 0 红）
 - 版本信息展示、明暗主题切换
 

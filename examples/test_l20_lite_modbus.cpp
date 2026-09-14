@@ -1,4 +1,4 @@
-// L10 / Modbus / 左手 —— 速度/扭矩/动作序列与各类状态读取
+// L20_Lite / Modbus / 左手 —— 速度/扭矩/动作序列与各类状态读取
 #include <iostream>
 #include <vector>
 #include <thread>
@@ -58,7 +58,7 @@ int main(int argc, char* argv[]) {
 
     // 2. 初始化手部 API
     try {
-    LinkerHandApi hand(LINKER_HAND::L10, HAND_TYPE::LEFT, COMM_TYPE::MODBUS);
+    LinkerHandApi hand(LINKER_HAND::L20_Lite, HAND_TYPE::LEFT, COMM_TYPE::MODBUS);
     
     // 3. 设置回调函数
     setupHandCallbacks(hand);
@@ -70,7 +70,7 @@ int main(int argc, char* argv[]) {
     std::cout << "----------------------------------------" << std::endl;
     std::cout << "测试 1: 设置速度" << std::endl;
     std::cout << "----------------------------------------" << std::endl;
-    std::vector<uint8_t> speed(10, 128);  // 10个关节，速度值 128 (L10有10个关节)
+    std::vector<uint8_t> speed(10, 128);  // 10个关节，速度值 128 (L20_Lite有10个关节)
     hand.setSpeed(speed);
     printVector("设置速度", speed);
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -91,7 +91,7 @@ int main(int argc, char* argv[]) {
     std::cout << "测试 3: 手指动作序列" << std::endl;
     std::cout << "----------------------------------------" << std::endl;
     
-    // L10 有 10 个关节: 大拇指弯曲、大拇指偏航、食指弯曲、中指弯曲、无名指弯曲、小拇指弯曲、食指偏航、无名指偏航、小拇指偏航、大拇指翻转
+    // L20_Lite 有 10 个关节: 大拇指弯曲、大拇指偏航、食指弯曲、中指弯曲、无名指弯曲、小拇指弯曲、食指偏航、无名指偏航、小拇指偏航、大拇指翻转
     std::vector<std::vector<uint8_t>> poses = {
         {255, 255, 255, 255, 255, 255, 255, 255, 255, 255},  // 完全张开
         {0, 255, 255, 255, 255, 255, 255, 255, 255, 255},    // 大拇指弯曲
@@ -216,7 +216,7 @@ int main(int argc, char* argv[]) {
     }
 
     std::cout << "========================================" << std::endl;
-    std::cout << "L10 测试完成！" << std::endl;
+    std::cout << "L20_Lite 测试完成！" << std::endl;
     std::cout << "========================================" << std::endl;
     std::cout << std::endl;
     } catch (const std::exception& e) {

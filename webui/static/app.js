@@ -15,11 +15,12 @@ const I18N = {
     about_sdk: 'SDK 版本', about_site: '官网', about_desc: 'LinkerHand 系列 C++ SDK 的 Web 控制界面。',
     f_model: '型号', f_comm: '通信方式', f_side: '左右手', f_chan: '设备',
     side_left: '左手', side_right: '右手', connect: '连接', connecting: '连接中…',
+    chan_ph_can: '留空自动检测 / can0', chan_ph_canfd: '留空自动检测 / socketcan:can0', chan_ph_modbus: '留空自动检测 / /dev/ttyUSB0',
     connected_ok: '连接成功', not_connected: '未连接——点击右上角 ⚙ 选择型号与通信方式后连接',
     disconnect: '断开连接', disconnecting: '断开中…', disconnected: '已断开',
     ver_info: '设备信息', joints_panel: '监控 & 控制', sp_tq_panel: '速度 & 扭矩',
     speed: '速度', torque: '扭矩', force_panel: '压感数据', rate: '频率',
-    rate_pos: '位置', rate_st: '速度/扭矩', rate_force: '触觉', rate_temp: '温度', rate_fault: '故障码',
+    rate_send: '控制下发', rate_pos: '位置', rate_st: '速度/扭矩', rate_force: '触觉', rate_temp: '温度', rate_fault: '故障码',
     no_force: '暂无触觉数据（该型号无传感器或未接入）。', ready: '就绪',
     h_joint: '关节', h_ctrl: '控制', h_target: '目标', h_pos: '实际',
     h_speed: '速度', h_torque: '扭矩', h_temp: '温度°C', h_fault: '故障码',
@@ -41,11 +42,12 @@ const I18N = {
     about_sdk: 'SDK Version', about_site: 'Website', about_desc: 'Web control UI for the LinkerHand C++ SDK.',
     f_model: 'Model', f_comm: 'Comm', f_side: 'Hand', f_chan: 'Device',
     side_left: 'Left', side_right: 'Right', connect: 'Connect', connecting: 'Connecting…',
+    chan_ph_can: 'blank = auto-detect / can0', chan_ph_canfd: 'blank = auto-detect / socketcan:can0', chan_ph_modbus: 'blank = auto-detect / /dev/ttyUSB0',
     connected_ok: 'Connected', not_connected: 'Not connected — click ⚙ to pick model & comm, then connect',
     disconnect: 'Disconnect', disconnecting: 'Disconnecting…', disconnected: 'Disconnected',
     ver_info: 'Device Info', joints_panel: 'Monitor & Control', sp_tq_panel: 'Speed & Torque',
     speed: 'Speed', torque: 'Torque', force_panel: 'Pressure Data', rate: 'Frequency',
-    rate_pos: 'Position', rate_st: 'Speed/Torque', rate_force: 'Tactile', rate_temp: 'Temp', rate_fault: 'Fault',
+    rate_send: 'Command', rate_pos: 'Position', rate_st: 'Speed/Torque', rate_force: 'Tactile', rate_temp: 'Temp', rate_fault: 'Fault',
     no_force: 'No tactile data (this model has no sensor or is not connected).', ready: 'Ready',
     h_joint: 'Joint', h_ctrl: 'Control', h_target: 'Target', h_pos: 'Actual',
     h_speed: 'Speed', h_torque: 'Torque', h_temp: 'Temp°C', h_fault: 'Fault',
@@ -119,7 +121,21 @@ const connMsg = document.getElementById('connMsg');
 const disconnectBtn = document.getElementById('disconnectBtn');
 let OPTS = null;
 const COMM_LABEL = {can: 'CAN', canfd: 'CAN-FD', modbus: 'Modbus', ethercat: 'EtherCAT'};
-const CHAN_PH = {can: 'can0', canfd: 'socketcan:can0', modbus: '/dev/ttyUSB0'};
+const CHAN_PH = {can: 'chan_ph_can', canfd: 'chan_ph_canfd', modbus: 'chan_ph_modbus'};
+// 按型号的初始默认姿势（0-255 滑块值，长度须 = 该型号 DOF）。
+// 未列出的型号默认全张开(255)。
+const DEFAULT_POSE = {
+  L30: [0, 0, 255, 0, 75, 0, 0, 0, 0, 0, 0, 0, 96, 255, 0, 0, 88],  // 非原始模式回退用
+  // L20_10 左手初始位置；右手暂用左手默认值先占位（DEFAULT_POSE 不区分左右手）
+  L20_10: [255, 255, 255, 255, 255, 255, 121, 127, 123, 121, 255, 255, 255, 255, 255, 255],
+};
+// 原始值模式下按左右手的完整默认姿势（原始 int16，17 关节）。左右手默认位不同。
+const DEFAULT_POSE_RAW_FULL = {
+  L30: {
+    right: [0, 0, 1000, 0, -82, 0, 0, 0, 0, 0, 0, -200, -49, 200, 0, 0, -80],
+    left:  [0, 0, 0,    0,  79, 0, 0, 0, 0, 0, 0,  148, -49, -200, 0, 0, -80],
+  },
+};
 
 async function openSettings(){
   setModal.hidden = false;
@@ -153,7 +169,7 @@ function onModelChange(){
   });
   onCommChange();
 }
-function onCommChange(){ mChan.placeholder = CHAN_PH[mComm.value] || ''; }
+function onCommChange(){ const k = CHAN_PH[mComm.value]; mChan.placeholder = k ? t(k) : ''; }
 async function doConnect(){
   connMsg.className = 'conn-msg'; connMsg.textContent = t('connecting');
   const body = {model: mModel.value, side: mSide.value, comm: mComm.value, channel: mChan.value.trim()};
@@ -204,7 +220,9 @@ function buildJoints(){
     const tr = document.createElement('tr');
     const nameTd = document.createElement('td'); nameTd.textContent = jointName(i);
     const ctlTd = document.createElement('td'); ctlTd.className = 'ctl';
-    const s = document.createElement('input'); s.type = 'range'; s.min = 0; s.max = 255; s.value = vals[i];
+    const s = document.createElement('input'); s.type = 'range';
+    const rng = (META.raw && META.ranges && META.ranges[i]) ? META.ranges[i] : [0, 255];
+    s.min = rng[0]; s.max = rng[1]; s.step = 1; s.value = vals[i];
     ctlTd.appendChild(s);
     const valTd = document.createElement('td'); valTd.className = 'num'; valTd.textContent = vals[i];
     s.addEventListener('input', () => { vals[i] = +s.value; valTd.textContent = s.value; sendThrottled(); });
@@ -224,10 +242,11 @@ function buildJoints(){
 function refresh(){ for(let i = 0; i < META.dof; i++){ sliders[i].value = vals[i]; outs[i].textContent = vals[i]; } }
 
 let timer = null, pending = false;
+let sendThrottleMs = 30;   // 控制下发节流(ms)，由"设置-频率-控制下发"调节，默认 ~33Hz
 function sendThrottled(){
   if(timer){ pending = true; return; }
   sendPose();
-  timer = setTimeout(() => { timer = null; if(pending){ pending = false; sendThrottled(); } }, 60);
+  timer = setTimeout(() => { timer = null; if(pending){ pending = false; sendThrottled(); } }, sendThrottleMs);
 }
 async function sendPose(){
   try{ const j = await post('/pose', {vals}); status(j.ok ? (t('sent') + ' [' + j.vals.join(', ') + ']') : (t('err') + ': ' + j.error)); }
@@ -247,6 +266,10 @@ rateEls.forEach(el => {
   const chan = el.dataset.chan, out = el.parentElement.querySelector('.rval b');
   el.addEventListener('input', () => {
     out.textContent = el.value;
+    if (chan === 'send') {           // "控制下发"：仅调前端下发节流，不发 /rate
+      sendThrottleMs = Math.round(1000 / Math.max(1, +el.value));
+      return;
+    }
     clearTimeout(rateTimers[chan]);          // 拖动去抖，避免刷爆 /rate
     rateTimers[chan] = setTimeout(() => post('/rate', {chan, hz:+el.value}), 120);
   });
@@ -438,7 +461,10 @@ function renderMonitor(pos, spd, trq, temp, fault){
     const p = get(pos, i);
     // 实际值与目标偏差超过容差时标橙,提示尚未到位(容差避开反馈抖动导致的常亮)
     c.pos.textContent = p == null ? '--' : p;
-    c.pos.className = (p != null && Math.abs(p - vals[i]) > 5) ? 'num warn' : 'num';
+    // 原始模式量程大，容差放宽(按各关节行程比例)，避免常亮橙色
+    let thr = 5;
+    if (META.raw && META.ranges && META.ranges[i]) thr = Math.max(20, (META.ranges[i][1] - META.ranges[i][0]) * 0.03);
+    c.pos.className = (p != null && Math.abs(p - vals[i]) > thr) ? 'num warn' : 'num';
     setNum(c.spd, get(spd, i)); setNum(c.trq, get(trq, i));
     const tp = get(temp, i), f = get(fault, i);
     c.temp.textContent = tp == null ? '--' : tp;
@@ -531,8 +557,42 @@ async function init(){
     return;
   }
   verReady = renderVersion(document.getElementById('infoVer'), META.version);
-  vals = new Array(META.dof).fill(255);
+  const dp = DEFAULT_POSE[META.model];
+  // 侧别以服务端实际连接为准(META.side)，避免刷新时下拉默认(left)导致误用左手姿势
+  const side = META.side || ((mSide && mSide.value) ? mSide.value : 'right');
+  if (mSide && META.side) mSide.value = META.side;   // 同步下拉显示
+  const rawFull = DEFAULT_POSE_RAW_FULL[META.model] && DEFAULT_POSE_RAW_FULL[META.model][side];
+  if (META.raw && META.ranges && META.ranges.length === META.dof) {
+    if (Array.isArray(rawFull) && rawFull.length === META.dof) {
+      // 按左右手的完整原始值默认姿势（各关节量程钳位）
+      vals = rawFull.map((v, i) => Math.max(META.ranges[i][0], Math.min(META.ranges[i][1], v)));
+    } else {
+      // 无预设原始默认：默认姿势(0-255)按各关节 ranges 换算，否则取行程中点
+      vals = META.ranges.map((r, i) => {
+        if (dp && dp.length === META.dof) return Math.round(r[0] + (dp[i] / 255) * (r[1] - r[0]));
+        return Math.round((r[0] + r[1]) / 2);
+      });
+    }
+  } else {
+    vals = (dp && dp.length === META.dof) ? dp.slice() : new Array(META.dof).fill(255);
+  }
+  // 速度/扭矩滑块量程：原始模式按实际量程(int16)铺满并给合理默认；否则沿用 0-255
+  const cfgScalar = (el, valEl, range, rawDef, defVal) => {
+    if (META.raw && Array.isArray(range) && range.length === 2) {
+      el.min = range[0]; el.max = range[1]; el.step = 1;
+      el.value = Math.max(range[0], Math.min(range[1], rawDef));
+    } else {
+      el.min = 0; el.max = 255; el.value = defVal;
+    }
+    valEl.textContent = el.value;
+  };
+  const spdMax = (Array.isArray(META.speed_range) && META.speed_range.length === 2) ? META.speed_range[1] : 255;
+  cfgScalar(speedEl, speedVal, META.speed_range, spdMax, 255);   // 速度默认取最大
+  cfgScalar(torqueEl, torqueVal, META.torque_range, 1024, 180); // 扭矩默认 1024(-2047~2047)
+
   buildJoints(); drawSaved();
-  sendPose();   // 推初始张开姿势
+  sendPose();   // 推初始姿势
+  // 原始模式下把速度/扭矩初值也下发，使设备与滑块一致
+  if (META.raw) { post('/speed', {val:+speedEl.value}); post('/torque', {val:+torqueEl.value}); }
 }
 init();

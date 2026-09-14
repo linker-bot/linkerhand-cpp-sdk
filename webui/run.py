@@ -29,12 +29,12 @@ JOINT_NAMES = {
     "L6":  ["拇指根部", "拇指侧摆", "食指根部", "中指根部", "无名指根部", "小指根部"],
     "O6":  ["拇指根部", "拇指侧摆", "食指根部", "中指根部", "无名指根部", "小指根部"],
     "L7":  ["大拇指弯曲", "大拇指横摆", "食指弯曲", "中指弯曲", "无名指弯曲", "小拇指弯曲", "拇指旋转"],
-    "L10": ["拇指根部", "拇指侧摆", "食指根部", "中指根部", "无名指根部", "小指根部",
+    "L20_LITE": ["拇指根部", "拇指侧摆", "食指根部", "中指根部", "无名指根部", "小指根部",
             "食指侧摆", "无名指侧摆", "小指侧摆", "拇指旋转"],
     "L20": ["拇指根部", "食指根部", "中指根部", "无名指根部", "小指根部", "拇指侧摆",
             "食指侧摆", "中指侧摆", "无名指侧摆", "小指侧摆", "拇指横摆", "预留1",
             "预留2", "预留3", "预留4", "拇指尖部", "食指末端", "中指末端", "无名指末端", "小指末端"],
-    "G20": ["拇指根部", "食指根部", "中指根部", "无名指根部", "小指根部",
+    "L20_10": ["拇指根部", "食指根部", "中指根部", "无名指根部", "小指根部",
             "拇指侧摆", "食指侧摆", "中指侧摆", "无名指侧摆", "小指侧摆", "拇指横摆",
             "拇指指尖", "食指指尖", "中指指尖", "无名指指尖", "小指指尖"],
     "L21": ["大拇指根部", "食指根部", "中指根部", "无名指根部", "小拇指根部", "大拇指侧摆",
@@ -50,6 +50,10 @@ JOINT_NAMES = {
             "中指侧摆", "中指指根", "中指指尖",
             "无名指侧摆", "无名指指根", "无名指指尖",
             "小指侧摆", "小指指根", "小指指尖"],
+    "L30": ["拇指指根", "拇指指尖", "拇指侧摆", "拇指旋转",
+            "无名指侧摆", "无名指指尖", "无名指指根",
+            "中指指根", "中指指尖", "小指指根", "小指指尖",
+            "小指侧摆", "中指侧摆", "食指侧摆", "食指指根", "食指指尖", "手腕"],
 }
 
 # 与 JOINT_NAMES 同型号、同顺序的英文关节名，供前端英文界面使用。
@@ -57,12 +61,12 @@ JOINT_NAMES_EN = {
     "L6":  ["Thumb base", "Thumb abd.", "Index base", "Middle base", "Ring base", "Pinky base"],
     "O6":  ["Thumb base", "Thumb abd.", "Index base", "Middle base", "Ring base", "Pinky base"],
     "L7":  ["Thumb flex", "Thumb roll", "Index flex", "Middle flex", "Ring flex", "Pinky flex", "Thumb rot."],
-    "L10": ["Thumb base", "Thumb abd.", "Index base", "Middle base", "Ring base", "Pinky base",
+    "L20_LITE": ["Thumb base", "Thumb abd.", "Index base", "Middle base", "Ring base", "Pinky base",
             "Index abd.", "Ring abd.", "Pinky abd.", "Thumb rot."],
     "L20": ["Thumb base", "Index base", "Middle base", "Ring base", "Pinky base", "Thumb abd.",
             "Index abd.", "Middle abd.", "Ring abd.", "Pinky abd.", "Thumb roll", "Reserved 1",
             "Reserved 2", "Reserved 3", "Reserved 4", "Thumb tip", "Index tip", "Middle tip", "Ring tip", "Pinky tip"],
-    "G20": ["Thumb base", "Index base", "Middle base", "Ring base", "Pinky base",
+    "L20_10": ["Thumb base", "Index base", "Middle base", "Ring base", "Pinky base",
             "Thumb abd.", "Index abd.", "Middle abd.", "Ring abd.", "Pinky abd.", "Thumb roll",
             "Thumb tip", "Index tip", "Middle tip", "Ring tip", "Pinky tip"],
     "L21": ["Thumb base", "Index base", "Middle base", "Ring base", "Pinky base", "Thumb abd.",
@@ -78,6 +82,10 @@ JOINT_NAMES_EN = {
             "Middle abd.", "Middle base", "Middle tip",
             "Ring abd.", "Ring base", "Ring tip",
             "Pinky abd.", "Pinky base", "Pinky tip"],
+    "L30": ["Thumb base", "Thumb tip", "Thumb abd.", "Thumb rot.",
+            "Ring abd.", "Ring tip", "Ring base",
+            "Middle base", "Middle tip", "Pinky base", "Pinky tip",
+            "Pinky abd.", "Middle abd.", "Index abd.", "Index base", "Index tip", "Wrist"],
 }
 
 bridge = None
@@ -88,18 +96,19 @@ BRIDGE_PATH = DEFAULT_BRIDGE   # main() 里按 --bridge 覆盖，供 /connect �
 current = None                 # 当前连接参数 {"model","side","comm","channel"}；未连接为 None
 
 # 型号 -> 可选通信方式（前端下拉联动 + /connect 校验依据）。
-# CAN 全型号支持；CAN-FD 仅 O20；Modbus 仅 O6/L7/L10（HandFactory 其余会抛异常）。
+# CAN 全型号支持；CAN-FD 仅 O20 / L30；Modbus 仅 O6/L7/L20_Lite（HandFactory 其余会抛异常）。
 # EtherCAT 当前 SDK 未接通（工厂直接抛异常），不列入。
 COMM_SUPPORT = {
     "L6":  ["can"],
     "O6":  ["can", "modbus"],
     "L7":  ["can", "modbus"],
-    "L10": ["can", "modbus"],
+    "L20_LITE": ["can", "modbus"],
     "L20": ["can"],
     "L21": ["can"],
     "L25": ["can"],
-    "G20": ["can"],
+    "L20_10": ["can"],
     "O20": ["canfd"],
+    "L30": ["canfd"],
 }
 
 meta = {}                 # {"model","dof","version"}
@@ -234,16 +243,33 @@ def _clamp_vec(vals):
     return [max(0, min(255, int(v))) for v in vals]
 
 
+def _clamp_i16(vals):
+    return [max(-32768, min(32767, int(v))) for v in vals]
+
+
 def send_pose(vals):
     _write("P " + " ".join(str(v) for v in _clamp_vec(vals)) + "\n")
+
+
+def send_pose_raw(vals):
+    # 原始值直控：按 int16 下发，不做 0-255 限幅
+    _write("P " + " ".join(str(v) for v in _clamp_i16(vals)) + "\n")
 
 
 def send_speed(vals):
     _write("S " + " ".join(str(v) for v in _clamp_vec(vals)) + "\n")
 
 
+def send_speed_raw(vals):
+    _write("S " + " ".join(str(v) for v in _clamp_i16(vals)) + "\n")
+
+
 def send_torque(vals):
     _write("T " + " ".join(str(v) for v in _clamp_vec(vals)) + "\n")
+
+
+def send_torque_raw(vals):
+    _write("T " + " ".join(str(v) for v in _clamp_i16(vals)) + "\n")
 
 
 def _dof():
@@ -298,14 +324,20 @@ class Handler(BaseHTTPRequestHandler):
             connected = bridge is not None and bridge.poll() is None
             with state_lock:
                 model = meta.get("model", "?")
+                cur_side = (current or {}).get("side", "")
                 m = {
                     "connected": connected,
                     "model": model,
+                    "side": cur_side,
                     "dof": _dof(),
                     "version": meta.get("version", ""),
                     "rates": meta.get("rates", {}),
                     "names": JOINT_NAMES.get(model, [f"关节{i}" for i in range(_dof())]),
                     "names_en": JOINT_NAMES_EN.get(model, [f"Joint {i}" for i in range(_dof())]),
+                    "raw": bool(meta.get("raw", False)),
+                    "ranges": meta.get("ranges", []),
+                    "speed_range": meta.get("speed_range", []),
+                    "torque_range": meta.get("torque_range", []),
                 }
             self._send(200, json.dumps(m), "application/json")
         elif self.path == "/options":
@@ -342,14 +374,26 @@ class Handler(BaseHTTPRequestHandler):
                 _write(f"R {chan} {hz}\n")
                 return self._send(200, json.dumps({"ok": True, "chan": chan, "hz": hz}), "application/json")
             if self.path == "/pose":
-                vals = _clamp_vec(_vec_from_payload(payload))
-                send_pose(vals)
+                if meta.get("raw"):
+                    vals = _clamp_i16(_vec_from_payload(payload))
+                    send_pose_raw(vals)
+                else:
+                    vals = _clamp_vec(_vec_from_payload(payload))
+                    send_pose(vals)
             elif self.path == "/speed":
-                vals = _clamp_vec(_vec_from_payload(payload))
-                send_speed(vals)
+                if meta.get("raw"):
+                    vals = _clamp_i16(_vec_from_payload(payload))
+                    send_speed_raw(vals)
+                else:
+                    vals = _clamp_vec(_vec_from_payload(payload))
+                    send_speed(vals)
             elif self.path == "/torque":
-                vals = _clamp_vec(_vec_from_payload(payload))
-                send_torque(vals)
+                if meta.get("raw"):
+                    vals = _clamp_i16(_vec_from_payload(payload))
+                    send_torque_raw(vals)
+                else:
+                    vals = _clamp_vec(_vec_from_payload(payload))
+                    send_torque(vals)
             else:
                 return self._send(404, "not found", "text/plain")
             self._send(200, json.dumps({"ok": True, "vals": vals}), "application/json")
@@ -388,7 +432,7 @@ def main():
     ap.add_argument("--side", choices=["left", "right"], default="left")
     ap.add_argument("--comm", choices=["can", "canfd", "modbus"], default="",
                     help="通信方式；缺省按型号自动（O20→canfd，其余→can）")
-    ap.add_argument("--channel", default="", help="CAN 接口名（如 can0）/ Modbus 串口（如 /dev/ttyUSB0）；O20 可用 'socketcan:can0'")
+    ap.add_argument("--channel", default="", help="设备通道；留空则按左右手自动检测自选（CAN：接口名 can0；CAN-FD/L30：socketcan 自检或 socketcan:can0；Modbus：串口 /dev/ttyUSB0）")
     ap.add_argument("--host", default="0.0.0.0")
     ap.add_argument("--port", type=int, default=8080)
     ap.add_argument("--bridge", default=DEFAULT_BRIDGE, help="web_bridge 可执行文件路径")

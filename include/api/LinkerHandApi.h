@@ -11,6 +11,8 @@
 #include <sstream>
 #include <string>
 #include <thread>
+#include <utility>
+#include <vector>
 #include <vector>
 
 #include "Common.h"
@@ -55,6 +57,17 @@ public:
 	std::vector<uint8_t> getPosition();
 	std::vector<double> getPositionArc();
 	std::vector<double> testPositionArc(const std::vector<uint8_t> &pose);
+	// 原始值直控（绕过 0-255 量化，完整分辨率；目前 L30 支持）
+	void setPositionRaw(const std::vector<int16_t> &raw);
+	std::vector<int16_t> getPositionRaw();
+	std::vector<std::pair<int16_t, int16_t>> getPositionRangeRaw();
+	// 速度/扭矩原始值直控（实际量程；目前 L30 支持）
+	void setSpeedRaw(const std::vector<int16_t> &raw);
+	std::vector<int16_t> getSpeedRaw();
+	std::pair<int16_t, int16_t> getSpeedRangeRaw();
+	void setTorqueRaw(const std::vector<int16_t> &raw);
+	std::vector<int16_t> getTorqueRaw();
+	std::pair<int16_t, int16_t> getTorqueRangeRaw();
 
 	// 设置速度
 	void setSpeed(const std::vector<uint8_t> &speed);
