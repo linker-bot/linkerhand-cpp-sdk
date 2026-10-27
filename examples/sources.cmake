@@ -36,7 +36,8 @@ set(LINKERHAND_EXAMPLES_CANFD
     test_o20_canfd_1
     test_o20_canfd_double
     test_l30_canfd_0
-    linker_hand_example
+    test_o30_canfd_0
+    hand_tui
 )
 
 # 仅 Linux 构建：SocketCAN 原生 CANFD（CanFDSocket），只用内核 linux/can.h，
@@ -45,4 +46,5 @@ set(LINKERHAND_EXAMPLES_LINUX
     test_o20_canfd_socket_0
     test_l30_canfd_socket_0
     test_l30_canfd_socket_auto_0
+    test_o30_canfd_socket_0
 )

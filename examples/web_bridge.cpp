@@ -3,14 +3,17 @@
 // 姿势/速度/力矩，周期性把实测位置、速度、力矩、触觉压感（含掌心）以文本/JSON 行写到 stdout。
 //
 // 用法：  web_bridge <MODEL> <side> [comm] [channel]
-//   MODEL    L6/L7/L20_LITE/L20/L21/L25/L20_10/O6/O20
+//   MODEL    L6/L7/L20_LITE/L20/L21/L25/L20_10/O6/O20/L30/O30
 //   side     left|right
 //   comm     可选，缺省 can。can | canfd | modbus。
-//            modbus 仅支持 O6/L7/L20_Lite；O20 请用 canfd。
+//            modbus 仅支持 O6/L7/L20_Lite；O20/L30/O30 请用 canfd。
 //   channel  可选。can：CAN 接口名（如 can0），留空按 side 自动探测。
 //            canfd（L30）：留空按 side 自动检测左右手所在的 CANFD 通道（socketcan 自检）；
 //                         "socketcan:can0" 指定内核原生接口；"socketcan:" 留空同样自检。
 //            canfd（O20）：留空用厂商 CAN-FD 设备(0,0)；"socketcan:can0" 用内核原生 CAN-FD。
+//            canfd（O30）：HOP 协议 + 标准帧；留空按 side 自动检测左右手所在 CANFD 通道
+//                         （HOP 特殊 ID 0x7FF 探测）；"socketcan:can0" 指定接口；
+//                         其余非空字符串走厂商 CAN-FD 设备(0,0)。
 //            modbus：串口路径（如 /dev/ttyUSB0），留空按 side 自动探测。
 //
 // stdin 命令（空白分隔，每行一条）：
@@ -68,6 +71,7 @@ static bool parse_model(const std::string& s, LINKER_HAND& out) {
     else if (s == "O6")  out = LINKER_HAND::O6;
     else if (s == "O20") out = LINKER_HAND::O20;
     else if (s == "L30") out = LINKER_HAND::L30;
+    else if (s == "O30") out = LINKER_HAND::O30;
     else return false;
     return true;
 }
@@ -84,6 +88,7 @@ static int dof_of(LINKER_HAND m) {
         case L20_10:           return 16;
         case O20:           return 16;
         case L30:           return 17;
+        case O30:           return 20;  // HOP 36 逻辑关节中 20 个有效电机（SDK 已剔除无效占位）
         default:            return 10;
     }
 }
@@ -137,11 +142,15 @@ int main(int argc, char** argv) {
     const std::string channel = (argc > 4) ? argv[4] : "";
     const int dof = dof_of(model);
 
-    // canfd 是 CAN 之上的传输变体（仅 O20 有意义），SDK 仍以 COMM_TYPE::CAN 构造。
+    // canfd 是 CAN 之上的传输变体（O20 / L30 / O30 有意义），SDK 仍以 COMM_TYPE::CAN 构造。
     const bool is_modbus = (comm == "modbus");
     const bool is_canfd  = (comm == "canfd")
                            || (model == LINKER_HAND::O20 && comm != "modbus")
-                           || (model == LINKER_HAND::L30 && comm != "modbus");
+                           || (model == LINKER_HAND::L30 && comm != "modbus")
+                           || (model == LINKER_HAND::O30 && comm != "modbus");
+    // O30 采用 HOP 协议 + 标准帧(11 位)：tx 必须以 is_extended=false 发送；
+    // O20/L30 用扩展帧(is_extended=true)。此标志控制 CAN-FD tx 的帧类型。
+    const bool is_std_frame = (model == LINKER_HAND::O30);
 
     try {
         COMM_TYPE ct = is_modbus ? COMM_TYPE::MODBUS : COMM_TYPE::CAN;
@@ -171,13 +180,14 @@ int main(int argc, char** argv) {
                 return 0;
             });
         } else if (is_canfd) {
-            // O20/L30 走 CAN-FD。channel 语义：
+            // O20/L30/O30 走 CAN-FD。channel 语义：
             //   "socketcan:canX" 或留空 -> 内核原生 CanFDSocket；留空/"socketcan:" 后无接口名时
-            //   自动检测左右手所在通道（CanFDSocket(side) 自检，仅 L30 协议可自检）。
+            //   自动检测左右手所在通道（CanFDSocket(side[,proto]) 自检，L30 与 O30 均支持）。
             //   其余非空字符串 -> 厂商 libcanbus CAN-FD（O20 默认设备(0,0) 走此路，写 "0" 即可）。
             bool use_socketcan = channel.rfind("socketcan:", 0) == 0;
-            // 留空：L30 走 socketcan 自动检测；O20 无 socketcan 自检协议，仍回退厂商默认(0,0)。
-            bool auto_socketcan = channel.empty() && (model == LINKER_HAND::L30);
+            // 留空：L30 / O30 走 socketcan 自动检测；O20 无 socketcan 自检协议，仍回退厂商默认(0,0)。
+            bool auto_socketcan = channel.empty() &&
+                                  (model == LINKER_HAND::L30 || model == LINKER_HAND::O30);
             if (use_socketcan || auto_socketcan) {
 #if defined(__linux__)
                 std::string iface;
@@ -185,14 +195,18 @@ int main(int argc, char** argv) {
                 std::shared_ptr<Communication::CanFDSocket> cf;
                 if (iface.empty()) {
                     // 未指定接口名：自动检测左右手所在的 CANFD 通道（内部遍历已启动接口，
-                    // 发 0xC3 读请求校验左右手，命中后打开；失败抛异常→BRIDGE_ERROR）。
-                    cf = std::make_shared<Communication::CanFDSocket>(side);
+                    // 按型号协议发探测读请求校验左右手，命中后打开；失败抛异常→BRIDGE_ERROR）。
+                    // O30 用 HOP 标准帧探测（特殊 ID 0x7FF 读左右手）；L30 用 0xC3 扩展帧。
+                    auto proto = (model == LINKER_HAND::O30)
+                                     ? Communication::CanFDSocket::FDProtocol::O30_HOP
+                                     : Communication::CanFDSocket::FDProtocol::L30_C3;
+                    cf = std::make_shared<Communication::CanFDSocket>(side, proto);
                 } else {
                     cf = std::make_shared<Communication::CanFDSocket>(iface);
                     if (!cf->init()) { std::cerr << "BRIDGE_ERROR: CanFDSocket init failed (" << iface << ")" << std::endl; return 1; }
                 }
-                hand->setCanTxCallback([cf](uint32_t id, const uint8_t* d, uintptr_t n) -> int32_t {
-                    try { std::vector<uint8_t> v(d, d + n); cf->send(v, id, true); } catch (...) { return -1; }
+                hand->setCanTxCallback([cf, is_std_frame](uint32_t id, const uint8_t* d, uintptr_t n) -> int32_t {
+                    try { std::vector<uint8_t> v(d, d + n); cf->send(v, id, !is_std_frame); } catch (...) { return -1; }
                     return 0;
                 });
                 hand->setCanRxCallback([cf](uint32_t* id_out, uint8_t* d_out, uint8_t* n_out) -> int32_t {
@@ -212,8 +226,8 @@ int main(int argc, char** argv) {
 #if defined(WEB_BRIDGE_HAS_CANFD)
                 auto cf = std::make_shared<Communication::CanFD>(0, 0);
                 if (!cf->init()) { std::cerr << "BRIDGE_ERROR: CanFD init failed" << std::endl; return 1; }
-                hand->setCanTxCallback([cf](uint32_t id, const uint8_t* d, uintptr_t n) -> int32_t {
-                    try { std::vector<uint8_t> v(d, d + n); cf->send(v, id, true); } catch (...) { return -1; }
+                hand->setCanTxCallback([cf, is_std_frame](uint32_t id, const uint8_t* d, uintptr_t n) -> int32_t {
+                    try { std::vector<uint8_t> v(d, d + n); cf->send(v, id, !is_std_frame); } catch (...) { return -1; }
                     return 0;
                 });
                 hand->setCanRxCallback([cf](uint32_t* id_out, uint8_t* d_out, uint8_t* n_out) -> int32_t {

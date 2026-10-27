@@ -15,9 +15,9 @@ LinkerHandApi(const LINKER_HAND &handJoint, const HAND_TYPE &handType, const COM
 LinkerHandApi 类的构造函数，用于初始化 Linker 机械手 API。
 
 参数
-- handJoint: 机械手型号，可选值 `LINKER_HAND::{L6, L7, L10, L20, L21, L25, O6, L20_10, O20}`。
+- handJoint: 机械手型号，可选值 `LINKER_HAND::{L6, L7, L10, L20, L21, L25, O6, L20_10, O20, L30, O30}`。
 - handType: 左手或右手（`HAND_TYPE::LEFT` 或 `HAND_TYPE::RIGHT`）。
-- commType: 通信协议类型，可选值 `COMM_TYPE::{CAN, MODBUS, ETHERCAT}`，默认为 `CAN`。CAN-FD 走 `COMM_TYPE::CAN`，由 `Communication::CommFactory` 在底层选择 `CanFD` 实现。
+- commType: 通信协议类型，可选值 `COMM_TYPE::{CAN, MODBUS, ETHERCAT}`，默认为 `CAN`。CAN-FD 型号仍以 `COMM_TYPE::CAN` 构造，调用方通过回调注入 `CanFD` 或 Linux `CanFDSocket` 收发实现。
 
 ---
 
@@ -45,7 +45,7 @@ void setPosition(const std::vector<uint8_t> &pose);
 **Description**:  
 设置关节的目标位置，用于控制手指的运动。  
 **Parameters**:  
-- `pose`: 一个包含目标位置数据长度为（O6/L6=6、L7=7、L10=10、L20=20、L20_10=16、L21=21、L25=25）
+- `pose`: 一个包含目标位置数据长度为（O6/L6=6、L7=7、L10=10、L20=20、L20_10=16、L21=21、L25=25、L30=17、O30=20）
 的 `std::vector<uint8_t>`数组，范围是0～255。
 ```
   O6/L6:  ["拇指根部", "拇指侧摆", "食指根部", "中指根部", "无名指根部", "小指根部"]
@@ -61,6 +61,8 @@ void setPosition(const std::vector<uint8_t> &pose);
   L20_10: ["大拇指根部", "食指根部", "中指根部","无名指根部","小拇指根部","大拇指侧摆","食指侧摆","中指侧摆","无名指侧摆","小拇指侧摆","大拇指横滚","大拇指指尖","食指指尖","中指指尖","无名指指尖","小拇指指尖"]
 
   L25: ["大拇指根部", "食指根部", "中指根部","无名指根部","小拇指根部","大拇指侧摆","食指侧摆","中指侧摆","无名指侧摆","小拇指侧摆","大拇指横滚","预留","预留","预留","预留","大拇指中部","食指中部","中指中部","无名指中部","小拇指中部","大拇指指尖","食指指尖","中指指尖","无名指指尖","小拇指指尖"]
+
+  O30: ["拇指横滚", "拇指航向", "食指航向", "中指航向", "无名指航向", "小指航向", "拇指指根1", "食指指根1", "中指指根1", "无名指指根1", "小指指根1", "食指指根2", "中指指根2", "无名指指根2", "小指指根2", "拇指指尖", "食指指尖", "中指指尖", "无名指指尖", "小指指尖"]
 ```
 ---
 
@@ -71,7 +73,7 @@ void setPositionArc(const std::vector<double> &pose);
 **Description**:  
 设置关节的目标位置，用于控制手指的运动。  
 **Parameters**:  
-- `pose`: 一个包含目标位置数据长度为（O6/L6=6、L7=7、L10=10、L20=20、L20_10=16、L21=21、L25=25）
+- `pose`: 一个包含目标位置数据长度为（O6/L6=6、L7=7、L10=10、L20=20、L20_10=16、L21=21、L25=25、L30=17、O30=20）
 的 `std::vector<double>`数组，范围为urdf限位。
 
 ---
@@ -103,14 +105,25 @@ void setTorque(const std::vector<uint8_t> &torque);
 std::vector<std::vector<std::vector<uint8_t>>> getForce();
 ```
 **Description**:  
-获取五个手指的触觉力传感器数据。每个手指的传感器分布为一个 6 行 × 12 列的二维矩阵（共 72 个传感单元），本函数将全部五个手指的数据封装在一个三维向量中返回。  
+获取五个手指的压感数据。本函数将全部五个手指的数据封装在一个三维向量中返回，矩阵尺寸由型号决定。O30 返回 10 行 × 7 列、共 70 个 `uint8_t` 压感值；SDK 会依次读取拇指到小指，单路超时时返回该路上次缓存并输出警告。
+
 **Returns**:  
 - 返回一个三维向量：std::vector<std::vector<std::vector<uint8_t>>>
     外层 vector 大小 = 5（五根手指）。
-    中层 vector（每根手指）大小 = 6（行）。
-    内层 vector（每行）大小 = 12（列）。
+    中层 vector（每根手指）大小 = 该型号的矩阵行数。
+    内层 vector（每行）大小 = 该型号的矩阵列数。
     每个元素为 uint8_t 类型的值。
-> 注：O6型号的灵巧手矩阵数据为 4 行 × 10 列。
+> 常见维度：O30 为 10×7；O6 为 4×10；O20 / L30 为 12×6。O30 实测传感器单位为 `g`。
+
+O30 最小调用方式：
+
+```cpp
+// 完成 CAN-FD 收发回调注册后调用；返回 [5][10][7]
+auto force = hand.getForce();
+uint8_t thumb_first_point = force.at(0).at(0).at(0);
+```
+
+O30 使用 HOP 标准帧，发送回调必须将 `is_extended` 设为 `false`。其 72 字节响应会按 `61 + 11` 有效字节分片，SDK 已按响应 EDL 重组并忽略 CAN-FD DLC 补齐字节。
 
 ---
 
@@ -333,4 +346,3 @@ int main() {
 - 如果有任何问题或需要进一步支持，请联系 [https://linkerbot.cn/aboutUs](https://linkerbot.cn/aboutUs)。
 
 ---
-
