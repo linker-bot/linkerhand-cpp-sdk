@@ -62,8 +62,10 @@
 
 ## 1. 下载 SDK
 
+下载最新 Release（`v2.2.1`）对应的 SDK：
+
 ```bash
-git clone https://github.com/linker-bot/linkerhand-cpp-sdk.git
+git clone --branch v2.2.1 --depth 1 https://github.com/linker-bot/linkerhand-cpp-sdk.git
 cd linkerhand-cpp-sdk
 ```
 
