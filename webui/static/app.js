@@ -128,6 +128,10 @@ const DEFAULT_POSE = {
   L30: [0, 0, 255, 0, 75, 0, 0, 0, 0, 0, 0, 0, 96, 255, 0, 0, 88],  // 非原始模式回退用
   // L20_10 左手初始位置；右手暂用左手默认值先占位（DEFAULT_POSE 不区分左右手）
   L20_10: [255, 255, 255, 255, 255, 255, 121, 127, 123, 121, 255, 255, 255, 255, 255, 255],
+  // O30 默认手势（20 个有效电机；无效电机已由 SDK 剔除，不在滑块中）：
+  //   中指航向(idx3)=158、无名指航向(idx4)=255、小指航向(idx5)=250，
+  //   食指/中指/无名指/小指指根1(idx7~10)=20，其余 0
+  O30: [0, 0, 0, 158, 255, 250, 0, 20, 20, 20, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 };
 // 原始值模式下按左右手的完整默认姿势（原始 int16，17 关节）。左右手默认位不同。
 const DEFAULT_POSE_RAW_FULL = {
@@ -488,6 +492,13 @@ async function poll(){
       const m = await (await fetch('/meta')).json();
       if(m.version) META.version = m.version;
       verReady = renderVersion(document.getElementById('infoVer'), META.version);
+      // dof 迟到自愈：连接瞬间 META 未到时前端可能按兜底 dof 建了错误数量的滑块，
+      // 待真实 META 到达后若 dof 变化则重建关节表（如 O30 由兜底 10 纠正为 20）。
+      if(m.connected && m.dof && m.dof !== META.dof){
+        META = m;
+        buildJoints(); drawSaved();
+        refresh();
+      }
     }
   }catch(e){ document.getElementById('conn').classList.remove('on'); }
   setTimeout(poll, 33);   // ~30Hz，跟上后端压感刷新率

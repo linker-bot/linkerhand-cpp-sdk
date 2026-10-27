@@ -54,6 +54,13 @@ JOINT_NAMES = {
             "无名指侧摆", "无名指指尖", "无名指指根",
             "中指指根", "中指指尖", "小指指根", "小指指尖",
             "小指侧摆", "中指侧摆", "食指侧摆", "食指指根", "食指指尖", "手腕"],
+    # O30 采用 HOP 协议，36 逻辑关节中 20 个为有效电机（无效索引 1~4/15/25~35 已由 SDK 剔除）。
+    # 下列 20 个关节名与 SDK 对外向量顺序一一对应（有效索引 0,5~14,16~24）。
+    "O30": ["拇指横滚",
+            "拇指航向", "食指航向", "中指航向", "无名指航向", "小指航向",
+            "拇指指根1", "食指指根1", "中指指根1", "无名指指根1", "小指指根1",
+            "食指指根2", "中指指根2", "无名指指根2", "小指指根2",
+            "拇指指尖", "食指指尖", "中指指尖", "无名指指尖", "小指指尖"],
 }
 
 # 与 JOINT_NAMES 同型号、同顺序的英文关节名，供前端英文界面使用。
@@ -86,6 +93,11 @@ JOINT_NAMES_EN = {
             "Ring abd.", "Ring tip", "Ring base",
             "Middle base", "Middle tip", "Pinky base", "Pinky tip",
             "Pinky abd.", "Middle abd.", "Index abd.", "Index base", "Index tip", "Wrist"],
+    "O30": ["Thumb roll",
+            "Thumb yaw", "Index yaw", "Middle yaw", "Ring yaw", "Pinky yaw",
+            "Thumb root1", "Index root1", "Middle root1", "Ring root1", "Pinky root1",
+            "Index root2", "Middle root2", "Ring root2", "Pinky root2",
+            "Thumb tip", "Index tip", "Middle tip", "Ring tip", "Pinky tip"],
 }
 
 bridge = None
@@ -96,7 +108,7 @@ BRIDGE_PATH = DEFAULT_BRIDGE   # main() 里按 --bridge 覆盖，供 /connect �
 current = None                 # 当前连接参数 {"model","side","comm","channel"}；未连接为 None
 
 # 型号 -> 可选通信方式（前端下拉联动 + /connect 校验依据）。
-# CAN 全型号支持；CAN-FD 仅 O20 / L30；Modbus 仅 O6/L7/L20_Lite（HandFactory 其余会抛异常）。
+# CAN 全型号支持；CAN-FD 仅 O20 / L30 / O30；Modbus 仅 O6/L7/L20_Lite（HandFactory 其余会抛异常）。
 # EtherCAT 当前 SDK 未接通（工厂直接抛异常），不列入。
 COMM_SUPPORT = {
     "L6":  ["can"],
@@ -109,6 +121,7 @@ COMM_SUPPORT = {
     "L20_10": ["can"],
     "O20": ["canfd"],
     "L30": ["canfd"],
+    "O30": ["canfd"],
 }
 
 meta = {}                 # {"model","dof","version"}

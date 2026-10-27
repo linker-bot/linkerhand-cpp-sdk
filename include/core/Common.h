@@ -14,6 +14,7 @@ enum LINKER_HAND {
     G20,
     O20,
     L30,
+    O30,
     L20_10 = G20,
     L20_11 = G20,
     L20_Lite = L10
@@ -28,6 +29,15 @@ enum COMM_TYPE {
     CAN,
     MODBUS,
     ETHERCAT
+};
+
+// 读取来源：对应 HOP 协议控制字节的 RTS 位（bit7）。
+//   STATE   = 读“实际/运行状态值”（RTS=0，默认，历史行为）
+//   SETTING = 读“最近一次成功写入的设定值”（RTS=1）
+// 目前 O30(HOP) 的 getPosition/getSpeed 支持；其他型号忽略该参数按实际值处理。
+enum ReadSource {
+    STATE   = 0,
+    SETTING = 1
 };
 
 // 新风格枚举（推荐新代码使用）。
@@ -46,6 +56,7 @@ enum class HandModel : uint8_t {
     O6,
     O20,
     L30,
+    O30,
     L20_10 = G20,
     L20_11 = G20,
     L20_Lite = L10
@@ -74,6 +85,7 @@ inline LINKER_HAND to_legacy(HandModel m) {
         case HandModel::O6:  return LINKER_HAND::O6;
         case HandModel::O20: return LINKER_HAND::O20;
         case HandModel::L30: return LINKER_HAND::L30;
+        case HandModel::O30: return LINKER_HAND::O30;
     }
     return LINKER_HAND::L10;
 }

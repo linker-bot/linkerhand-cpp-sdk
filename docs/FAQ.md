@@ -59,7 +59,7 @@ cmake --build build -j
 - Linux `aarch64`
 - Windows `x64`（MinGW / MSVC 导入库）
 
-其中 O20 的 CAN-FD 示例目前主要面向 Linux `x86_64`。
+其中厂商 `CanFD` 后端目前主要面向 Linux `x86_64`；O20、L30、O30 在 Linux 上也可使用不依赖厂商库的 `CanFDSocket` 后端。
 
 ## 通信与接口
 
@@ -163,16 +163,30 @@ canfd.init();
 // rx: len = frame.can_dlc; memcpy(out, frame.data, len);
 ```
 
-单手样板见 `examples/test_o20_canfd_socket_0.cpp`。手型逻辑（O20）与传输层完全解耦，换后端只需改这一处构造 + 回调，`LinkerHandApi` 用法不变。
+单手样板见 `examples/test_o20_canfd_socket_0.cpp`。手型逻辑与传输层完全解耦，换后端只需改这一处构造 + 回调，`LinkerHandApi` 用法不变。
+
+### Q13: O30 的压感数据怎么读取？
+
+O30 使用 HOP 标准 CAN-FD 帧。先按 `examples/test_o30_canfd_socket_0.cpp` 注册 CAN-FD 收发回调，再调用统一接口：
+
+```cpp
+auto force = api.getForce();  // [5][10][7]：拇、食、中、无名、小指
+```
+
+- `getForce()` 返回五根手指各自的 10×7 压感矩阵，顺序为拇指、食指、中指、无名指、小指。
+- SDK 会逐指写入传感器选择器并同步读取，单指响应按 `61 + 11` 字节自动重组。
+- CAN-FD 合法 DLC 可能在第二片尾部补零，SDK 只采用 HOP 头中的 EDL 有效长度。
+- 厂商 `CanFD::send` 和 `CanFDSocket::send` 的 O30 发送都必须使用标准帧，即 `is_extended=false`。
+- Linux SocketCAN 推荐配置为仲裁域 1 Mbps、数据域 5 Mbps；设备是否启用 BRS 以现场配置为准，O30 App 1.2.2 实测为关闭。
 
 ## 文档与支持
 
-### Q13: 先看哪个文档最合适？
+### Q14: 先看哪个文档最合适？
 
 - 想了解总体接入方式：看 `README.md`
 - 想确认接口签名：看 `docs/API-Reference.md`
 - 遇到构建或运行问题：看 `docs/TROUBLESHOOTING.md`
 
-### Q14: 旧版参考目录还能直接当文档源吗？
+### Q15: 旧版参考目录还能直接当文档源吗？
 
 不能。旧版目录只适合做历史对照，内容可能与当前命名空间、构建开关不一致。请以 repository root 的源码与文档为准。

@@ -105,6 +105,18 @@ public:
 	// 设置电机使能 目前仅支持L25
 	void setDisable(const std::vector<uint8_t> &disable = std::vector<uint8_t>(5, 1));
 
+	// ---- 非破坏式成败通道（激活 ErrorCode.h；老 void/容器 API 全部保留）----------
+	// 现有 setter 返回 void、getter 返回容器，调用方无法区分“成功返回空”与“失败”。
+	// 下列 tryXxx / out-param 重载给出显式 HandError 通道，且不改任何旧签名。
+	// 语义：NotInitialized(型号未构造) / InvalidParameter(空或关节数与型号不符) / Success。
+	// 注意：CAN 为异步下发，Success 表示“参数合法且已入队”，非设备级 ACK。
+	::linkerhand::HandError trySetPosition(const std::vector<uint8_t> &pose);
+	::linkerhand::HandError trySetSpeed(const std::vector<uint8_t> &speed);
+	::linkerhand::HandError trySetTorque(const std::vector<uint8_t> &torque);
+	// out-param getter：取到非空数据返回 Success，否则 OperationFailed（尚未收到/型号不支持）。
+	::linkerhand::HandError getPosition(std::vector<uint8_t> &out);
+	::linkerhand::HandError getTorque(std::vector<uint8_t> &out);
+
 private:
 	// 获取法向压力
 	void getNormalForce();
