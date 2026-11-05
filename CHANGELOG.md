@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Move interactive tools, the Web server/UI, device setup utility and historical examples
+  to linkerbot-hand-tools. Keep public SDK integration, callback adapters, binary dependencies
+  and one read-only consumer example. BUILD_EXAMPLES now builds only that example.
+- Replace consumer build wrappers with SDK package build/install commands. SDK and vendor
+  binaries, enum values and public ABI are unchanged.
+
+
 - Limit active maintenance and current tool selectors to L7, L20_10/L20_11, L21, L25 and O20.
   G20 aliases remain available. Examples for migrated devices remain in repository history.
 - Preserve the packaged SDK ABI and binary files. Correct package version reporting to 2.2.1.

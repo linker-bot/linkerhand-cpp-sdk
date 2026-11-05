@@ -12,7 +12,7 @@ struct ModelInfo {
     bool fd;
     bool modbus;
 };
-// These rows also supply the Web UI catalogue. Keep the initializer format stable.
+// Maintained model/API layouts. Historical enum values remain available for ABI compatibility.
 inline constexpr std::array<ModelInfo, 5> models{{
     {"L7", L7, 7, false, true},
     {"L20_10", L20_10, 16, false, false},

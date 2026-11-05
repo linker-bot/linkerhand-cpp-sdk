@@ -1,0 +1,13 @@
+# Remove this package's recorded files; dependency installs have separate ownership.
+set(_manifest "@CMAKE_BINARY_DIR@/install_manifest.txt")
+if(NOT EXISTS "${_manifest}")
+    message(FATAL_ERROR "No install manifest found; uninstall must use the installation build directory")
+endif()
+file(STRINGS "${_manifest}" _files)
+foreach(_file IN LISTS _files)
+    if(_file MATCHES "/(include/linkerhand-cpp-sdk|lib/linkerhand-cpp-sdk|lib/cmake/linkerhand-cpp-sdk|share/doc/linkerhand-cpp-sdk)/")
+        file(REMOVE "${_file}")
+    else()
+        message(STATUS "Leaving dependency-owned file: ${_file}")
+    endif()
+endforeach()

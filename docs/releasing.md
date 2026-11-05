@@ -9,7 +9,8 @@ until the intended device/firmware/backend acceptance records are available.
    Windows x64 MSVC. Run offline CTest checks. Keep Ubuntu 20.04/22.04 compatibility builds.
    Windows MinGW and vendor-device support remain subject to matching-runtime acceptance.
 3. Verify installation and a separate `find_package` consumer. Check version/range behavior,
-   runtime dependencies and installed public headers. Do not execute motion examples in CI.
+   runtime dependencies and installed public headers. Interactive application validation belongs
+   in linkerbot-hand-tools; SDK CI does not operate hardware.
 4. Complete the applicable [hardware record](device-compatibility.md), including firmware,
    driver and adapter details. Keep untested combinations explicitly unverified.
 5. Document tool selector changes, migration gaps, binary provenance and known limitations.

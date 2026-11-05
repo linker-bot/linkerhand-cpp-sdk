@@ -13,3 +13,7 @@ contracts change; avoid speculation about implementation details absent from thi
 
 For bugs, include model, hardware/firmware, side/address, protocol, adapter/driver,
 OS/architecture, compiler/CRT, package revision, reproduction and logs.
+
+Interactive applications and historical demonstrations belong in
+[linkerbot-hand-tools](https://github.com/linker-bot/linkerbot-hand-tools).
+Keep this repository focused on SDK consumers, integration contracts, packaging and tests.

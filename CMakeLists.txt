@@ -1,31 +1,20 @@
 cmake_minimum_required(VERSION 3.16)
-project(LinkerHandSDKExamples LANGUAGES CXX)
+project(LinkerHandSDKPackage VERSION 2.2.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 include(CTest)
 
-option(BUILD_EXAMPLES "Build example applications" ON)
-option(LINKERHAND_USE_TRANSPORT "Enable the optional transport callback adapter" OFF)
+option(BUILD_EXAMPLES "Build the read-only SDK integration example" ON)
+option(LINKERHAND_USE_TRANSPORT "Build optional transport adapter integration/tests" OFF)
 if(LINKERHAND_USE_TRANSPORT)
     include(cmake/LegacyTransport.cmake)
 endif()
-option(BUILD_HAND_TEACH_PENDANT "Deprecated: external teach pendant source is not packaged" OFF)
-
 if(BUILD_EXAMPLES)
-    add_subdirectory(examples)
+    add_subdirectory(demo)
 endif()
-
-if(BUILD_HAND_TEACH_PENDANT)
-    message(FATAL_ERROR "hand_teach_pendant source is not packaged; use webui or hand_tui")
-endif()
-
-message(STATUS "=== LinkerHand C++ SDK Examples ===")
-message(STATUS "Packaged SDK version: 2.2.1")
-message(STATUS "Build Examples: ${BUILD_EXAMPLES}")
-message(STATUS "Build Hand Teach Pendant: ${BUILD_HAND_TEACH_PENDANT}")
-message(STATUS "=====================================")
+message(STATUS "Packaged SDK version: ${PROJECT_VERSION}; implementation is prebuilt")
 
 # ---------------------------------------------------------------------------
 # 安装规则（发布包模式）
@@ -104,9 +93,16 @@ endif()
 
 if(BUILD_TESTING)
     find_package(Python3 COMPONENTS Interpreter REQUIRED)
-    add_test(NAME legacy_scope
-        COMMAND ${Python3_EXECUTABLE} -B -m unittest discover -s tests -p test_legacy_scope.py -v)
-    set_tests_properties(legacy_scope PROPERTIES WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
     add_test(NAME legacy_package_versions
         COMMAND ${Python3_EXECUTABLE} -B "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_package_versions.py")
 endif()
+
+if(BUILD_TESTING)
+    add_executable(sdk_contract_test tests/sdk_contract_test.cpp)
+    target_include_directories(sdk_contract_test PRIVATE include/core)
+    add_test(NAME sdk_contract COMMAND sdk_contract_test)
+endif()
+install(FILES README.md LICENSE CHANGELOG.md DESTINATION share/doc/linkerhand-cpp-sdk)
+install(DIRECTORY docs/ DESTINATION share/doc/linkerhand-cpp-sdk/docs FILES_MATCHING PATTERN "*.md")
+configure_file(cmake/uninstall.cmake.in "${CMAKE_CURRENT_BINARY_DIR}/uninstall.cmake" @ONLY)
+add_custom_target(uninstall COMMAND ${CMAKE_COMMAND} -P "${CMAKE_CURRENT_BINARY_DIR}/uninstall.cmake")
