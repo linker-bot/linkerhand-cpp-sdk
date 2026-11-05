@@ -100,7 +100,7 @@ namespace communication
                     return std::make_unique<CanBus>(hand);
                 #endif
             } else {
-                throw std::runtime_error("Unsupported: " + hand);
+                throw std::runtime_error("Unsupported HAND_TYPE: " + std::to_string(static_cast<int>(hand)));
             }
         }
 

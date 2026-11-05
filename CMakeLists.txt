@@ -6,18 +6,18 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 option(BUILD_EXAMPLES "Build example applications" ON)
-option(BUILD_HAND_TEACH_PENDANT "Build hand teach pendant application" OFF)
+option(BUILD_HAND_TEACH_PENDANT "Deprecated: external teach pendant source is not packaged" OFF)
 
 if(BUILD_EXAMPLES)
     add_subdirectory(examples)
 endif()
 
 if(BUILD_HAND_TEACH_PENDANT)
-    add_subdirectory(hand_teach_pendant)
+    message(FATAL_ERROR "hand_teach_pendant source is not packaged; use webui or hand_tui")
 endif()
 
 message(STATUS "=== LinkerHand C++ SDK Examples ===")
-message(STATUS "Version: 2.0.0")
+message(STATUS "Packaged SDK version: 2.2.1")
 message(STATUS "Build Examples: ${BUILD_EXAMPLES}")
 message(STATUS "Build Hand Teach Pendant: ${BUILD_HAND_TEACH_PENDANT}")
 message(STATUS "=====================================")
@@ -57,7 +57,7 @@ elseif(UNIX AND NOT APPLE)
 endif()
 
 if(LH_LIB_SRC_DIR AND EXISTS "${LH_LIB_SRC_DIR}")
-    # 用 install(DIRECTORY) 而非 install(FILES)：保留 .so → .so.2 → .so.2.0.0 的软链
+    # 用 install(DIRECTORY) 而非 install(FILES)：保留 .so → .so.2 → .so.2.2.1 的软链
     install(DIRECTORY "${LH_LIB_SRC_DIR}/" DESTINATION "${LH_INSTALL_LIB_ROOT}/lib" USE_SOURCE_PERMISSIONS)
     message(STATUS "Install lib source: ${LH_LIB_SRC_DIR}")
 else()

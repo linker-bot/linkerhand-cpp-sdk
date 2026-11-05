@@ -53,7 +53,7 @@ std::atomic<bool> running(true);
 
 COMM_TYPE channel;
 
-// ===================== TUI 基础设施（自包，全部匿名 namespace） =====================
+// ===================== TUI 基础设施（terminal helpers） =====================
 namespace tui {
 
 struct Size { int rows; int cols; };
@@ -453,7 +453,7 @@ static void runPresetAction(LinkerHandApi& hand, tui::StatusPane& pane)
         hand.setPosition(pos1_3);
         std::this_thread::sleep_for(std::chrono::seconds(1));
     } else if (hand.handJoint_ == LINKER_HAND::L20_10) {
-        hand.setSpeed(std::vector<uint8_t>(5, HAND_SPEED)); // L20 need 5 speed
+        hand.setSpeed(std::vector<uint8_t>(5, HAND_SPEED)); // G20 legacy speed layout has five entries.
         pane.log("L20_10 - Execute action - Make a fist");
         std::vector<uint8_t> L20_10_POSE_CLOSE_1 = {255, 0, 0, 0, 0, 255, 255, 178, 84, 0, 255, 255, 0, 0, 0, 0};
         hand.setPosition(L20_10_POSE_CLOSE_1);

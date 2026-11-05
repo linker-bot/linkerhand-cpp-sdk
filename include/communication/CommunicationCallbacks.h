@@ -25,7 +25,8 @@ using DataBuffer = std::vector<uint8_t>;
 using CanTxCallback = std::function<int32_t(uint32_t can_id,
 	const uint8_t *data,
 	uintptr_t data_len)>;
-// RX回调函数类型：接收数据 (CAN ID, 数据指针, 数据长度) -> 返回状态码
+// RX returns a payload byte count; the ABI has no buffer-capacity input.
+// Caller and adapter must agree on the 8-byte Classic or 64-byte FD bound.
 using CanRxCallback = std::function<int32_t(uint32_t* can_id_out,
     uint8_t* data_out,
     uint8_t* data_len_out)>;

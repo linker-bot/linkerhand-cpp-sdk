@@ -40,8 +40,7 @@ elseif(UNIX AND NOT APPLE)
     endif()
     set(LIB_EXTENSION ".so")
 elseif(APPLE)
-    set(LIB_SUBDIR "x86_64")
-    set(LIB_EXTENSION ".dylib")
+    message(FATAL_ERROR "The packaged SDK does not support macOS")
 else()
     message(WARNING "Unknown architecture, defaulting to x86_64")
     set(LIB_SUBDIR "x86_64")
@@ -90,17 +89,14 @@ message(STATUS "Found LinkerHand headers: ${LINKERHAND_INCLUDE_DIR}")
 include_directories(
     ${LINKERHAND_INCLUDE_DIR}
     ${LINKERHAND_INCLUDE_DIR}/api
-    ${LINKERHAND_INCLUDE_DIR}/hand
-    ${LINKERHAND_INCLUDE_DIR}/factory
     ${LINKERHAND_INCLUDE_DIR}/communication
-    ${LINKERHAND_INCLUDE_DIR}/util
     ${LINKERHAND_INCLUDE_DIR}/core
 )
 
 # CAN-FD 总开关：
 # - 嵌套模式：父 CMake 已设 USE_CANFD,直接沿用
 # - 独立模式：优先跟随 find_package 拿到的 LINKERHAND_USE_CANFD（release-package
-#   据 third_party/libcanbus 是否存在自动推断；安装版 Config 据 SDK 构建时的值固化）;
+#   据 third_party/libcanbus 是否存在自动推断；安装版 Config 据发布包内容推断）;
 #   都没有再回落到 ON。用户可显式 -DUSE_CANFD=ON/OFF 覆盖。
 if(NOT DEFINED USE_CANFD)
     if(DEFINED LINKERHAND_USE_CANFD)
@@ -156,7 +152,7 @@ if(USE_CANFD)
     if(NOT _LH_NEED_DOWNGRADE AND NOT LINKERHAND_AS_SUBPROJECT
        AND UNIX AND NOT APPLE AND LINKERHAND_LIB_DIR)
         set(_LH_SDK_SO "")
-        foreach(_n linkerhand_cpp_sdk.so.2.0.0 linkerhand_cpp_sdk.so.2 linkerhand_cpp_sdk.so)
+        foreach(_n linkerhand_cpp_sdk.so.2.2.1 linkerhand_cpp_sdk.so.2 linkerhand_cpp_sdk.so)
             if(NOT _LH_SDK_SO AND EXISTS "${LINKERHAND_LIB_DIR}/${_n}")
                 set(_LH_SDK_SO "${LINKERHAND_LIB_DIR}/${_n}")
             endif()

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # 启动 Web 示教器：先确保 C++ 桥 web_bridge 已编译，未编译则自动构建，再拉起 webui。
-# 透传所有参数给 run.py（如 --model O6 --side left --port 8080）。
+# 透传所有参数给 run.py（如 --model L7 --side left --port 8080）。
 set -euo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

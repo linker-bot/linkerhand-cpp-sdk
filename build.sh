@@ -288,7 +288,7 @@ if [ "$INSTALL" = true ]; then
     echo "使用示例（推荐 find_package）："
     echo "  find_package(linkerhand-cpp-sdk CONFIG REQUIRED)"
     echo "  target_link_libraries(<tgt> PRIVATE LinkerHand::linkerhand_cpp_sdk)"
-    echo "  参考工程: examples/standalone/"
+    echo "  参考工程: demo/"
     echo ""
     INC="$INSTALL_PREFIX/include/linkerhand-cpp-sdk"
     echo "或手动指定（头按子目录发布）："

@@ -10,7 +10,7 @@ namespace linkerhand {
 namespace communication
 {
     // 跨总线（CAN/Modbus/EtherCAT）抽象的占位接口。
-    // 当前未被任何实现类继承——保留作为未来跨总线统一抽象的占位，
+    // Historical placeholder; the packaged public classes do not derive from it.
     // 实际实现请走 ICanBus / ICanFD / IModbus / IEtherCAT 各自的接口。
     class ICommunication
     {
