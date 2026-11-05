@@ -72,6 +72,13 @@ jobs:
           cmake --install build --config Release --prefix "$GITHUB_WORKSPACE/install"
           cmake -S demo -B consumer -DCMAKE_PREFIX_PATH="$GITHUB_WORKSPACE/install"
           cmake --build consumer --config Release --parallel 4
+      - name: Check Linux build wrapper
+        if: matrix.os == 'ubuntu-24.04' && matrix.container == '' && matrix.transport == 'OFF'
+        run: bash build.sh --test
+      - name: Check Windows build wrapper
+        if: matrix.os == 'windows-2022' && matrix.transport == 'OFF'
+        shell: cmd
+        run: call build.bat -t --compiler msvc
       - name: Record binary provenance
         shell: bash
         run: python3 tools/binary_manifest.py > binary-manifest.json

@@ -9,8 +9,9 @@ identity, transport availability, address rules, joint ordering, units, limits, 
 freshness, command completion and recovery behavior before migrating.
 
 Existing Modbus paths for O6 and L20 Lite are outside this repository's active scope.
-Their removal from current tools does not establish equivalent Modbus support in the newer
-SDK. Keep the previous package until the required replacement path has been validated.
+The shared tools retain an explicit legacy compatibility path for these devices; this
+does not establish equivalent Modbus support in the newer SDK. Validate the selected
+firmware and transport before replacing an existing application.
 
 Historical examples and tool behavior remain available at the
 [v2.2.1 tag](https://github.com/linker-bot/linkerhand-cpp-sdk/tree/v2.2.1).
