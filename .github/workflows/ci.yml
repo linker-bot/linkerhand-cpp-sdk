@@ -26,31 +26,26 @@ jobs:
             container: ''
             arch: x86_64
             cmake_build_type: Release
-            use_qemu: false
           # Linux x86_64 Debug 构建
           - os: ubuntu-latest
             container: ''
             arch: x86_64
             cmake_build_type: Debug
-            use_qemu: false
-          # Linux aarch64 Release 构建 (使用 QEMU 模拟)
-          - os: ubuntu-latest
+          # Native Linux aarch64 Release build
+          - os: ubuntu-24.04-arm
             container: ''
             arch: aarch64
             cmake_build_type: Release
-            use_qemu: true
           # Ubuntu 22.04 容器 (Docker)
           - os: ubuntu-latest
             container: 'ubuntu:22.04'
             arch: x86_64
             cmake_build_type: Release
-            use_qemu: false
           # Ubuntu 20.04 容器 (Docker)
           - os: ubuntu-latest
             container: 'ubuntu:20.04'
             arch: x86_64
             cmake_build_type: Release
-            use_qemu: false
 
     steps:
       - name: 准备容器环境 (Ubuntu 20.04/22.04)
@@ -73,12 +68,6 @@ jobs:
       - name: 检出代码
         uses: actions/checkout@v4
 
-      - name: 设置 QEMU (aarch64)
-        if: matrix.use_qemu == true
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: arm64
-
       - name: 缓存 CMake 构建
         uses: actions/cache@v4
         with:
@@ -97,14 +86,6 @@ jobs:
             cmake \
             git \
             libpthread-stubs0-dev
-          # 对于 aarch64，安装交叉编译工具链或 QEMU 用户模式
-          if [ "${{ matrix.arch }}" = "aarch64" ]; then
-            sudo apt-get install -y \
-              gcc-aarch64-linux-gnu \
-              g++-aarch64-linux-gnu \
-              qemu-user-static \
-              binfmt-support
-          fi
 
       - name: 验证工具链版本
         run: |
@@ -112,13 +93,8 @@ jobs:
           cmake --version
           echo ""
           echo "=== 编译器版本 ==="
-          if [ "${{ matrix.arch }}" = "aarch64" ]; then
-            aarch64-linux-gnu-gcc --version
-            aarch64-linux-gnu-g++ --version
-          else
-            gcc --version
-            g++ --version
-          fi
+          gcc --version
+          g++ --version
           echo ""
           echo "=== 系统信息 ==="
           uname -a
@@ -131,21 +107,9 @@ jobs:
       - name: 配置 CMake
         working-directory: build
         run: |
-          if [ "${{ matrix.arch }}" = "aarch64" ]; then
-            # 使用交叉编译工具链
-            cmake .. \
-              -DCMAKE_BUILD_TYPE=${{ matrix.cmake_build_type }} \
-              -DBUILD_TESTING=ON \
-              -DCMAKE_SYSTEM_NAME=Linux \
-              -DCMAKE_SYSTEM_PROCESSOR=aarch64 \
-              -DCMAKE_C_COMPILER=aarch64-linux-gnu-gcc \
-              -DCMAKE_CXX_COMPILER=aarch64-linux-gnu-g++ \
-              -DCMAKE_FIND_ROOT_PATH=/usr/aarch64-linux-gnu
-          else
-            cmake .. \
-              -DCMAKE_BUILD_TYPE=${{ matrix.cmake_build_type }} \
-              -DBUILD_TESTING=ON
-          fi
+          cmake .. \
+            -DCMAKE_BUILD_TYPE=${{ matrix.cmake_build_type }} \
+            -DBUILD_TESTING=ON
 
       - name: 构建项目
         working-directory: build
@@ -158,15 +122,7 @@ jobs:
       - name: 运行测试
         working-directory: build
         run: |
-          if [ "${{ matrix.arch }}" = "aarch64" ]; then
-            # 对于 aarch64，使用 QEMU 运行测试
-            # 设置 QEMU 环境变量
-            export QEMU_LD_PREFIX=/usr/aarch64-linux-gnu
-            # 使用较少的并行任务，因为 QEMU 模拟较慢
-            ctest --output-on-failure --parallel 2 || ctest --output-on-failure
-          else
-            ctest --output-on-failure --parallel $(nproc) || ctest --output-on-failure
-          fi
+          ctest --output-on-failure --parallel $(nproc)
         continue-on-error: false
 
       - name: 显示测试结果
