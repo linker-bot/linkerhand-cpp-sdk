@@ -30,9 +30,10 @@ unchanged for existing consumers. See [maintenance scope](docs/maintenance-scope
 ## Build
 
 Use Linux x86_64/aarch64 or Windows x64 with the matching packaged library and C++17
-compiler. macOS has no packaged SDK library or supported native CAN backend.
+compiler and CMake 3.16+. macOS has no packaged SDK library or supported native CAN backend.
 Windows applications must use the matching MSVC or MinGW runtime and library.
-Build success is not evidence of device or driver compatibility.
+Build success is not evidence of device or driver compatibility. Python 3 is needed for
+the default offline checks; use `-DBUILD_TESTING=OFF` for an examples-only build.
 
 ```sh
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
@@ -87,6 +88,8 @@ Set `CMAKE_PREFIX_PATH` to the package root or installation prefix. On Linux, ar
 for the SDK and its runtime dependencies to be available to the dynamic loader.
 `build.sh -i` installs the package; review `build.sh --help` before system installation.
 
+See the [optional transport adapter](docs/transport-adapter.md) for the new communication path.
+
 ## Maintenance and validation
 
 - [Scope and compatibility policy](docs/maintenance-scope.md)
@@ -101,3 +104,5 @@ proof of device execution. See [contributing](CONTRIBUTING.md).
 
 The project is distributed under the [MIT license](LICENSE). Bundled third-party
 components retain their own notices and documentation.
+
+See [release checks](docs/releasing.md) for the package acceptance procedure.

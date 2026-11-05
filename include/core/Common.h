@@ -3,6 +3,8 @@
 
 #include <cstdint>
 
+// Preserve numeric values and aliases for the packaged binary ABI.
+// Active maintenance is defined in LegacyModels.h; other models are historical.
 enum LINKER_HAND {
     L6,
     L7,
@@ -34,7 +36,7 @@ enum COMM_TYPE {
 // 读取来源：对应 HOP 协议控制字节的 RTS 位（bit7）。
 //   STATE   = 读“实际/运行状态值”（RTS=0，默认，历史行为）
 //   SETTING = 读“最近一次成功写入的设定值”（RTS=1）
-// 目前 O30(HOP) 的 getPosition/getSpeed 支持；其他型号忽略该参数按实际值处理。
+// Historical HOP metadata; LinkerHandApi in this package has no ReadSource overload.
 enum ReadSource {
     STATE   = 0,
     SETTING = 1

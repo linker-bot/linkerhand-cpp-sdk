@@ -1,348 +1,101 @@
+# Legacy C++ API reference
 
----
+This reference covers maintained devices: L7, L20_10 / L20_11 (`G20`), L21, L25 and
+O20. Other declarations remain for binary compatibility; see [migration](migration.md).
+The implementation is prebuilt, so model-specific behavior must be checked against the
+actual firmware and the [validation record](device-compatibility.md).
 
-# Linker Hand C++ API Documentation
-
-## API Overview
-
-This document provides a detailed overview of the C++ API for the Linker Hand, including functions for controlling the hand's movements, retrieving sensor data, and setting operational parameters.
-
-## 构造函数
-```cpp
-LinkerHandApi(const LINKER_HAND &handJoint, const HAND_TYPE &handType, const COMM_TYPE commType = COMM_TYPE::CAN);
-```
-描述
-LinkerHandApi 类的构造函数，用于初始化 Linker 机械手 API。
-
-参数
-- handJoint: 机械手型号，可选值 `LINKER_HAND::{L6, L7, L10, L20, L21, L25, O6, L20_10, O20, L30, O30}`。
-- handType: 左手或右手（`HAND_TYPE::LEFT` 或 `HAND_TYPE::RIGHT`）。
-- commType: 通信协议类型，可选值 `COMM_TYPE::{CAN, MODBUS, ETHERCAT}`，默认为 `CAN`。CAN-FD 型号仍以 `COMM_TYPE::CAN` 构造，调用方通过回调注入 `CanFD` 或 Linux `CanFDSocket` 收发实现。
-
----
-
-## 通信回调设置
-
-为了适配不同的底层驱动（如不同的 CAN 卡或 Modbus 库），API 提供了回调机制。
-
-| 函数 | 参数类型 | 描述 |
-| --- | --- | --- |
-| `setCanTxCallback` | `CanTxCallback` | 设置 CAN 发送回调函数 |
-| `setCanRxCallback` | `CanRxCallback` | 设置 CAN 接收回调函数 |
-| `setModbusTxCallback` | `ModbusTxCallback` | 设置 Modbus 发送回调函数 |
-| `setModbusRxCallback` | `ModbusRxCallback` | 设置 Modbus 接收回调函数 |
-| `freeCanCallback` | 无 | 释放/重置 CAN 相关回调 |
-| `freeModbusCallback` | 无 | 释放/重置 Modbus 相关回调 |
-
----
-
-## 成员函数
-
-### 设置关节位置
-```cpp
-void setPosition(const std::vector<uint8_t> &pose);
-```
-**Description**:  
-设置关节的目标位置，用于控制手指的运动。  
-**Parameters**:  
-- `pose`: 一个包含目标位置数据长度为（O6/L6=6、L7=7、L10=10、L20=20、L20_10=16、L21=21、L25=25、L30=17、O30=20）
-的 `std::vector<uint8_t>`数组，范围是0～255。
-```
-  O6/L6:  ["拇指根部", "拇指侧摆", "食指根部", "中指根部", "无名指根部", "小指根部"]
-  
-  L7:  ["大拇指弯曲", "大拇指横摆","食指弯曲", "中指弯曲", "无名指弯曲","小拇指弯曲","拇指旋转"]
-
-  L10: ["拇指根部", "拇指侧摆","食指根部", "中指根部", "无名指根部","小指根部","食指侧摆","无名指侧摆","小指侧摆","拇指旋转"]
-
-  L20: ["拇指根部", "食指根部", "中指根部", "无名指根部","小指根部","拇指侧摆","食指侧摆","中指侧摆","无名指侧摆","小指侧摆","拇指横摆","预留","预留","预留","预留","拇指尖部","食指末端","中指末端","无名指末端","小指末端"]
-  
-  L21: ["大拇指根部", "食指根部", "中指根部","无名指根部","小拇指根部","大拇指侧摆","食指侧摆","中指侧摆","无名指侧摆","小拇指侧摆","大拇指横滚","预留","预留","预留","预留","大拇指中部","预留","预留","预留","预留","大拇指指尖","食指指尖","中指指尖","无名指指尖","小拇指指尖"]
-
-  L20_10: ["大拇指根部", "食指根部", "中指根部","无名指根部","小拇指根部","大拇指侧摆","食指侧摆","中指侧摆","无名指侧摆","小拇指侧摆","大拇指横滚","大拇指指尖","食指指尖","中指指尖","无名指指尖","小拇指指尖"]
-
-  L25: ["大拇指根部", "食指根部", "中指根部","无名指根部","小拇指根部","大拇指侧摆","食指侧摆","中指侧摆","无名指侧摆","小拇指侧摆","大拇指横滚","预留","预留","预留","预留","大拇指中部","食指中部","中指中部","无名指中部","小拇指中部","大拇指指尖","食指指尖","中指指尖","无名指指尖","小拇指指尖"]
-
-  O30: ["拇指横滚", "拇指航向", "食指航向", "中指航向", "无名指航向", "小指航向", "拇指指根1", "食指指根1", "中指指根1", "无名指指根1", "小指指根1", "食指指根2", "中指指根2", "无名指指根2", "小指指根2", "拇指指尖", "食指指尖", "中指指尖", "无名指指尖", "小指指尖"]
-```
----
-
-### 设置关节位置
-```cpp
-void setPositionArc(const std::vector<double> &pose);
-```
-**Description**:  
-设置关节的目标位置，用于控制手指的运动。  
-**Parameters**:  
-- `pose`: 一个包含目标位置数据长度为（O6/L6=6、L7=7、L10=10、L20=20、L20_10=16、L21=21、L25=25、L30=17、O30=20）
-的 `std::vector<double>`数组，范围为urdf限位。
-
----
-
-### 设置速度
-```cpp
-void setSpeed(const std::vector<uint8_t> &speed);
-```
-**Description**:  
-设置手部的运动速度。  
-**Parameters**:  
-- `speed`: 一个包含速度数据的 `std::vector<uint8_t>`，长度为5个元素对应每手指的速度值。
-
----
-
-### 设置扭矩
-```cpp
-void setTorque(const std::vector<uint8_t> &torque);
-```
-**Description**:  
-设置手部的扭矩。  
-**Parameters**:  
-- `torque`: 一个包含扭矩数据的 `std::vector<uint8_t>`，长度为5个元素对应手指的扭矩值。
-
----
-
-### 获取传感器数据
-```cpp
-std::vector<std::vector<std::vector<uint8_t>>> getForce();
-```
-**Description**:  
-获取五个手指的压感数据。本函数将全部五个手指的数据封装在一个三维向量中返回，矩阵尺寸由型号决定。O30 返回 10 行 × 7 列、共 70 个 `uint8_t` 压感值；SDK 会依次读取拇指到小指，单路超时时返回该路上次缓存并输出警告。
-
-**Returns**:  
-- 返回一个三维向量：std::vector<std::vector<std::vector<uint8_t>>>
-    外层 vector 大小 = 5（五根手指）。
-    中层 vector（每根手指）大小 = 该型号的矩阵行数。
-    内层 vector（每行）大小 = 该型号的矩阵列数。
-    每个元素为 uint8_t 类型的值。
-> 常见维度：O30 为 10×7；O6 为 4×10；O20 / L30 为 12×6。O30 实测传感器单位为 `g`。
-
-O30 最小调用方式：
+## Construction
 
 ```cpp
-// 完成 CAN-FD 收发回调注册后调用；返回 [5][10][7]
-auto force = hand.getForce();
-uint8_t thumb_first_point = force.at(0).at(0).at(0);
+LinkerHandApi(const LINKER_HAND& model, const HAND_TYPE& side,
+              const COMM_TYPE comm = COMM_TYPE::CAN);
 ```
 
-O30 使用 HOP 标准帧，发送回调必须将 `is_extended` 设为 `false`。其 72 字节响应会按 `61 + 11` 有效字节分片，SDK 已按响应 EDL 重组并忽略 CAN-FD DLC 补齐字节。
+The header also declares a scoped-enum overload.
+Use `COMM_TYPE::CAN` for both Classic CAN and O20 CAN FD. L7 also supports
+`COMM_TYPE::MODBUS`. EtherCAT is not a maintained communication path.
+Construction does not replace application-owned transport setup or callback registration.
 
----
-
-### 获取全掌压感点阵
-```cpp
-std::vector<std::vector<uint8_t>> getPalmForce();
-```
-**Description**:  
-获取手掌区域的触觉压感点阵。矩阵维度随掌部传感器类型而定：`TSSP_JZG` 为 20 行 × 28 列，`TSSP_HWK` 为 14 行 × 16 列。  
-**支持型号**：L6 / O6 / L20_10（其余型号返回空并提示不支持）。  
-**Returns**:  
-- 返回二维向量 `std::vector<std::vector<uint8_t>>`：外层为行、内层为列，每个元素为该传感单元的压感值（uint8_t）。
-
----
-
-### 获取五指合力值
-```cpp
-std::vector<std::vector<uint8_t>> getFingerForceSum();
-```
-**Description**:  
-获取五根手指的法向合力值。每指分量数随传感器类型而定：`TSSP_JZG` 每指 3 个，`TSSP_HWK` 每指 1 个。  
-**支持型号**：L20_10（其余型号返回空并提示不支持）。  
-**Returns**:  
-- 返回二维向量 `std::vector<std::vector<uint8_t>>`：外层大小 = 5（五根手指），内层为该指的合力分量。
-
----
-
-### 获取全掌合力值
-```cpp
-std::vector<uint8_t> getPalmForceSum();
-```
-**Description**:  
-获取整个手掌的法向合力值。分量数随传感器类型而定：`TSSP_JZG` 为 2 个，`TSSP_HWK` 为 1 个。  
-**支持型号**：L20_10（其余型号返回空并提示不支持）。  
-**Returns**:  
-- 返回一个 `std::vector<uint8_t>`，为手掌合力分量。
-
----
-
-### 获取速度
-```cpp
-std::vector<uint8_t> getSpeed();
-```
-**Description**:  
-获取当前设置的速度值。  
-**Returns**:  
-- 返回一个 `std::vector<uint8_t>`，包含当前的速度设置值。
-
----
-
-### 获取当前关节状态
-```cpp
-std::vector<uint8_t> getPosition();
-```
-**Description**:  
-获取当前关节的状态信息。  
-**Returns**:  
-- 返回一个 `std::vector<uint8_t>`，包含当前关节的状态数据。
-
----
-
-### 获取当前关节状态
-```cpp
-std::vector<double> getPositionArc();
-```
-**Description**:  
-获取当前关节的状态信息。  
-**Returns**:  
-- 返回一个 `std::vector<double>`，包含当前关节的状态数据。
-
----
-
-### 获取版本号
-```cpp
-std::string getVersion();
-```
-**Description**:  
-获取当前软件或硬件的版本号。  
-**Returns**:  
-- 返回一个字符串，表示当前的版本号。
-
----
-
-### 获取电机温度
-```cpp
-std::vector<uint8_t> getTemperature();
-```
-**Description**:  
-获取电机的温度数据。  
-**Returns**:  
-- 返回一个 `std::vector<uint8_t>`，包含电机的温度数据。
-
----
-
-### 获取电机故障码
-```cpp
-std::vector<uint8_t> getFaultCode();
-```
-**Description**:  
-获取电机的故障码。  
-**Returns**:  
-- 返回一个 `std::vector<uint8_t>`，包含电机的故障码。
-
----
-
-### 获取当前最大扭矩
-```cpp
-std::vector<uint8_t> getTorque();
-```
-**Description**:  
-获取电机的当前最大扭矩值。  
-**Returns**:  
-- 返回一个 `std::vector<uint8_t>`，包含电机的当前最大扭矩值。
-
----
-
-### 设置电机使能（目前仅支持 L25）
-```cpp
-void setEnable(const std::vector<uint8_t> &enable);
-```
-**Description**:  
-使能电机。  
-**Parameters**:  
-- `enable`: 一个包含使能数据的 `std::vector<uint8_t>`，每个元素对应一个电机的使能状态。
-
----
-
-### 设置电机禁用（目前仅支持 L25）
-```cpp
-void setDisable(const std::vector<uint8_t> &disable);
-```
-**Description**:  
-禁用电机。  
-**Parameters**:  
-- `disable`: 一个包含禁用数据的 `std::vector<uint8_t>`，每个元素对应一个电机的禁用状态。
-
----
-
-### 清除电机故障码
-```cpp
-void clearFaultCode();
-```
-**Description**:  
-清除电机的故障码。
-
----
-
-## Example Usage
-
-以下是一个完整的示例代码，展示如何使用上述 API：
+## CAN callbacks
 
 ```cpp
-#include "LinkerHandApi.h"
-
-int main() {
-
-    // 初始化灵巧手
-    LinkerHandApi hand(LINKER_HAND::L10, HAND_TYPE::LEFT, COMM_TYPE::CAN);
-    
-    // 初始化CAN设备/自动搜索CAN设备（CommFactory 旧名 CanBusFactory 兼容保留）
-    std::shared_ptr<Communication::ICanBus> bus = Communication::CommFactory::createCanBus("can0", 1000000);
-    // std::shared_ptr<Communication::ICanBus> bus = Communication::CommFactory::createCanBus(HAND_TYPE::LEFT);
-    
-    // 设置CAN发送回调函数
-    hand.setCanTxCallback([bus](uint32_t can_id, const uint8_t *data, uintptr_t data_len) -> int32_t {
-        std::vector<uint8_t> data_vec(data, data + data_len);
-        bus->send(data_vec, can_id);
-        return 0;
-    });
-
-    // 设置CAN接收回调函数
-    hand.setCanRxCallback([bus](uint32_t* can_id_out, uint8_t* data_out, uint8_t* len_out) -> int32_t {
-        try {
-            auto frame = bus->recv();
-            if (frame.can_id == 0 && frame.can_dlc == 0) {
-                return -1;
-            }
-            *can_id_out = frame.can_id;
-            *len_out = frame.can_dlc;
-            memcpy(data_out, frame.data, frame.can_dlc);
-            return 0;
-        } catch (const std::exception& e) {
-            std::cerr << "CAN接收错误: " << e.what() << std::endl;
-            return -1;
-        }
-    });
-    std::cout << "-------------------------------------------" << std::endl;
-
-    std::cout << "获取版本信息：" << std::endl;
-    std::cout << hand.getVersion() << std::endl;
-    std::cout << "-------------------------------------------" << std::endl;
-
-    std::cout << "执行动作：握拳" << std::endl;
-    std::vector<uint8_t> fist_pose = {120, 60, 0, 0, 0, 0, 255, 255, 255, 51};
-    hand.setPosition(fist_pose);
-    std::this_thread::sleep_for(std::chrono::seconds(1));
-    std::cout << "-------------------------------------------" << std::endl;
-
-    std::cout << "执行动作：张开" << std::endl;
-    std::vector<uint8_t> open_pose = {255, 104, 255, 255, 255, 255, 255, 255, 255, 71};
-    hand.setPosition(open_pose);
-    std::this_thread::sleep_for(std::chrono::seconds(1));
-    std::cout << "-------------------------------------------" << std::endl;
-    
-    std::cout << "程序结束！" << std::endl;
-    return 0;
-}
-
+using CanTxCallback = std::function<int32_t(uint32_t id,
+    const uint8_t* data, uintptr_t length)>;
+using CanRxCallback = std::function<int32_t(uint32_t* id,
+    uint8_t* data, uint8_t* length)>;
 ```
 
----
+Register using `setCanTxCallback` and `setCanRxCallback`. Existing examples return `0`
+on success and `-1` when no frame is available or I/O fails. Keep transport state alive
+while callbacks may be invoked. Catch exceptions at the callback boundary and retain
+separate diagnostics, because the return code cannot distinguish detailed errors.
 
-## Notes
-- 在使用 API 之前，请确保手部设备已正确连接并初始化。
-- 参数值（如速度、扭矩等）的具体范围和含义请参考设备的技术手册。
+TX length and RX output length are payload byte counts. The vendor `CanFDFrame.can_dlc`
+is a wire DLC code and needs conversion; the SocketCAN FD variant already supplies bytes.
+O20 uses extended CAN FD frames. Do not infer frame type solely from payload length.
+Classic buffers hold at most 8 bytes; FD buffers hold at most 64 bytes. The RX callback
+has no capacity argument: the caller and adapter must agree on the buffer bound.
 
----
+`freeCanCallback` and `freeModbusCallback` are historical reset APIs. Their presence does
+not establish a thread-drain guarantee. Keep callback owners alive through API destruction
+unless a separately verified shutdown contract is available.
 
-## Contact
-- 如果有任何问题或需要进一步支持，请联系 [https://linkerbot.cn/aboutUs](https://linkerbot.cn/aboutUs)。
+## Modbus callbacks
 
----
+L7 callbacks pass complete raw RTU frames in existing examples. TX receives slave ID,
+register address, bytes and length; RX receives slave ID and output pointers. CRC and
+frame boundaries must match the packaged protocol implementation. These are not the same
+contract as a structured `RtuSession` request. See [maintenance scope](maintenance-scope.md).
+
+The old RX length output is `uint8_t`; it cannot represent a 256-byte ADU. Adapters must
+reject oversize results before copying or narrowing. `IModbus::transact` expresses an
+atomic raw exchange, but independent TX/RX callbacks do not automatically provide one.
+
+## Control vectors
+
+`setPosition` accepts normalized `uint8_t` values, not physical angles. Existing tool
+position layouts are L7: 7, G20: 16, L21: 25, L25: 25 and O20: 16 entries. Reserved
+entries are part of the legacy layout; do not remove them based on the marketing joint
+count. O20 readback length can differ from its command length.
+
+`setPositionArc` accepts `double` values using the packaged mapping. Validate the
+mapping and units for the device before use. `testPositionArc` is a historical conversion
+entry point, not a hardware test.
+
+`setSpeed` and `setTorque` have model-specific vector layouts. Do not assume every model
+uses either five entries or its full position count: G20 examples use five speed entries,
+while L7 uses seven. Confirm the particular operation and firmware before sending.
+
+`setPositionRaw`, `getPositionRaw`, range getters, `setSpeedRaw` and `setTorqueRaw` are
+retained ABI methods associated with migrated devices. Current legacy tools do not expose
+those raw-control paths.
+
+`setEnable` / `setDisable` are documented for L25; `clearFaultCode` is historically
+associated with ordinary L20, which is outside active maintenance. A declaration alone
+does not establish support on another model.
+
+## Readings
+
+Position, speed, torque, temperature, fault and version getters expose legacy containers
+or strings. Empty values may mean missing data, failure or an unsupported operation.
+No universal freshness or device acknowledgment contract is provided by these return types.
+
+`getForce` returns finger matrices whose dimensions depend on the sensor and firmware.
+Do not assign physical units to bytes without a verified sensor specification.
+`getPalmForce`, `getFingerForceSum` and `getPalmForceSum` are available in the ABI;
+G20 examples use palm/aggregate sensing. Treat support and dimensions as device-specific.
+
+## Error channel
+
+`trySetPosition`, `trySetSpeed` and `trySetTorque` return `HandError`; the header describes
+parameter/initialization validation and CAN enqueue success. They do not report mechanical
+arrival. Out-parameter `getPosition` / `getTorque` distinguish a nonempty result from
+`OperationFailed`, but do not add a freshness guarantee.
+
+## Minimal integration
+
+[demo/main.cpp](../demo/main.cpp) registers callbacks and reads the L7 version.
+[demo/CMakeLists.txt](../demo/CMakeLists.txt) links the packaged SDK target.
+Use matching compiler/CRT binaries and arrange runtime library discovery. Hardware
+examples may write parameters or move devices; CI only builds those executables.

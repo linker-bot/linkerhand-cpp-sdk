@@ -42,7 +42,7 @@ void printWithLock(const std::string& message) {
     std::cout << message << std::endl;
 }
 
-// 线程1：获取版本信息（独立运行，不依赖其他数据）
+// 线程1：获取版本信息（shares the same physical connection）
 void threadGetVersion(LinkerHandApi& hand, int iteration) {
     try {
         auto start = std::chrono::steady_clock::now();
@@ -63,7 +63,7 @@ void threadGetVersion(LinkerHandApi& hand, int iteration) {
     }
 }
 
-// 线程2：设置扭矩和速度（这两个可以并行）
+// 线程2：设置扭矩和速度（concurrent callers share the transport）
 void threadSetParameters(LinkerHandApi& hand, int iteration) {
     try {
         auto start = std::chrono::steady_clock::now();
@@ -94,7 +94,7 @@ void threadSetParameters(LinkerHandApi& hand, int iteration) {
     }
 }
 
-// 线程3：获取扭矩、速度、状态（这些可以并行获取）
+// 线程3：获取扭矩、速度、状态（concurrent example calls; no SDK thread-safety guarantee）
 void threadGetParameters(LinkerHandApi& hand, int iteration) {
     try {
         auto start = std::chrono::steady_clock::now();
@@ -158,7 +158,7 @@ void threadGetParameters(LinkerHandApi& hand, int iteration) {
     }
 }
 
-// 线程4：获取压感数据（5个手指可以并行获取）
+// 线程4：获取压感数据（sensor layout is model-specific）
 void threadGetTouchData(LinkerHandApi& hand, int iteration) {
     try {
         auto start = std::chrono::steady_clock::now();

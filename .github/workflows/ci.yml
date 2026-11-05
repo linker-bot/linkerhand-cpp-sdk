@@ -62,6 +62,7 @@ jobs:
             cmake \
             make \
             libpthread-stubs0-dev \
+            python3 \
             tar \
             gzip
 
@@ -85,7 +86,8 @@ jobs:
             build-essential \
             cmake \
             git \
-            libpthread-stubs0-dev
+            libpthread-stubs0-dev \
+            python3
 
       - name: 验证工具链版本
         run: |
@@ -116,13 +118,13 @@ jobs:
         run: |
           cmake --build . \
             --config ${{ matrix.cmake_build_type }} \
-            --parallel $(nproc) \
+            --parallel "$(nproc)" \
             --verbose
 
       - name: 运行测试
         working-directory: build
         run: |
-          ctest --output-on-failure --parallel $(nproc)
+          ctest --output-on-failure --parallel "$(nproc)"
         continue-on-error: false
 
       - name: 显示测试结果
@@ -152,7 +154,8 @@ jobs:
             build-essential \
             cmake \
             git \
-            libpthread-stubs0-dev
+            libpthread-stubs0-dev \
+            python3
 
       - name: 创建构建目录
         run: mkdir -p build
@@ -169,7 +172,7 @@ jobs:
         run: |
           cmake --build . \
             --config Release \
-            --parallel $(nproc) \
+            --parallel "$(nproc)" \
             --target test_l7_can_0 test_l21_can_0
 
       - name: 验证示例程序
@@ -215,33 +218,15 @@ jobs:
             echo "以下文件需要修复："
             echo "$CRLF_FILES"
             echo ""
-            echo "修复方法（Linux/macOS）："
-            echo "  find . -type f ! -path './third_party/*' \\( -name '*.cpp' -o -name '*.h' -o -name '*.cmake' -o -name 'CMakeLists.txt' \\) -exec sed -i 's/\\r$//' {} \\;"
-            echo ""
-            echo "或者使用 dos2unix："
-            echo "  find . -type f ! -path './third_party/*' \\( -name '*.cpp' -o -name '*.h' -o -name '*.cmake' -o -name 'CMakeLists.txt' \\) -exec dos2unix {} \\;"
+            echo "Normalize these files to LF line endings and retry."
             exit 1
           fi
           echo "✓ 文件编码检查通过（已排除 third_party 目录）"
 
-      - name: 检查 CMake 语法
+      - name: Check package configuration
         run: |
-          echo "检查 CMake 语法..."
-          cmake --version
-          # 尝试解析 CMakeLists.txt
-          mkdir -p /tmp/cmake-check
-          cd /tmp/cmake-check
-          cmake ${{ github.workspace }} -Wno-dev > /dev/null 2>&1 || true
-          echo "✓ CMake 语法检查完成"
-
-      - name: 检查头文件包含
-        run: |
-          echo "检查头文件包含..."
-          # 检查是否有明显的头文件问题
-          if find ${{ github.workspace }}/include -name "*.h" -exec grep -l "#include.*\.\./" {} \; | head -5; then
-            echo "警告: 发现相对路径包含"
-          fi
-          echo "✓ 头文件检查完成"
+          cmake -S "$GITHUB_WORKSPACE" -B /tmp/cmake-check \
+            -DBUILD_EXAMPLES=OFF -DBUILD_TESTING=OFF
 
   summary:
     name: CI Summary
@@ -249,14 +234,26 @@ jobs:
     needs: [build-and-test, build-examples, code-quality]
     if: always()
     steps:
-      - name: 生成 CI 摘要
+      - name: Summarize job results
+        env:
+          BUILD_RESULT: ${{ needs.build-and-test.result }}
+          EXAMPLES_RESULT: ${{ needs.build-examples.result }}
+          QUALITY_RESULT: ${{ needs.code-quality.result }}
         run: |
-          echo "## CI/CD 构建摘要" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 构建状态" >> $GITHUB_STEP_SUMMARY
-          echo "- 构建和测试: ${{ needs.build-and-test.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "- 示例构建: ${{ needs.build-examples.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "- 代码质量: ${{ needs.code-quality.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 详细信息" >> $GITHUB_STEP_SUMMARY
-          echo "查看上方的作业详情以获取更多信息。" >> $GITHUB_STEP_SUMMARY
+          {
+            echo "## CI results"
+            echo "- Build and tests: $BUILD_RESULT"
+            echo "- Examples: $EXAMPLES_RESULT"
+            echo "- Package configuration: $QUALITY_RESULT"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Enforce job results
+        if: always()
+        env:
+          BUILD_RESULT: ${{ needs.build-and-test.result }}
+          EXAMPLES_RESULT: ${{ needs.build-examples.result }}
+          QUALITY_RESULT: ${{ needs.code-quality.result }}
+        run: |
+          test "$BUILD_RESULT" = success
+          test "$EXAMPLES_RESULT" = success
+          test "$QUALITY_RESULT" = success

@@ -1,23 +1,28 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.16)
 project(LinkerHandSDKExamples LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+include(CTest)
 
 option(BUILD_EXAMPLES "Build example applications" ON)
-option(BUILD_HAND_TEACH_PENDANT "Build hand teach pendant application" OFF)
+option(LINKERHAND_USE_TRANSPORT "Enable the optional transport callback adapter" OFF)
+if(LINKERHAND_USE_TRANSPORT)
+    include(cmake/LegacyTransport.cmake)
+endif()
+option(BUILD_HAND_TEACH_PENDANT "Deprecated: external teach pendant source is not packaged" OFF)
 
 if(BUILD_EXAMPLES)
     add_subdirectory(examples)
 endif()
 
 if(BUILD_HAND_TEACH_PENDANT)
-    add_subdirectory(hand_teach_pendant)
+    message(FATAL_ERROR "hand_teach_pendant source is not packaged; use webui or hand_tui")
 endif()
 
 message(STATUS "=== LinkerHand C++ SDK Examples ===")
-message(STATUS "Version: 2.0.0")
+message(STATUS "Packaged SDK version: 2.2.1")
 message(STATUS "Build Examples: ${BUILD_EXAMPLES}")
 message(STATUS "Build Hand Teach Pendant: ${BUILD_HAND_TEACH_PENDANT}")
 message(STATUS "=====================================")
@@ -57,7 +62,7 @@ elseif(UNIX AND NOT APPLE)
 endif()
 
 if(LH_LIB_SRC_DIR AND EXISTS "${LH_LIB_SRC_DIR}")
-    # 用 install(DIRECTORY) 而非 install(FILES)：保留 .so → .so.2 → .so.2.0.0 的软链
+    # 用 install(DIRECTORY) 而非 install(FILES)：保留 .so → .so.2 → .so.2.2.1 的软链
     install(DIRECTORY "${LH_LIB_SRC_DIR}/" DESTINATION "${LH_INSTALL_LIB_ROOT}/lib" USE_SOURCE_PERMISSIONS)
     message(STATUS "Install lib source: ${LH_LIB_SRC_DIR}")
 else()
@@ -78,4 +83,30 @@ install(FILES
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/third_party")
     install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/third_party/"
             DESTINATION "${LH_INSTALL_LIB_ROOT}/third_party")
+endif()
+
+install(DIRECTORY include/legacy/ DESTINATION "${LH_INSTALL_INCLUDE_DIR}/legacy" FILES_MATCHING PATTERN "*.h")
+
+if(LINKERHAND_USE_TRANSPORT AND BUILD_TESTING)
+    enable_testing()
+    add_executable(legacy_callbacks_test tests/can_callbacks_test.cpp)
+    target_link_libraries(legacy_callbacks_test PRIVATE linkerhand_legacy_transport)
+    add_test(NAME legacy_callbacks COMMAND legacy_callbacks_test)
+endif()
+
+if(BUILD_TESTING)
+    enable_testing()
+    add_executable(legacy_modbus_test tests/modbus_callbacks_test.cpp)
+    target_include_directories(legacy_modbus_test PRIVATE include)
+    target_compile_features(legacy_modbus_test PRIVATE cxx_std_17)
+    add_test(NAME legacy_modbus COMMAND legacy_modbus_test)
+endif()
+
+if(BUILD_TESTING)
+    find_package(Python3 COMPONENTS Interpreter REQUIRED)
+    add_test(NAME legacy_scope
+        COMMAND ${Python3_EXECUTABLE} -B -m unittest discover -s tests -p test_legacy_scope.py -v)
+    set_tests_properties(legacy_scope PROPERTIES WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+    add_test(NAME legacy_package_versions
+        COMMAND ${Python3_EXECUTABLE} -B "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_package_versions.py")
 endif()

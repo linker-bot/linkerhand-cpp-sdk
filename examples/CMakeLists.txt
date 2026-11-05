@@ -14,9 +14,14 @@ if(MSVC)
     set(CMAKE_MSVC_SHOW_INCLUDES FALSE)
 endif()
 
-option(BUILD_TESTS "Build test applications" ON)
+option(BUILD_TESTS "Build hardware example applications (not offline tests)" ON)
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+# Keep executables beside staged DLLs for multi-config generators as well.
+foreach(_config IN LISTS CMAKE_CONFIGURATION_TYPES)
+    string(TOUPPER "${_config}" _config_upper)
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_${_config_upper} "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
+endforeach()
 
 if(WIN32)
     set(LIB_SUBDIR "win64")
@@ -40,8 +45,7 @@ elseif(UNIX AND NOT APPLE)
     endif()
     set(LIB_EXTENSION ".so")
 elseif(APPLE)
-    set(LIB_SUBDIR "x86_64")
-    set(LIB_EXTENSION ".dylib")
+    message(FATAL_ERROR "The packaged SDK does not support macOS")
 else()
     message(WARNING "Unknown architecture, defaulting to x86_64")
     set(LIB_SUBDIR "x86_64")
@@ -90,17 +94,14 @@ message(STATUS "Found LinkerHand headers: ${LINKERHAND_INCLUDE_DIR}")
 include_directories(
     ${LINKERHAND_INCLUDE_DIR}
     ${LINKERHAND_INCLUDE_DIR}/api
-    ${LINKERHAND_INCLUDE_DIR}/hand
-    ${LINKERHAND_INCLUDE_DIR}/factory
     ${LINKERHAND_INCLUDE_DIR}/communication
-    ${LINKERHAND_INCLUDE_DIR}/util
     ${LINKERHAND_INCLUDE_DIR}/core
 )
 
 # CAN-FD 总开关：
 # - 嵌套模式：父 CMake 已设 USE_CANFD,直接沿用
 # - 独立模式：优先跟随 find_package 拿到的 LINKERHAND_USE_CANFD（release-package
-#   据 third_party/libcanbus 是否存在自动推断；安装版 Config 据 SDK 构建时的值固化）;
+#   据 third_party/libcanbus 是否存在自动推断；安装版 Config 据发布包内容推断）;
 #   都没有再回落到 ON。用户可显式 -DUSE_CANFD=ON/OFF 覆盖。
 if(NOT DEFINED USE_CANFD)
     if(DEFINED LINKERHAND_USE_CANFD)
@@ -156,7 +157,7 @@ if(USE_CANFD)
     if(NOT _LH_NEED_DOWNGRADE AND NOT LINKERHAND_AS_SUBPROJECT
        AND UNIX AND NOT APPLE AND LINKERHAND_LIB_DIR)
         set(_LH_SDK_SO "")
-        foreach(_n linkerhand_cpp_sdk.so.2.0.0 linkerhand_cpp_sdk.so.2 linkerhand_cpp_sdk.so)
+        foreach(_n linkerhand_cpp_sdk.so.2.2.1 linkerhand_cpp_sdk.so.2 linkerhand_cpp_sdk.so)
             if(NOT _LH_SDK_SO AND EXISTS "${LINKERHAND_LIB_DIR}/${_n}")
                 set(_LH_SDK_SO "${LINKERHAND_LIB_DIR}/${_n}")
             endif()
@@ -261,14 +262,14 @@ if(NOT LINKERHAND_AS_SUBPROJECT AND LINKERHAND_INCLUDE_DIR)
 endif()
 
 # 所有 example 共享同一份运行时依赖：用单一 custom target 一次性拷贝,
-# 而不是给每个 exe 挂 POST_BUILD —— 否则 ~30 个 example 会重复刷屏并和
+# 而不是给每个 exe 挂 POST_BUILD —— 否则每个 example 会重复复制依赖并和
 # SONAME 软链 target 在并行构建下争抢同一份文件。
 function(_define_examples_runtime_deps_target)
     if(TARGET examples_runtime_deps)
         return()
     endif()
 
-    set(_cmds "")
+    set(_cmds COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
 
     if(LINKERHAND_AS_SUBPROJECT)
         list(APPEND _cmds
@@ -428,3 +429,13 @@ endif()
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 message(STATUS "Target platform: ${CMAKE_SYSTEM_NAME} ${LIB_SUBDIR}")
 message(STATUS "Output directory: ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
+
+if(LINKERHAND_USE_TRANSPORT)
+    add_executable(legacy_transport legacy_transport.cpp)
+    target_link_libraries(legacy_transport PRIVATE ${COMMON_LIBS} linkerhand_legacy_transport)
+    copy_dependencies(legacy_transport)
+    if(TARGET web_bridge)
+        target_compile_definitions(web_bridge PRIVATE LINKERHAND_TRANSPORT_ADAPTER=1)
+        target_link_libraries(web_bridge PRIVATE linkerhand_legacy_transport)
+    endif()
+endif()

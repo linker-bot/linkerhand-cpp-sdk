@@ -1,0 +1,56 @@
+name: Legacy validation
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  offline:
+    name: Native validation (${{ matrix.os }}, transport=${{ matrix.transport }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, ubuntu-24.04-arm, windows-2022]
+        transport: ['OFF', 'ON']
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check out transport source
+        if: matrix.transport == 'ON'
+        uses: actions/checkout@v4
+        with:
+          repository: linker-bot/linkerbot-transport-cpp
+          ref: ff429d0c0333120dd6867ee7247549e53934ed46
+          path: transport-source
+      - name: Configure
+        shell: bash
+        run: |
+          cmake -S . -B build-validation \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_TESTING=ON \
+            -DLINKERHAND_USE_TRANSPORT=${{ matrix.transport }} \
+            -DLINKERHAND_TRANSPORT_SOURCE_DIR="$GITHUB_WORKSPACE/transport-source" \
+            -DLINKERBOT_TRANSPORT_ENABLE_SERIAL=OFF \
+            -DLINKERBOT_TRANSPORT_ENABLE_MODBUS=OFF
+      - name: Build
+        run: cmake --build build-validation --config Release --parallel 4
+      - name: Run offline tests
+        run: ctest --test-dir build-validation -C Release --output-on-failure --no-tests=error
+      - name: Install and build a separate consumer
+        shell: bash
+        run: |
+          cmake --install build-validation --config Release --prefix "$GITHUB_WORKSPACE/install-validation"
+          cmake -S demo -B build-consumer -DCMAKE_PREFIX_PATH="$GITHUB_WORKSPACE/install-validation"
+          cmake --build build-consumer --config Release --parallel 4
+      - name: Record packaged binary hashes
+        shell: bash
+        run: python tools/binary_manifest.py > binary-manifest.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: binary-manifest-${{ matrix.os }}-${{ matrix.transport }}
+          path: binary-manifest.json

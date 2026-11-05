@@ -18,6 +18,7 @@
 #include "LinkerHandApi.h"
 #include "LegacyModels.h"
 #include "Modbus.h"
+#include "legacy/ModbusCallbacks.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -53,7 +54,7 @@ std::atomic<bool> running(true);
 
 COMM_TYPE channel;
 
-// ===================== TUI 基础设施（自包，全部匿名 namespace） =====================
+// ===================== TUI 基础设施（terminal helpers） =====================
 namespace tui {
 
 struct Size { int rows; int cols; };
@@ -453,7 +454,7 @@ static void runPresetAction(LinkerHandApi& hand, tui::StatusPane& pane)
         hand.setPosition(pos1_3);
         std::this_thread::sleep_for(std::chrono::seconds(1));
     } else if (hand.handJoint_ == LINKER_HAND::L20_10) {
-        hand.setSpeed(std::vector<uint8_t>(5, HAND_SPEED)); // L20 need 5 speed
+        hand.setSpeed(std::vector<uint8_t>(5, HAND_SPEED)); // G20 legacy speed layout has five entries.
         pane.log("L20_10 - Execute action - Make a fist");
         std::vector<uint8_t> L20_10_POSE_CLOSE_1 = {255, 0, 0, 0, 0, 255, 255, 178, 84, 0, 255, 255, 0, 0, 0, 0};
         hand.setPosition(L20_10_POSE_CLOSE_1);
@@ -813,18 +814,7 @@ int main(int argc, char* argv[])
             (argc > 1) ? channel_name = argv[1] : channel_name = "/dev/ttyUSB0";
             modbus = std::make_shared<Modbus>(handType);
 
-            hand.setModbusTxCallback([modbus](uint8_t sid, uint16_t addr, const uint8_t* data, uintptr_t len) -> int32_t {
-                if (!modbus) return -1;
-                return modbus->sendRawFrame(data, len) ? 0 : -1;
-            });
-            hand.setModbusRxCallback([modbus](uint8_t sid, uint16_t* addr_out, uint8_t* data_out, uint8_t* len_out) -> int32_t {
-                if (!modbus) return -1;
-                int len = modbus->receiveCompleteFrame(data_out, 256, 500);
-                if (len <= 0 || data_out[0] != sid) return -1;
-                *len_out = static_cast<uint8_t>(len);
-                if (addr_out) *addr_out = 0;
-                return 0;
-            });
+            (void)linkerhand::legacy::bind_modbus_callbacks(hand, modbus);
         } else if (channel == COMM_TYPE::ETHERCAT) {
             errMsg = "EtherCAT 暂不支持 !";
         }

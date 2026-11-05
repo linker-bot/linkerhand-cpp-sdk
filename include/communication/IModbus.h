@@ -8,7 +8,7 @@ namespace linkerhand {
 namespace communication {
 
 // Modbus RTU 通信抽象。
-// 实例化由 CanBusFactory::createModbus 返回 std::unique_ptr<IModbus>。
+// 实例化由 CommFactory::createModbus 返回 std::unique_ptr<IModbus>。
 // 静态工具方法（detect_serial_ports / auto_detect_serial_port）保留在
 // 实现类 Modbus 上，不进抽象接口。
 class IModbus {

@@ -34,6 +34,7 @@ namespace communication
         explicit CanFDSocket(const std::string& interface = "can0");
         // 自动检测左右手：遍历已启动的 CAN 接口，逐一发探测读请求，
         // 命中与 hand_type 匹配的接口后打开该接口（参考 CanBus 的 auto_detect_channel）。
+        // Historical discovery API for migrated devices. O20 tools use an explicit interface.
         // 默认按 L30V6 协议（0xC3 扩展帧，arb 1Mbps / data 5Mbps FD 帧，需内核侧已 fd on）。
         explicit CanFDSocket(const HAND_TYPE& hand_type);
         // 指定协议的自动检测重载（O30 用 FDProtocol::O30_HOP）。

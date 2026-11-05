@@ -1,0 +1,12 @@
+# Optional source/prebuilt dependency. Do not download dependencies implicitly.
+set(LINKERHAND_TRANSPORT_SOURCE_DIR "" CACHE PATH "Path to linkerbot-transport-cpp source")
+if(LINKERHAND_TRANSPORT_SOURCE_DIR)
+    set(LINKERBOT_TRANSPORT_BUILD_TESTS OFF CACHE BOOL "")
+    set(LINKERBOT_TRANSPORT_BUILD_EXAMPLES OFF CACHE BOOL "")
+    add_subdirectory("${LINKERHAND_TRANSPORT_SOURCE_DIR}" "${CMAKE_BINARY_DIR}/legacy-transport")
+else()
+    find_package(linkerbot-transport 0.3 CONFIG REQUIRED)
+endif()
+add_library(linkerhand_legacy_transport INTERFACE)
+target_include_directories(linkerhand_legacy_transport INTERFACE "${CMAKE_CURRENT_LIST_DIR}/../include")
+target_link_libraries(linkerhand_legacy_transport INTERFACE linkerbot::can)

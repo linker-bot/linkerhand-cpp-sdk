@@ -43,7 +43,7 @@ using CanFrame = TPCANMsg;
 #include <linux/can/raw.h>
 using CanFrame = struct can_frame;
 #elif defined(__APPLE__) && defined(__MACH__)
-#error "macOS 无 CAN 后端，不受支持（原此处为命名空间作用域裸 std::cout 语句，无法编译）"
+#error "The packaged SDK has no macOS CAN backend"
 #else
 #error "Unsupported platform"
 #endif

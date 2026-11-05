@@ -13,7 +13,6 @@
 #include <thread>
 #include <utility>
 #include <vector>
-#include <vector>
 
 #include "Common.h"
 #include "CommunicationCallbacks.h"
@@ -21,7 +20,7 @@
 #include "LinkerHandExport.h"
 
 // 仅前向声明 IHand，避免把 hand/ 子目录的实现细节带进公共头。
-// 实例化 std::unique_ptr<IHand> 的析构在 LinkerHandApi.cpp 里完成。
+// Destruction is supplied by the packaged SDK library.
 namespace linkerhand { namespace hand { class IHand; } }
 
 namespace linkerhand {
@@ -57,11 +56,11 @@ public:
 	std::vector<uint8_t> getPosition();
 	std::vector<double> getPositionArc();
 	std::vector<double> testPositionArc(const std::vector<uint8_t> &pose);
-	// 原始值直控（绕过 0-255 量化，完整分辨率；目前 L30 支持）
+	// Historical raw-control ABI for migrated devices; not exposed by legacy tools.
 	void setPositionRaw(const std::vector<int16_t> &raw);
 	std::vector<int16_t> getPositionRaw();
 	std::vector<std::pair<int16_t, int16_t>> getPositionRangeRaw();
-	// 速度/扭矩原始值直控（实际量程；目前 L30 支持）
+	// Historical raw speed/torque ABI; support is model-specific.
 	void setSpeedRaw(const std::vector<int16_t> &raw);
 	std::vector<int16_t> getSpeedRaw();
 	std::pair<int16_t, int16_t> getSpeedRangeRaw();
@@ -98,11 +97,11 @@ public:
 	std::vector<uint8_t> getFaultCode();
 
 	// ----------------------------------------------------------
-	// 清除电机故障码 目前仅支持L20
+	// Historical ordinary-L20 fault reset ABI; outside active maintenance.
 	void clearFaultCode(const std::vector<uint8_t> &torque = std::vector<uint8_t>(5, 1));
-	// 设置电机使能 目前仅支持L25
+	// L25 motor enable; verify firmware-specific vector layout.
 	void setEnable(const std::vector<uint8_t> &enable = std::vector<uint8_t>(5, 0));
-	// 设置电机使能 目前仅支持L25
+	// L25 motor disable; verify firmware-specific vector layout.
 	void setDisable(const std::vector<uint8_t> &disable = std::vector<uint8_t>(5, 1));
 
 	// ---- 非破坏式成败通道（激活 ErrorCode.h；老 void/容器 API 全部保留）----------

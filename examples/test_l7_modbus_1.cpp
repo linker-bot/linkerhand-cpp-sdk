@@ -14,9 +14,10 @@
 #include "LinkerHandApi.h"
 #include "CommunicationCallbacks.h"
 #include "Modbus.h"
+#include "legacy/ModbusCallbacks.h"
 
 // 全局变量
-static std::unique_ptr<Modbus> g_modbus = nullptr;
+static std::shared_ptr<Modbus> g_modbus = nullptr;
 static std::atomic<bool> g_running{true};
 static std::mutex g_console_mutex;
 static std::mutex g_hand_mutex;  // 手部操作互斥锁
@@ -379,7 +380,7 @@ int main(int argc, char* argv[]) {
     LinkerHandApi hand(LINKER_HAND::L7, HAND_TYPE::RIGHT, COMM_TYPE::MODBUS);
 
     // 1. 初始化 Modbus 设备
-    g_modbus = std::make_unique<Modbus>("/dev/ttyUSB0", 115200);
+    g_modbus = std::make_shared<Modbus>("/dev/ttyUSB0", 115200);
     if (!g_modbus->isOpen()) {
         std::cerr << "错误: 串口打开失败，退出。" << std::endl;
         return -1;
@@ -388,19 +389,7 @@ int main(int argc, char* argv[]) {
     safePrint("串口初始化成功: /dev/ttyUSB0 @ 115200 baud");
     
     // 3. 设置 Modbus 回调函数
-    hand.setModbusTxCallback([](uint8_t sid, uint16_t addr, const uint8_t* data, uintptr_t len) -> int32_t {
-        if (!g_modbus) return -1;
-        return g_modbus->sendRawFrame(data, len) ? 0 : -1;
-    });
-    
-    hand.setModbusRxCallback([](uint8_t sid, uint16_t* addr_out, uint8_t* data_out, uint8_t* len_out) -> int32_t {
-        if (!g_modbus) return -1;
-        int len = g_modbus->receiveCompleteFrame(data_out, 256, 500);
-        if (len <= 0 || data_out[0] != sid) return -1;
-        *len_out = static_cast<uint8_t>(len);
-        if (addr_out) *addr_out = 0;
-        return 0;
-    });
+    (void)linkerhand::legacy::bind_modbus_callbacks(hand, g_modbus);
     
     safePrint("手部API初始化完成");
     safePrint("开始多线程测试...");
