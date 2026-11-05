@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
-"""LinkerHand 全型号 Web 示教器 —— 纯 Python 标准库，零第三方依赖。
+"""LinkerHand legacy Web 示教器 —— 纯 Python 标准库，零第三方依赖。
 
 启动编译好的 C++ 桥 `web_bridge`（build/bin/）作为子进程，通过 stdin/stdout 文本协议
-下发姿势/速度/力矩、读回实测位置与触觉压感；浏览器端用 HTTP 轮询交互。任何装了 Python3
-的平台解压即用，无需 pip、Boost、websocketpp。
+下发姿势/速度/力矩、读回实测位置与触觉压感；浏览器端用 HTTP 轮询交互。Python server requires a supported native SDK platform and a built bridge.
 
 用法:
-    python3 webui/run.py --model O6 --side left [--channel can0]
+    python3 webui/run.py --model L7 --side left [--channel can0]
                                [--host 0.0.0.0] [--port 8080] [--bridge PATH]
 
 然后浏览器打开 http://<本机>:8080/ 。运行前需先拉起对应 CAN 接口并给手上电。
@@ -15,6 +14,7 @@ import argparse
 import json
 import mimetypes
 import os
+import re
 import threading
 import subprocess
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -23,82 +23,12 @@ REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DEFAULT_BRIDGE = os.path.join(REPO, "build", "bin", "web_bridge")
 STATIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
 
-# 型号 -> 关节名（复刻 hand_teach_pendant/src/HandController.h:joint_names_）。
+# Joint labels preserve the existing packaged vector order, including reserved slots.
 # 数量 = 该型号控制自由度，前端据此渲染滑块与标签。
-JOINT_NAMES = {
-    "L6":  ["拇指根部", "拇指侧摆", "食指根部", "中指根部", "无名指根部", "小指根部"],
-    "O6":  ["拇指根部", "拇指侧摆", "食指根部", "中指根部", "无名指根部", "小指根部"],
-    "L7":  ["大拇指弯曲", "大拇指横摆", "食指弯曲", "中指弯曲", "无名指弯曲", "小拇指弯曲", "拇指旋转"],
-    "L20_LITE": ["拇指根部", "拇指侧摆", "食指根部", "中指根部", "无名指根部", "小指根部",
-            "食指侧摆", "无名指侧摆", "小指侧摆", "拇指旋转"],
-    "L20": ["拇指根部", "食指根部", "中指根部", "无名指根部", "小指根部", "拇指侧摆",
-            "食指侧摆", "中指侧摆", "无名指侧摆", "小指侧摆", "拇指横摆", "预留1",
-            "预留2", "预留3", "预留4", "拇指尖部", "食指末端", "中指末端", "无名指末端", "小指末端"],
-    "L20_10": ["拇指根部", "食指根部", "中指根部", "无名指根部", "小指根部",
-            "拇指侧摆", "食指侧摆", "中指侧摆", "无名指侧摆", "小指侧摆", "拇指横摆",
-            "拇指指尖", "食指指尖", "中指指尖", "无名指指尖", "小指指尖"],
-    "L21": ["大拇指根部", "食指根部", "中指根部", "无名指根部", "小拇指根部", "大拇指侧摆",
-            "食指侧摆", "中指侧摆", "无名指侧摆", "小拇指侧摆", "大拇指横滚", "预留1",
-            "预留2", "预留3", "预留4", "大拇指中部", "预留5", "预留6", "预留7", "预留8",
-            "大拇指指尖", "食指指尖", "中指指尖", "无名指指尖", "小拇指指尖"],
-    "L25": ["大拇指根部", "食指根部", "中指根部", "无名指根部", "小拇指根部", "大拇指侧摆",
-            "食指侧摆", "中指侧摆", "无名指侧摆", "小拇指侧摆", "大拇指横滚", "预留1",
-            "预留2", "预留3", "预留4", "大拇指中部", "食指中部", "中指中部", "无名指中部",
-            "小拇指中部", "大拇指指尖", "食指指尖", "中指指尖", "无名指指尖", "小拇指指尖"],
-    "O20": ["拇指指根", "拇指指尖", "拇指侧摆", "拇指旋转",
-            "食指侧摆", "食指指根", "食指指尖",
-            "中指侧摆", "中指指根", "中指指尖",
-            "无名指侧摆", "无名指指根", "无名指指尖",
-            "小指侧摆", "小指指根", "小指指尖"],
-    "L30": ["拇指指根", "拇指指尖", "拇指侧摆", "拇指旋转",
-            "无名指侧摆", "无名指指尖", "无名指指根",
-            "中指指根", "中指指尖", "小指指根", "小指指尖",
-            "小指侧摆", "中指侧摆", "食指侧摆", "食指指根", "食指指尖", "手腕"],
-    # O30 采用 HOP 协议，36 逻辑关节中 20 个为有效电机（无效索引 1~4/15/25~35 已由 SDK 剔除）。
-    # 下列 20 个关节名与 SDK 对外向量顺序一一对应（有效索引 0,5~14,16~24）。
-    "O30": ["拇指横滚",
-            "拇指航向", "食指航向", "中指航向", "无名指航向", "小指航向",
-            "拇指指根1", "食指指根1", "中指指根1", "无名指指根1", "小指指根1",
-            "食指指根2", "中指指根2", "无名指指根2", "小指指根2",
-            "拇指指尖", "食指指尖", "中指指尖", "无名指指尖", "小指指尖"],
-}
+JOINT_NAMES = {'L7': ['大拇指弯曲', '大拇指横摆', '食指弯曲', '中指弯曲', '无名指弯曲', '小拇指弯曲', '拇指旋转'], 'L20_10': ['拇指根部', '食指根部', '中指根部', '无名指根部', '小指根部', '拇指侧摆', '食指侧摆', '中指侧摆', '无名指侧摆', '小指侧摆', '拇指横摆', '拇指指尖', '食指指尖', '中指指尖', '无名指指尖', '小指指尖'], 'L21': ['大拇指根部', '食指根部', '中指根部', '无名指根部', '小拇指根部', '大拇指侧摆', '食指侧摆', '中指侧摆', '无名指侧摆', '小拇指侧摆', '大拇指横滚', '预留1', '预留2', '预留3', '预留4', '大拇指中部', '预留5', '预留6', '预留7', '预留8', '大拇指指尖', '食指指尖', '中指指尖', '无名指指尖', '小拇指指尖'], 'L25': ['大拇指根部', '食指根部', '中指根部', '无名指根部', '小拇指根部', '大拇指侧摆', '食指侧摆', '中指侧摆', '无名指侧摆', '小拇指侧摆', '大拇指横滚', '预留1', '预留2', '预留3', '预留4', '大拇指中部', '食指中部', '中指中部', '无名指中部', '小拇指中部', '大拇指指尖', '食指指尖', '中指指尖', '无名指指尖', '小拇指指尖'], 'O20': ['拇指指根', '拇指指尖', '拇指侧摆', '拇指旋转', '食指侧摆', '食指指根', '食指指尖', '中指侧摆', '中指指根', '中指指尖', '无名指侧摆', '无名指指根', '无名指指尖', '小指侧摆', '小指指根', '小指指尖']}
 
 # 与 JOINT_NAMES 同型号、同顺序的英文关节名，供前端英文界面使用。
-JOINT_NAMES_EN = {
-    "L6":  ["Thumb base", "Thumb abd.", "Index base", "Middle base", "Ring base", "Pinky base"],
-    "O6":  ["Thumb base", "Thumb abd.", "Index base", "Middle base", "Ring base", "Pinky base"],
-    "L7":  ["Thumb flex", "Thumb roll", "Index flex", "Middle flex", "Ring flex", "Pinky flex", "Thumb rot."],
-    "L20_LITE": ["Thumb base", "Thumb abd.", "Index base", "Middle base", "Ring base", "Pinky base",
-            "Index abd.", "Ring abd.", "Pinky abd.", "Thumb rot."],
-    "L20": ["Thumb base", "Index base", "Middle base", "Ring base", "Pinky base", "Thumb abd.",
-            "Index abd.", "Middle abd.", "Ring abd.", "Pinky abd.", "Thumb roll", "Reserved 1",
-            "Reserved 2", "Reserved 3", "Reserved 4", "Thumb tip", "Index tip", "Middle tip", "Ring tip", "Pinky tip"],
-    "L20_10": ["Thumb base", "Index base", "Middle base", "Ring base", "Pinky base",
-            "Thumb abd.", "Index abd.", "Middle abd.", "Ring abd.", "Pinky abd.", "Thumb roll",
-            "Thumb tip", "Index tip", "Middle tip", "Ring tip", "Pinky tip"],
-    "L21": ["Thumb base", "Index base", "Middle base", "Ring base", "Pinky base", "Thumb abd.",
-            "Index abd.", "Middle abd.", "Ring abd.", "Pinky abd.", "Thumb roll", "Reserved 1",
-            "Reserved 2", "Reserved 3", "Reserved 4", "Thumb mid", "Reserved 5", "Reserved 6", "Reserved 7", "Reserved 8",
-            "Thumb tip", "Index tip", "Middle tip", "Ring tip", "Pinky tip"],
-    "L25": ["Thumb base", "Index base", "Middle base", "Ring base", "Pinky base", "Thumb abd.",
-            "Index abd.", "Middle abd.", "Ring abd.", "Pinky abd.", "Thumb roll", "Reserved 1",
-            "Reserved 2", "Reserved 3", "Reserved 4", "Thumb mid", "Index mid", "Middle mid", "Ring mid",
-            "Pinky mid", "Thumb tip", "Index tip", "Middle tip", "Ring tip", "Pinky tip"],
-    "O20": ["Thumb base", "Thumb tip", "Thumb abd.", "Thumb rot.",
-            "Index abd.", "Index base", "Index tip",
-            "Middle abd.", "Middle base", "Middle tip",
-            "Ring abd.", "Ring base", "Ring tip",
-            "Pinky abd.", "Pinky base", "Pinky tip"],
-    "L30": ["Thumb base", "Thumb tip", "Thumb abd.", "Thumb rot.",
-            "Ring abd.", "Ring tip", "Ring base",
-            "Middle base", "Middle tip", "Pinky base", "Pinky tip",
-            "Pinky abd.", "Middle abd.", "Index abd.", "Index base", "Index tip", "Wrist"],
-    "O30": ["Thumb roll",
-            "Thumb yaw", "Index yaw", "Middle yaw", "Ring yaw", "Pinky yaw",
-            "Thumb root1", "Index root1", "Middle root1", "Ring root1", "Pinky root1",
-            "Index root2", "Middle root2", "Ring root2", "Pinky root2",
-            "Thumb tip", "Index tip", "Middle tip", "Ring tip", "Pinky tip"],
-}
+JOINT_NAMES_EN = {'L7': ['Thumb flex', 'Thumb roll', 'Index flex', 'Middle flex', 'Ring flex', 'Pinky flex', 'Thumb rot.'], 'L20_10': ['Thumb base', 'Index base', 'Middle base', 'Ring base', 'Pinky base', 'Thumb abd.', 'Index abd.', 'Middle abd.', 'Ring abd.', 'Pinky abd.', 'Thumb roll', 'Thumb tip', 'Index tip', 'Middle tip', 'Ring tip', 'Pinky tip'], 'L21': ['Thumb base', 'Index base', 'Middle base', 'Ring base', 'Pinky base', 'Thumb abd.', 'Index abd.', 'Middle abd.', 'Ring abd.', 'Pinky abd.', 'Thumb roll', 'Reserved 1', 'Reserved 2', 'Reserved 3', 'Reserved 4', 'Thumb mid', 'Reserved 5', 'Reserved 6', 'Reserved 7', 'Reserved 8', 'Thumb tip', 'Index tip', 'Middle tip', 'Ring tip', 'Pinky tip'], 'L25': ['Thumb base', 'Index base', 'Middle base', 'Ring base', 'Pinky base', 'Thumb abd.', 'Index abd.', 'Middle abd.', 'Ring abd.', 'Pinky abd.', 'Thumb roll', 'Reserved 1', 'Reserved 2', 'Reserved 3', 'Reserved 4', 'Thumb mid', 'Index mid', 'Middle mid', 'Ring mid', 'Pinky mid', 'Thumb tip', 'Index tip', 'Middle tip', 'Ring tip', 'Pinky tip'], 'O20': ['Thumb base', 'Thumb tip', 'Thumb abd.', 'Thumb rot.', 'Index abd.', 'Index base', 'Index tip', 'Middle abd.', 'Middle base', 'Middle tip', 'Ring abd.', 'Ring base', 'Ring tip', 'Pinky abd.', 'Pinky base', 'Pinky tip']}
 
 bridge = None
 bridge_lock = threading.Lock()
@@ -108,21 +38,26 @@ BRIDGE_PATH = DEFAULT_BRIDGE   # main() 里按 --bridge 覆盖，供 /connect �
 current = None                 # 当前连接参数 {"model","side","comm","channel"}；未连接为 None
 
 # 型号 -> 可选通信方式（前端下拉联动 + /connect 校验依据）。
-# CAN 全型号支持；CAN-FD 仅 O20 / L30 / O30；Modbus 仅 O6/L7/L20_Lite（HandFactory 其余会抛异常）。
+# Classic CAN applies to L7/G20/L21/L25; O20 uses CAN FD; only L7 uses Modbus.
 # EtherCAT 当前 SDK 未接通（工厂直接抛异常），不列入。
-COMM_SUPPORT = {
-    "L6":  ["can"],
-    "O6":  ["can", "modbus"],
-    "L7":  ["can", "modbus"],
-    "L20_LITE": ["can", "modbus"],
-    "L20": ["can"],
-    "L21": ["can"],
-    "L25": ["can"],
-    "L20_10": ["can"],
-    "O20": ["canfd"],
-    "L30": ["canfd"],
-    "O30": ["canfd"],
-}
+def _communication_catalogue():
+    """Read the same maintained-model rows used by the C++ tools."""
+    path = os.path.join(REPO, "include", "core", "LegacyModels.h")
+    with open(path, encoding="utf-8") as source:
+        rows = re.findall(r'\{"([A-Z0-9_]+)", \w+, (\d+), (true|false), (true|false)\}', source.read())
+    if not rows:
+        raise RuntimeError("Legacy model catalogue is empty")
+    catalogue = {}
+    for name, size, fd, modbus in rows:
+        if len(JOINT_NAMES.get(name, [])) != int(size) or len(JOINT_NAMES_EN.get(name, [])) != int(size):
+            raise RuntimeError("Joint labels do not match model catalogue: " + name)
+        catalogue[name] = (["canfd"] if fd == "true" else ["can"]) + (["modbus"] if modbus == "true" else [])
+    if set(catalogue) != set(JOINT_NAMES) or set(catalogue) != set(JOINT_NAMES_EN):
+        raise RuntimeError("Joint label catalogue contains an unmaintained model")
+    return catalogue
+
+
+COMM_SUPPORT = _communication_catalogue()
 
 meta = {}                 # {"model","dof","version"}
 latest = {                # 最新回读缓存
@@ -136,8 +71,18 @@ latest = {                # 最新回读缓存
 }
 
 
+def canonical_model(value):
+    name = str(value).upper()
+    return {"G20": "L20_10", "L20_11": "L20_10"}.get(name, name)
+
+
 def start_bridge(bridge_path, model, side, comm, channel, timeout=8.0):
     global bridge, current
+    model = canonical_model(model)
+    if model not in COMM_SUPPORT or comm not in COMM_SUPPORT[model]:
+        raise ValueError("Unsupported legacy model/transport; see docs/migration.md")
+    if side not in ("left", "right"):
+        raise ValueError("side must be left or right")
     if not os.path.exists(bridge_path):
         raise SystemExit(f"web_bridge 未找到: {bridge_path}\n请先构建 SDK 示例 (BUILD_EXAMPLES=ON)。")
     argv = [bridge_path, model, side, comm]
@@ -414,14 +359,14 @@ class Handler(BaseHTTPRequestHandler):
             self._send(400, json.dumps({"ok": False, "error": str(e)}), "application/json")
 
     def _handle_connect(self, payload):
-        model = str(payload.get("model", "")).upper()
+        model = canonical_model(payload.get("model", ""))
         side = str(payload.get("side", "left")).lower()
         comm = str(payload.get("comm", "")).lower()
         channel = str(payload.get("channel", "")).strip()
         if model not in JOINT_NAMES:
             return self._send(200, json.dumps({"ok": False, "error": f"未知型号: {model}"}), "application/json")
         if side not in ("left", "right"):
-            side = "left"
+            return self._send(400, json.dumps({"ok": False, "error": "Invalid side"}), "application/json")
         if comm == "ethercat":
             return self._send(200, json.dumps({"ok": False, "error": "EtherCAT 暂不支持"}), "application/json")
         if comm not in COMM_SUPPORT.get(model, []):
@@ -439,13 +384,13 @@ class Handler(BaseHTTPRequestHandler):
 
 def main():
     global BRIDGE_PATH
-    ap = argparse.ArgumentParser(description="LinkerHand 全型号无依赖 Web 示教器")
-    ap.add_argument("--model", choices=list(JOINT_NAMES.keys()),
+    ap = argparse.ArgumentParser(description="LinkerHand legacy无依赖 Web 示教器")
+    ap.add_argument("--model", type=canonical_model, choices=list(JOINT_NAMES.keys()),
                     help="启动即连的型号；不填则待前端设置面板在线连接")
     ap.add_argument("--side", choices=["left", "right"], default="left")
     ap.add_argument("--comm", choices=["can", "canfd", "modbus"], default="",
                     help="通信方式；缺省按型号自动（O20→canfd，其余→can）")
-    ap.add_argument("--channel", default="", help="设备通道；留空则按左右手自动检测自选（CAN：接口名 can0；CAN-FD/L30：socketcan 自检或 socketcan:can0；Modbus：串口 /dev/ttyUSB0）")
+    ap.add_argument("--channel", default="", help="设备通道；留空则按左右手自动检测自选（CAN：接口名 can0；CAN-FD/O20: socketcan:can0；Modbus：串口 /dev/ttyUSB0）")
     ap.add_argument("--host", default="0.0.0.0")
     ap.add_argument("--port", type=int, default=8080)
     ap.add_argument("--bridge", default=DEFAULT_BRIDGE, help="web_bridge 可执行文件路径")

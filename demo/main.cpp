@@ -7,7 +7,7 @@
 #include "CommFactory.h"
 
 int main() {
-    constexpr LINKER_HAND model = LINKER_HAND::O6;
+    constexpr LINKER_HAND model = LINKER_HAND::L7;
     constexpr HAND_TYPE  side   = HAND_TYPE::LEFT;
 
     auto hand = std::make_shared<LinkerHandApi>(model, side, COMM_TYPE::CAN);
