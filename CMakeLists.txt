@@ -18,12 +18,12 @@ message(STATUS "Packaged SDK version: ${PROJECT_VERSION}; implementation is preb
 
 # ---------------------------------------------------------------------------
 # 安装规则（发布包模式）
-# 本目录是 pack.sh 产出的发布包：SDK 已是预编译产物，源码不在此处。
+# SDK 已是预编译产物，源码不在此处。
 # cmake --install 时把 include/ 头与对应平台的 lib 铺到 prefix，与 build.sh
 # 期望的目录布局保持一致：
 #   $PREFIX/include/linkerhand-legacy-cpp-sdk/{api,core,communication}/*.h
 #   $PREFIX/lib/linkerhand-legacy-cpp-sdk/lib/<预编译库>
-# build.sh 随后在 $PREFIX/lib/ 建符号链接 + ldconfig。
+# 消费者需配置运行时库搜索路径。
 # ---------------------------------------------------------------------------
 
 set(LH_INSTALL_INCLUDE_DIR "include/linkerhand-legacy-cpp-sdk")
