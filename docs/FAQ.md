@@ -30,3 +30,10 @@ packaged compiler/CRT and architecture. Do not mix incompatible C++ runtimes acr
 
 The ABI contains historical declarations. EtherCAT is not a maintained tool path and is
 not advertised as working. L7 is the maintained Modbus device.
+
+## Where are the TUI, Web UI and complete v2.2.1 examples?
+
+Use [linkerbot-hand-tools](https://github.com/linker-bot/linkerbot-hand-tools).
+It preserves historical sources and uses both SDK generations. This package keeps only
+SDK integration and a read-only consumer example. Device configuration scripts also
+belong with the tools, not SDK installation.

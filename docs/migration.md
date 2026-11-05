@@ -18,3 +18,12 @@ Do not remove public enums from an existing application's headers to enforce the
 
 `L20_10` and `L20_11` are not ordinary `L20`. The legacy aliases are preserved; applications
 must select the appropriate device and firmware rather than migrate by a name prefix.
+
+## Shared tools
+
+CLI/TUI, Web UI, tactile/palm visualization and historical demonstrations now live in
+[linkerbot-hand-tools](https://github.com/linker-bot/linkerbot-hand-tools). That repository
+preserves the v2.2.1 tool sources and provides a shared runtime for both SDK generations.
+The package keeps only one read-only integration example. `BUILD_EXAMPLES` no longer
+builds device applications; application-specific targets and start-webui.sh were removed.
+Use the tools project's explicit legacy compatibility selection for historical API paths.

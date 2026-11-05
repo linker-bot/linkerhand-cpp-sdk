@@ -8,8 +8,8 @@ communication path is covered by the newer SDK.
 
 Preserve exported signatures, enum numeric values, binary names and CMake targets.
 Historical symbols may remain available in prebuilt binaries without being maintained.
-Tools and examples advertise only maintained devices. A removed tool option is a scope
-change and must be noted in release notes; it does not remove a binary symbol.
+Interactive tools are maintained in linkerbot-hand-tools. The SDK package contains only
+a minimal read-only consumer example. Removing tool targets does not remove binary symbols.
 
 Do not rename `G20` to ordinary `L20`: they are different enum values. `L20_10` and
 `L20_11` alias `G20`; `L20_Lite` aliases `L10`. Preserve these relationships.

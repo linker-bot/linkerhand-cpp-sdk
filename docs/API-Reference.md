@@ -54,7 +54,7 @@ atomic raw exchange, but independent TX/RX callbacks do not automatically provid
 
 ## Control vectors
 
-`setPosition` accepts normalized `uint8_t` values, not physical angles. Existing tool
+`setPosition` accepts normalized `uint8_t` values, not physical angles. Legacy API
 position layouts are L7: 7, G20: 16, L21: 25, L25: 25 and O20: 16 entries. Reserved
 entries are part of the legacy layout; do not remove them based on the marketing joint
 count. O20 readback length can differ from its command length.
@@ -64,12 +64,12 @@ mapping and units for the device before use. `testPositionArc` is a historical c
 entry point, not a hardware test.
 
 `setSpeed` and `setTorque` have model-specific vector layouts. Do not assume every model
-uses either five entries or its full position count: G20 examples use five speed entries,
+uses either five entries or its full position count: Historical G20 usage uses five speed entries,
 while L7 uses seven. Confirm the particular operation and firmware before sending.
 
 `setPositionRaw`, `getPositionRaw`, range getters, `setSpeedRaw` and `setTorqueRaw` are
-retained ABI methods associated with migrated devices. Current legacy tools do not expose
-those raw-control paths.
+retained ABI methods associated with migrated devices. Applications select the appropriate SDK; shared tools own
+raw-control presentation.
 
 `setEnable` / `setDisable` are documented for L25; `clearFaultCode` is historically
 associated with ordinary L20, which is outside active maintenance. A declaration alone
@@ -84,7 +84,7 @@ No universal freshness or device acknowledgment contract is provided by these re
 `getForce` returns finger matrices whose dimensions depend on the sensor and firmware.
 Do not assign physical units to bytes without a verified sensor specification.
 `getPalmForce`, `getFingerForceSum` and `getPalmForceSum` are available in the ABI;
-G20 examples use palm/aggregate sensing. Treat support and dimensions as device-specific.
+Historical G20 interfaces expose palm/aggregate sensing. Treat support and dimensions as device-specific.
 
 ## Error channel
 
