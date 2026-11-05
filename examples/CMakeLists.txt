@@ -14,7 +14,7 @@ if(MSVC)
     set(CMAKE_MSVC_SHOW_INCLUDES FALSE)
 endif()
 
-option(BUILD_TESTS "Build test applications" ON)
+option(BUILD_TESTS "Build hardware example applications (not offline tests)" ON)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
@@ -257,7 +257,7 @@ if(NOT LINKERHAND_AS_SUBPROJECT AND LINKERHAND_INCLUDE_DIR)
 endif()
 
 # 所有 example 共享同一份运行时依赖：用单一 custom target 一次性拷贝,
-# 而不是给每个 exe 挂 POST_BUILD —— 否则 ~30 个 example 会重复刷屏并和
+# 而不是给每个 exe 挂 POST_BUILD —— 否则每个 example 会重复复制依赖并和
 # SONAME 软链 target 在并行构建下争抢同一份文件。
 function(_define_examples_runtime_deps_target)
     if(TARGET examples_runtime_deps)

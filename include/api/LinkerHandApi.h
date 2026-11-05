@@ -97,11 +97,11 @@ public:
 	std::vector<uint8_t> getFaultCode();
 
 	// ----------------------------------------------------------
-	// 清除电机故障码 目前仅支持L20
+	// Historical ordinary-L20 fault reset ABI; outside active maintenance.
 	void clearFaultCode(const std::vector<uint8_t> &torque = std::vector<uint8_t>(5, 1));
-	// 设置电机使能 目前仅支持L25
+	// L25 motor enable; verify firmware-specific vector layout.
 	void setEnable(const std::vector<uint8_t> &enable = std::vector<uint8_t>(5, 0));
-	// 设置电机使能 目前仅支持L25
+	// L25 motor disable; verify firmware-specific vector layout.
 	void setDisable(const std::vector<uint8_t> &disable = std::vector<uint8_t>(5, 1));
 
 	// ---- 非破坏式成败通道（激活 ErrorCode.h；老 void/容器 API 全部保留）----------

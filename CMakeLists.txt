@@ -1,9 +1,10 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.16)
 project(LinkerHandSDKExamples LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+include(CTest)
 
 option(BUILD_EXAMPLES "Build example applications" ON)
 option(LINKERHAND_USE_TRANSPORT "Enable the optional transport callback adapter" OFF)
@@ -99,4 +100,13 @@ if(BUILD_TESTING)
     target_include_directories(legacy_modbus_test PRIVATE include)
     target_compile_features(legacy_modbus_test PRIVATE cxx_std_17)
     add_test(NAME legacy_modbus COMMAND legacy_modbus_test)
+endif()
+
+if(BUILD_TESTING)
+    find_package(Python3 COMPONENTS Interpreter REQUIRED)
+    add_test(NAME legacy_scope
+        COMMAND ${Python3_EXECUTABLE} -B -m unittest discover -s tests -p test_legacy_scope.py -v)
+    set_tests_properties(legacy_scope PROPERTIES WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+    add_test(NAME legacy_package_versions
+        COMMAND ${Python3_EXECUTABLE} -B "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_package_versions.py")
 endif()
