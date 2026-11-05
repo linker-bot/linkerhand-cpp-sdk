@@ -23,3 +23,7 @@ firmware mappings or the missing SDK implementation build.
 The optional transport path stays opt-in until accepted on the relevant hardware. L7 RTU
 remains on the packaged backend with bounded raw callbacks. Internal binary model pruning
 and full RTU transaction migration require the original implementation/verified contracts.
+
+Name release archives `linkerhand-legacy-cpp-sdk-<version>-<platform>-<arch>.<ext>`
+(for example, `linkerhand-legacy-cpp-sdk-2.2.1-linux-x86_64.tar.gz`).
+Keep the prebuilt library filenames described in [binary provenance](build-provenance.md).

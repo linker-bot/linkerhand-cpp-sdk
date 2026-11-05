@@ -1,4 +1,4 @@
-name: SDK package
+name: linkerhand-legacy-cpp-sdk
 on:
   pull_request:
   push:
@@ -8,7 +8,7 @@ permissions:
   contents: read
 jobs:
   package:
-    name: SDK package (${{ matrix.container || matrix.os }}, transport=${{ matrix.transport }})
+    name: linkerhand-legacy-cpp-sdk (${{ matrix.container || matrix.os }}, transport=${{ matrix.transport }})
     runs-on: ${{ matrix.os }}
     container: ${{ matrix.container }}
     strategy:
@@ -84,5 +84,5 @@ jobs:
         run: python3 tools/binary_manifest.py > binary-manifest.json
       - uses: actions/upload-artifact@v4
         with:
-          name: SDK-manifest-${{ strategy.job-index }}
+          name: linkerhand-legacy-cpp-sdk-manifest-${{ strategy.job-index }}
           path: binary-manifest.json

@@ -3,7 +3,7 @@ setlocal EnableExtensions
 rem Build consumers of the prebuilt SDK; implementation source is not packaged.
 set "SDK_SOURCE=%~dp0"
 set "SDK_BUILD=%~dp0build"
-set "SDK_PREFIX=%LOCALAPPDATA%\LinkerHandSDK"
+set "SDK_PREFIX=%LOCALAPPDATA%\linkerhand-legacy-cpp-sdk"
 set "SDK_TESTS=ON"
 set "SDK_INSTALL=0"
 set "SDK_RUN_TESTS=0"

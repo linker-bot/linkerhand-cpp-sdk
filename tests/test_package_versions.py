@@ -17,7 +17,7 @@ class PackageVersions(unittest.TestCase):
                       f'set(PACKAGE_FIND_VERSION_MIN_MAJOR "{version.split(".")[0]}")',
                       f'set(PACKAGE_FIND_VERSION_MAX "{maximum}")',
                       f'set(PACKAGE_FIND_VERSION_RANGE_MAX "{bound}")']
-        parts += [f'include("{(root / "cmake/linkerhand-cpp-sdk-config-version.cmake").as_posix()}")',
+        parts += [f'include("{(root / "cmake/linkerhand-legacy-cpp-sdk-config-version.cmake").as_posix()}")',
                   f'if(NOT "${{PACKAGE_VERSION_COMPATIBLE}}" STREQUAL "{str(compatible).upper()}")',
                   'message(FATAL_ERROR "unexpected compatibility result")', 'endif()',
                   f'if(NOT "${{PACKAGE_VERSION_EXACT}}" STREQUAL "{str(exact).upper()}")',
