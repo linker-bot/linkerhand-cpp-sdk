@@ -1,4 +1,4 @@
-// L20 / CAN / 左手 —— 读取状态/触觉并执行握拳与张开（带 TX/RX 日志）
+// L20_10 / CAN / 左手 —— 读取状态/触觉并执行握拳与张开（带 TX/RX 日志）
 #include <array>
 #include <cstdint>
 

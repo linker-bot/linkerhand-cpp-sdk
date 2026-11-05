@@ -214,26 +214,26 @@ jobs:
           cmake --build . \
             --config Release \
             --parallel $(nproc) \
-            --target test test_o6_can_0
+            --target test_l7_can_0 test_l21_can_0
 
       - name: 验证示例程序
         working-directory: build
         run: |
           echo "=== 验证构建产物 ==="
-          if [ -f bin/test ]; then
-            echo "✓ test 构建成功"
-            file bin/test
-            ls -lh bin/test
+          if [ -f bin/test_l7_can_0 ]; then
+            echo "✓ test_l7_can_0 构建成功"
+            file bin/test_l7_can_0
+            ls -lh bin/test_l7_can_0
           else
-            echo "✗ test 未找到"
+            echo "✗ test_l7_can_0 未找到"
             exit 1
           fi
-          if [ -f bin/test_o6_can_0 ]; then
-            echo "✓ test_o6_can_0 构建成功"
-            file bin/test_o6_can_0
-            ls -lh bin/test_o6_can_0
+          if [ -f bin/test_l21_can_0 ]; then
+            echo "✓ test_l21_can_0 构建成功"
+            file bin/test_l21_can_0
+            ls -lh bin/test_l21_can_0
           else
-            echo "✗ test_o6_can_0 未找到"
+            echo "✗ test_l21_can_0 未找到"
             exit 1
           fi
 

@@ -1,4 +1,4 @@
-// 全型号 / CAN·CAN-FD·Modbus —— 自包 ANSI 全屏 TUI 功能巡检示例
+// Interactive checks for maintained legacy CAN, CAN FD and L7 Modbus devices.
 // 无第三方库：原始终端模式(termios / Windows Console API) + ANSI 转义自绘分屏界面，
 // 方向键+回车导航；左侧操作菜单，右侧状态面板实时刷新。
 #include <iostream>
@@ -16,6 +16,7 @@
 #include <cstring>
 #include <algorithm>
 #include "LinkerHandApi.h"
+#include "LegacyModels.h"
 #include "Modbus.h"
 
 #ifdef _WIN32
@@ -402,17 +403,6 @@ std::string bytesToHex(const std::vector<std::vector<uint8_t>>& bytes)
     return hexStr;
 }
 
-// L6 - 执行动作 - 单指
-std::vector<std::vector<uint8_t>> L6_POSE_1 = {
-    {255, 255, 255, 255, 255, 255},
-    {0, 255, 255, 255, 255, 255},
-    {255, 0, 255, 255, 255, 255},
-    {255, 255, 0, 255, 255, 255},
-    {255, 255, 255, 0, 255, 255},
-    {255, 255, 255, 255, 0, 255},
-    {255, 255, 255, 255, 255, 0},
-    {255, 255, 255, 255, 255, 255}};
-
 // L7 - 执行动作 - 手掌握拳
 std::vector<std::vector<uint8_t>> L7_POSE_1 = {
     {255, 255, 255, 255, 255, 255, 255},
@@ -424,75 +414,12 @@ std::vector<std::vector<uint8_t>> L7_POSE_1 = {
 // L7 - 执行动作 - 张开
 std::vector<uint8_t> L7_POSE_OPEN = {255, 255, 255, 255, 255, 255, 255};
 
-// L10 - 执行动作 - 手指循环弯曲
-std::vector<std::vector<uint8_t>> L10_POSE_1 = {
-    {35,140,255,255,255,255,255,255,255,30},    // 拇指弯曲
-    {255,70,255,255,255,255,255,255,255,255},   // 手掌张开
-    {255,70,0,255,255,255,255,255,255,255},     // 食指弯曲
-    {255,70,255,255,255,255,255,255,255,255},   // 手掌张开
-    {255,70,255,0,255,255,255,255,255,255},     // 中指弯曲
-    {255,70,255,255,255,255,255,255,255,255},   // 手掌张开
-    {255,70,255,255,0,255,255,255,255,255},     // 无名指弯曲
-    {255,70,255,255,255,255,255,255,255,255},   // 手掌张开
-    {255,70,255,255,255,0,255,255,255,255},     // 小拇指弯曲
-    {255,70,255,255,255,255,255,255,255,255}    // 手掌张开
-};
-
-// L10 - 执行动作 - 拇指与其他手指循环对指
-std::vector<std::vector<uint8_t>> L10_POSE_2 = {
-    {255, 70, 255, 255, 255, 255, 255, 255, 255, 255},  // 手掌张开
-    {145, 128, 146, 255, 255, 255, 255, 255, 255, 90},  // 拇指对食指
-    {255, 70, 255, 255, 255, 255, 255, 255, 255, 255},  // 手掌张开
-    {145, 88, 255, 148, 255, 255, 255, 255, 255, 75},   // 拇指对中指
-    {255, 70, 255, 255, 255, 255, 255, 255, 255, 255},  // 手掌张开
-    {145, 63, 255, 255, 150, 255, 255, 255, 255, 60},   // 拇指对无名指
-    {255, 70, 255, 255, 255, 255, 255, 255, 255, 255},  // 手掌张开
-    {147, 70, 255, 255, 255, 131, 255, 255, 120, 27},   // 拇指对小拇指
-    {255, 70, 255, 255, 255, 255, 255, 255, 255, 255}   // 手掌张开
-};
-
-// L10 - 执行动作 - 手指侧摆
-std::vector<std::vector<uint8_t>> L10_POSE_3 = {
-    {255, 255, 255, 255, 255, 255, 40, 88, 80, 63},     // 手掌张开
-    {255, 0, 255, 255, 255, 255, 40, 88, 80, 63},       // 拇指侧摆
-    {255, 70, 255, 255, 255, 255, 40, 88, 80, 0},       // 手掌张开
-    {255, 255, 255, 255, 255, 255, 40, 88, 80, 255},    // 拇指旋转
-    {255, 255, 255, 255, 255, 255, 40, 88, 80, 63},     // 手掌张开
-    {255, 255, 255, 255, 255, 255, 255, 88, 80, 63},    // 食指侧摆
-    {255, 255, 255, 255, 255, 255, 40, 88, 80, 63},     // 手掌张开
-    {255, 255, 255, 255, 255, 255, 40, 255, 80, 63},    // 无名指侧摆
-    {255, 255, 255, 255, 255, 255, 40, 88, 80, 63},     // 手掌张开
-    {255, 255, 255, 255, 255, 255, 40, 88, 255, 63},    // 小拇指侧摆
-    {255, 255, 255, 255, 255, 255, 40, 88, 80, 63}      // 手掌张开
-};
-
-// L10 - 执行动作 - 张开
-std::vector<uint8_t> L10_POSE_OPEN = {255, 104, 255, 255, 255, 255, 255, 255, 255, 71};
-// L10 - 执行动作 - 握拳
-std::vector<uint8_t> L10_POSE_CLOSE = {101, 60, 0, 0, 0, 0, 255, 255, 255, 51};
-
 // ===================== 各功能任务（输出走 StatusPane） =====================
 
 // 执行预设动作（按型号分派，逻辑保留原样，输出改写入面板）
 static void runPresetAction(LinkerHandApi& hand, tui::StatusPane& pane)
 {
-    if (hand.handJoint_ == LINKER_HAND::L6) {
-        pane.log("L6 - Execute action");
-        for (size_t i = 0; i < 10 && !tui::abortRequested(); i++) {
-            for (const auto& pose : L6_POSE_1) {
-                hand.setPosition(pose);
-                std::this_thread::sleep_for(std::chrono::milliseconds(150));
-            }
-            std::this_thread::sleep_for(std::chrono::milliseconds(150));
-        }
-    } else if (hand.handJoint_ == LINKER_HAND::O6) {
-        pane.log("O6 - Execute action");
-        for (const auto& pose : L6_POSE_1) {
-            if (tui::abortRequested()) break;
-            hand.setPosition(pose);
-            std::this_thread::sleep_for(std::chrono::milliseconds(1200));
-        }
-    } else if (hand.handJoint_ == LINKER_HAND::L7) {
+    if (hand.handJoint_ == LINKER_HAND::L7) {
         hand.setSpeed(std::vector<uint8_t>(7, HAND_SPEED));   // L7 need 7 speed
         hand.setTorque(std::vector<uint8_t>(7, HAND_TORQUE)); // L7 need 7 torque
         pane.log("L7 - Execute action - Make a fist");
@@ -502,43 +429,6 @@ static void runPresetAction(LinkerHandApi& hand, tui::StatusPane& pane)
         }
         pane.log("L7 - Execute action - Open hand");
         hand.setPosition(L7_POSE_OPEN);
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-    } else if (hand.handJoint_ == LINKER_HAND::L10) {
-        hand.setSpeed(std::vector<uint8_t>(10, HAND_SPEED));
-        hand.setTorque(std::vector<uint8_t>(10, HAND_TORQUE));
-        pane.log("L10 - Execute action - Finger cycle bending");
-        for (const auto& pose : L10_POSE_1) {
-            if (tui::abortRequested()) break;
-            hand.setPosition(pose);
-            std::this_thread::sleep_for(std::chrono::seconds(1));
-        }
-        pane.log("L10 - Execute action - Thumb and Circular Fingers");
-        for (const auto& pose : L10_POSE_2) {
-            if (tui::abortRequested()) break;
-            hand.setPosition(pose);
-            std::this_thread::sleep_for(std::chrono::seconds(1));
-        }
-        pane.log("L10 - Execute action - Finger side swing");
-        for (const auto& pose : L10_POSE_3) {
-            if (tui::abortRequested()) break;
-            hand.setPosition(pose);
-            std::this_thread::sleep_for(std::chrono::seconds(1));
-        }
-        pane.log("L10 - Execute action - Make a fist");
-        hand.setPosition(L10_POSE_CLOSE);
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-        pane.log("L10 - Execute action - Open hand");
-        hand.setPosition(L10_POSE_OPEN);
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-    } else if (hand.handJoint_ == LINKER_HAND::L20) {
-        hand.setSpeed(std::vector<uint8_t>(5, HAND_SPEED)); // L20 need 5 speed
-        pane.log("L20 - Execute action - Make a fist");
-        std::vector<uint8_t> L20_POSE_CLOSE = {69, 0, 0, 0, 0, 32, 10, 100, 180, 240, 145, 255, 255, 255, 255, 0, 0, 0, 0, 0};
-        hand.setPosition(L20_POSE_CLOSE);
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-        pane.log("L20 - Execute action - Open hand");
-        std::vector<uint8_t> L20_POSE_OPEN = {255, 255, 230, 255, 255, 255, 10, 100, 180, 240, 245, 255, 255, 255, 255, 255, 255, 255, 255, 255};
-        hand.setPosition(L20_POSE_OPEN);
         std::this_thread::sleep_for(std::chrono::seconds(1));
     } else if (hand.handJoint_ == LINKER_HAND::L25 || hand.handJoint_ == LINKER_HAND::L21) {
         hand.setSpeed(std::vector<uint8_t>(25, HAND_SPEED));
@@ -812,12 +702,12 @@ int main(int argc, char* argv[])
         tui::RawMode guard;
 
         // 1) 选型号
-        const std::vector<std::string> modelItems = {
-            "L6", "L7", "L10", "L20", "L21", "L25", "O6", "L20_10", "O20"};
-        const std::array<LINKER_HAND, 9> modelEnum = {
-            LINKER_HAND::L6, LINKER_HAND::L7, LINKER_HAND::L10, LINKER_HAND::L20,
-            LINKER_HAND::L21, LINKER_HAND::L25, LINKER_HAND::O6, LINKER_HAND::L20_10,
-            LINKER_HAND::O20};
+        std::vector<std::string> modelItems;
+        std::vector<LINKER_HAND> modelEnum;
+        for (const auto& info : linkerhand::legacy::models) {
+            modelItems.push_back(info.name);
+            modelEnum.push_back(info.model);
+        }
         int mi = tui::runMenu("选择 LinkerHand 型号", modelItems, "↑/↓ 选择   ⏎ 确认   ESC/q 退出");
         if (mi < 0) return 0;
         LINKER_HAND linkerhand = modelEnum[mi];
@@ -834,14 +724,15 @@ int main(int argc, char* argv[])
         if (linkerhand == LINKER_HAND::O20) {
             channel = COMM_TYPE::CAN;
             busName = "CAN-FD";
-        } else {
-            int bi = tui::runMenu("选择通信总线", {"CAN", "Modbus", "EtherCAT"},
+        } else if (linkerhand == LINKER_HAND::L7) {
+            int bi = tui::runMenu("选择通信总线", {"CAN", "Modbus"},
                                   "↑/↓ 选择   ⏎ 确认   ESC/q 退出");
             if (bi < 0) return 0;
-            const std::array<COMM_TYPE, 3> busEnum = {COMM_TYPE::CAN, COMM_TYPE::MODBUS, COMM_TYPE::ETHERCAT};
-            const std::array<const char*, 3> busNames = {"CAN", "Modbus", "EtherCAT"};
-            channel = busEnum[bi];
-            busName = busNames[bi];
+            channel = bi == 0 ? COMM_TYPE::CAN : COMM_TYPE::MODBUS;
+            busName = bi == 0 ? "CAN" : "Modbus";
+        } else {
+            channel = COMM_TYPE::CAN;
+            busName = "CAN";
         }
 
         // 调用API接口
