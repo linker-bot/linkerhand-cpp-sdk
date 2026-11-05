@@ -39,10 +39,10 @@ Use an appropriate writable prefix or explicitly run the installer with needed p
 ## CMake integration
 
 ```cmake
-find_package(linkerhand-cpp-sdk 2.2.1 CONFIG REQUIRED)
+find_package(linkerhand-legacy-cpp-sdk 2.2.1 CONFIG REQUIRED)
 add_executable(my_app main.cpp)
 target_compile_features(my_app PRIVATE cxx_std_17)
-target_link_libraries(my_app PRIVATE LinkerHand::linkerhand_cpp_sdk)
+target_link_libraries(my_app PRIVATE LinkerHand::linkerhand_legacy_cpp_sdk)
 ```
 
 Set `CMAKE_PREFIX_PATH` to the package root or installation prefix. Arrange runtime library
@@ -65,3 +65,17 @@ firmware and sensors; queue/backend acceptance is not device acknowledgment or m
 arrival. SDK and bundled dependency binaries remain unchanged.
 
 See [LICENSE](LICENSE) for the SDK package license. Vendor components retain their notices.
+
+## Package naming
+
+The package name is `linkerhand-legacy-cpp-sdk`. Use
+`find_package(linkerhand-legacy-cpp-sdk CONFIG REQUIRED)` and link
+`LinkerHand::linkerhand_legacy_cpp_sdk`. Installed headers, libraries, CMake
+configuration and documentation use package-specific directories under the prefix.
+Consumers of the former `linkerhand-cpp-sdk` package must update their package
+lookup, target name and any explicit installation paths.
+
+Prebuilt library filenames remain `linkerhand_cpp_sdk.*` to preserve their embedded
+runtime names and Windows import-library references. Renaming these binaries
+requires rebuilding the SDK from its implementation sources, which are not included.
+Public C++ API names and compiler definitions are unchanged.

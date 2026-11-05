@@ -1,4 +1,4 @@
-name: SDK package
+name: linkerhand-legacy-cpp-sdk
 on:
   pull_request:
   push:
@@ -8,7 +8,7 @@ permissions:
   contents: read
 jobs:
   package:
-    name: SDK package (${{ matrix.container || matrix.os }}, transport=${{ matrix.transport }})
+    name: linkerhand-legacy-cpp-sdk (${{ matrix.container || matrix.os }}, transport=${{ matrix.transport }})
     runs-on: ${{ matrix.os }}
     container: ${{ matrix.container }}
     strategy:
@@ -70,7 +70,9 @@ jobs:
         shell: bash
         run: |
           cmake --install build --config Release --prefix "$GITHUB_WORKSPACE/install"
-          cmake -S demo -B consumer -DCMAKE_PREFIX_PATH="$GITHUB_WORKSPACE/install"
+          cp -R demo "$RUNNER_TEMP/legacy-sdk-consumer"
+          cmake -S "$RUNNER_TEMP/legacy-sdk-consumer" -B consumer \
+            -Dlinkerhand-legacy-cpp-sdk_DIR="$GITHUB_WORKSPACE/install/lib/cmake/linkerhand-legacy-cpp-sdk"
           cmake --build consumer --config Release --parallel 4
       - name: Check Linux build wrapper
         if: matrix.os == 'ubuntu-24.04' && matrix.container == '' && matrix.transport == 'OFF'
@@ -84,5 +86,5 @@ jobs:
         run: python3 tools/binary_manifest.py > binary-manifest.json
       - uses: actions/upload-artifact@v4
         with:
-          name: SDK-manifest-${{ strategy.job-index }}
+          name: linkerhand-legacy-cpp-sdk-manifest-${{ strategy.job-index }}
           path: binary-manifest.json

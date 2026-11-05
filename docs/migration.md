@@ -14,7 +14,7 @@ does not establish equivalent Modbus support in the newer SDK. Validate the sele
 firmware and transport before replacing an existing application.
 
 Historical examples and tool behavior remain available at the
-[v2.2.1 tag](https://github.com/linker-bot/linkerhand-cpp-sdk/tree/v2.2.1).
+[v2.2.1 tag](https://github.com/linker-bot/linkerbot-hand-legacy-cpp-sdk/tree/v2.2.1).
 Do not remove public enums from an existing application's headers to enforce the new scope.
 
 `L20_10` and `L20_11` are not ordinary `L20`. The legacy aliases are preserved; applications
