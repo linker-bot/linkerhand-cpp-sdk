@@ -10,9 +10,10 @@
 #include "LinkerHandApi.h"
 #include "CommunicationCallbacks.h"
 #include "Modbus.h"
+#include "legacy/ModbusCallbacks.h"
 
 // 全局 Modbus 设备实例
-static std::unique_ptr<Modbus> g_modbus = nullptr;
+static std::shared_ptr<Modbus> g_modbus = nullptr;
 
 // 辅助函数：打印向量数据
 void printVector(const std::string& label, const std::vector<uint8_t>& vec) {
@@ -35,7 +36,7 @@ int main(int argc, char* argv[]) {
     std::cout << std::endl;
     
     // 1. 初始化 Modbus 设备
-    g_modbus = std::make_unique<Modbus>("/dev/ttyUSB0", 115200);
+    g_modbus = std::make_shared<Modbus>("/dev/ttyUSB0", 115200);
     if (!g_modbus->isOpen()) {
         std::cerr << "串口打开失败，退出。" << std::endl;
         return -1;
@@ -46,19 +47,7 @@ int main(int argc, char* argv[]) {
     LinkerHandApi hand(LINKER_HAND::L7, HAND_TYPE::RIGHT, COMM_TYPE::MODBUS);
     
     // 3. 设置 Modbus 回调函数
-    hand.setModbusTxCallback([](uint8_t sid, uint16_t addr, const uint8_t* data, uintptr_t len) -> int32_t {
-        if (!g_modbus) return -1;
-        return g_modbus->sendRawFrame(data, len) ? 0 : -1;
-    });
-
-    hand.setModbusRxCallback([](uint8_t sid, uint16_t* addr_out, uint8_t* data_out, uint8_t* len_out) -> int32_t {
-        if (!g_modbus) return -1;
-        int len = g_modbus->receiveCompleteFrame(data_out, 256, 500);
-        if (len <= 0 || data_out[0] != sid) return -1;
-        *len_out = static_cast<uint8_t>(len);
-        if (addr_out) *addr_out = 0;
-        return 0; 
-    });
+    (void)linkerhand::legacy::bind_modbus_callbacks(hand, g_modbus);
     
     std::cout << "初始化完成！" << std::endl;
     std::cout << std::endl;

@@ -17,6 +17,7 @@
 #include "LegacyModels.h"
 #include "CommFactory.h"
 #include "Modbus.h"
+#include "legacy/ModbusCallbacks.h"
 #ifdef LINKERHAND_TRANSPORT_ADAPTER
 #include "legacy/CanCallbacks.h"
 #include <linkerbot/can/vendor_canfd_transport.hpp>
@@ -109,18 +110,7 @@ int main(int argc, char** argv) {
                           ? std::make_shared<Modbus>(side, 115200)
                           : std::make_shared<Modbus>(channel, 115200);
             if (!mb->isOpen()) { std::cerr << "BRIDGE_ERROR: Modbus 串口打开失败 (" << (channel.empty() ? "auto" : channel) << ")" << std::endl; return 1; }
-            hand->setModbusTxCallback([mb](uint8_t /*sid*/, uint16_t /*addr*/, const uint8_t* d, uintptr_t n) -> int32_t {
-                try { return mb->sendRawFrame(d, n) ? 0 : -1; } catch (...) { return -1; }
-            });
-            hand->setModbusRxCallback([mb](uint8_t sid, uint16_t* addr_out, uint8_t* d_out, uint8_t* n_out) -> int32_t {
-                try {
-                    int len = mb->receiveCompleteFrame(d_out, 256, 500);
-                    if (len <= 0 || d_out[0] != sid) return -1;
-                    *n_out = static_cast<uint8_t>(len);
-                    if (addr_out) *addr_out = 0;
-                } catch (...) { return -1; }
-                return 0;
-            });
+            (void)linkerhand::legacy::bind_modbus_callbacks(*hand, mb);
 #ifdef LINKERHAND_TRANSPORT_ADAPTER
         } else {
             std::unique_ptr<linkerbot::can::CANTransport> backend;

@@ -39,3 +39,12 @@ cannot be inferred from individual callbacks. No uncertain frame is replayed aut
 
 Keep the default packaged path until the combinations listed in
 [device validation](device-compatibility.md) have passed. L7 Modbus remains unchanged.
+
+## L7 Modbus boundary
+
+`legacy/ModbusCallbacks.h` keeps the existing raw RTU backend and shares callback binding
+across examples and tools. It rejects slave mismatches and responses that exceed the
+old 8-bit length field before copying to the SDK. It does not migrate to structured
+`RtuSession` transactions or promise transaction serialization across separate TX/RX calls.
+Serialize complete SDK operations on a physical line. Full migration requires the original
+protocol implementation or a verified callback/firmware contract and hardware acceptance.

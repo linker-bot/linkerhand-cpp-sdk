@@ -18,6 +18,7 @@
 #include "LinkerHandApi.h"
 #include "LegacyModels.h"
 #include "Modbus.h"
+#include "legacy/ModbusCallbacks.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -813,18 +814,7 @@ int main(int argc, char* argv[])
             (argc > 1) ? channel_name = argv[1] : channel_name = "/dev/ttyUSB0";
             modbus = std::make_shared<Modbus>(handType);
 
-            hand.setModbusTxCallback([modbus](uint8_t sid, uint16_t addr, const uint8_t* data, uintptr_t len) -> int32_t {
-                if (!modbus) return -1;
-                return modbus->sendRawFrame(data, len) ? 0 : -1;
-            });
-            hand.setModbusRxCallback([modbus](uint8_t sid, uint16_t* addr_out, uint8_t* data_out, uint8_t* len_out) -> int32_t {
-                if (!modbus) return -1;
-                int len = modbus->receiveCompleteFrame(data_out, 256, 500);
-                if (len <= 0 || data_out[0] != sid) return -1;
-                *len_out = static_cast<uint8_t>(len);
-                if (addr_out) *addr_out = 0;
-                return 0;
-            });
+            (void)linkerhand::legacy::bind_modbus_callbacks(hand, modbus);
         } else if (channel == COMM_TYPE::ETHERCAT) {
             errMsg = "EtherCAT 暂不支持 !";
         }
