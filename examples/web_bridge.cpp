@@ -17,6 +17,15 @@
 #include "LegacyModels.h"
 #include "CommFactory.h"
 #include "Modbus.h"
+#ifdef LINKERHAND_TRANSPORT_ADAPTER
+#include "legacy/CanCallbacks.h"
+#include <linkerbot/can/vendor_canfd_transport.hpp>
+#ifdef __linux__
+#include <linkerbot/can/socketcan_transport.hpp>
+#else
+#include <linkerbot/can/pcan_transport.hpp>
+#endif
+#endif
 #if defined(WEB_BRIDGE_HAS_CANFD)
 #include "CanFD.h"
 #endif
@@ -87,6 +96,10 @@ int main(int argc, char** argv) {
     const int dof = info->position_size;
 
     try {
+#ifdef LINKERHAND_TRANSPORT_ADAPTER
+        std::shared_ptr<linkerbot::can::CANDispatcher> dispatcher;
+        std::shared_ptr<linkerhand::legacy::CanCallbacks> callbacks;
+#endif
         COMM_TYPE ct = is_modbus ? COMM_TYPE::MODBUS : COMM_TYPE::CAN;
         auto hand = std::make_shared<LinkerHandApi>(model, side, ct);
 
@@ -108,6 +121,35 @@ int main(int argc, char** argv) {
                 } catch (...) { return -1; }
                 return 0;
             });
+#ifdef LINKERHAND_TRANSPORT_ADAPTER
+        } else {
+            std::unique_ptr<linkerbot::can::CANTransport> backend;
+            if (is_canfd && channel.rfind("socketcan:", 0) != 0) {
+                if (!channel.empty() && channel != "0")
+                    throw std::runtime_error("Vendor O20 bridge accepts empty channel or 0; use socketcan:can0 for SocketCAN");
+                backend = std::make_unique<linkerbot::can::VendorCanFdTransport>();
+            } else {
+                if (channel.empty()) throw std::runtime_error("Transport adapter requires an explicit channel");
+#ifdef __linux__
+                const auto iface = is_canfd ? channel.substr(10) : channel;
+                backend = std::make_unique<linkerbot::can::SocketCANTransport>(iface, is_canfd);
+#else
+                linkerbot::can::PcanConfig config;
+                config.channel = linkerbot::can::pcan_channel_handle(channel);
+                config.mode = is_canfd ? linkerbot::can::PcanMode::kFd : linkerbot::can::PcanMode::kClassic;
+                backend = std::make_unique<linkerbot::can::PcanTransport>(config);
+#endif
+            }
+            dispatcher = std::make_shared<linkerbot::can::CANDispatcher>(std::move(backend));
+            callbacks = std::make_shared<linkerhand::legacy::CanCallbacks>(dispatcher, is_canfd, is_canfd);
+            hand->setCanTxCallback([callbacks](uint32_t id, const uint8_t* data, uintptr_t size) {
+                return callbacks->transmit(id, data, size);
+            });
+            hand->setCanRxCallback([callbacks](uint32_t* id, uint8_t* data, uint8_t* size) {
+                return callbacks->receive(id, data, size);
+            });
+        }
+#else
         } else if (is_canfd) {
             // O20 accepts an explicit SocketCAN FD interface; otherwise use vendor (0,0).
             const bool use_socketcan = channel.rfind("socketcan:", 0) == 0;
@@ -178,6 +220,8 @@ int main(int argc, char** argv) {
                 return 0;
             });
         }
+
+#endif
 
         // Preserve legacy parameter initialization; this is not a read-only connection.
         hand->setSpeed(std::vector<uint8_t>(dof, 180));

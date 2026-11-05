@@ -6,6 +6,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 option(BUILD_EXAMPLES "Build example applications" ON)
+option(LINKERHAND_USE_TRANSPORT "Enable the optional transport callback adapter" OFF)
+if(LINKERHAND_USE_TRANSPORT)
+    include(cmake/LegacyTransport.cmake)
+endif()
 option(BUILD_HAND_TEACH_PENDANT "Deprecated: external teach pendant source is not packaged" OFF)
 
 if(BUILD_EXAMPLES)
@@ -78,4 +82,13 @@ install(FILES
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/third_party")
     install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/third_party/"
             DESTINATION "${LH_INSTALL_LIB_ROOT}/third_party")
+endif()
+
+install(DIRECTORY include/legacy/ DESTINATION "${LH_INSTALL_INCLUDE_DIR}/legacy" FILES_MATCHING PATTERN "*.h")
+
+if(LINKERHAND_USE_TRANSPORT AND BUILD_TESTING)
+    enable_testing()
+    add_executable(legacy_callbacks_test tests/can_callbacks_test.cpp)
+    target_link_libraries(legacy_callbacks_test PRIVATE linkerhand_legacy_transport)
+    add_test(NAME legacy_callbacks COMMAND legacy_callbacks_test)
 endif()
