@@ -20,7 +20,7 @@
 #include "LinkerHandExport.h"
 
 // 仅前向声明 IHand，避免把 hand/ 子目录的实现细节带进公共头。
-// 实例化 std::unique_ptr<IHand> 的析构在 LinkerHandApi.cpp 里完成。
+// Destruction is supplied by the packaged SDK library.
 namespace linkerhand { namespace hand { class IHand; } }
 
 namespace linkerhand {

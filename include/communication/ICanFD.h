@@ -13,7 +13,7 @@ namespace communication
     {
         bool valid;             // 帧是否有效
         uint32_t can_id;        // CAN FD 帧 ID
-        uint8_t can_dlc;        // DLC (0-15)
+        uint8_t can_dlc;        // Vendor: wire DLC (0-15); CanFDSocket: payload byte count
         uint8_t data[64];       // 数据
         uint8_t frame_type;     // 帧类型
         uint8_t extern_flag;    // 扩展帧标识

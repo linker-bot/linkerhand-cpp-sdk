@@ -16,7 +16,12 @@ endif()
 
 option(BUILD_TESTS "Build hardware example applications (not offline tests)" ON)
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+# Keep executables beside staged DLLs for multi-config generators as well.
+foreach(_config IN LISTS CMAKE_CONFIGURATION_TYPES)
+    string(TOUPPER "${_config}" _config_upper)
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_${_config_upper} "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
+endforeach()
 
 if(WIN32)
     set(LIB_SUBDIR "win64")
@@ -264,7 +269,7 @@ function(_define_examples_runtime_deps_target)
         return()
     endif()
 
-    set(_cmds "")
+    set(_cmds COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
 
     if(LINKERHAND_AS_SUBPROJECT)
         list(APPEND _cmds

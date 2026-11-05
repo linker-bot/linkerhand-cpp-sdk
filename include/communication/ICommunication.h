@@ -1,6 +1,7 @@
 #ifndef I_COMMUNICATION_H
 #define I_COMMUNICATION_H
 
+#include <cstdint>
 #include <set>
 #include <vector>
 #include <string>
