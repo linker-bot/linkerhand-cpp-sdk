@@ -1,81 +1,24 @@
-# Web 示教器（webui/）
+# Legacy hand Web UI
 
-一套开箱即用的灵巧手网页控制界面，全型号通用，`./build.sh -b` 编译后 `python3 webui/run.py` 即可使用；也可用仓库根目录的 `./start-webui.sh` 一条命令启动（未编译会自动先构建）。
+The Python standard-library server drives `build/bin/web_bridge`. It supports L7,
+L20_10 / L20_11, L21, L25 and O20. L7 supports CAN or Modbus; O20 uses CAN FD;
+the remaining models use Classic CAN.
 
-支持型号：L6 / L7 / L20_Lite / L20 / L21 / L25 / L20_10 / O6 / O20 / L30 / O30（O20、L30、O30 走 CAN-FD）。
-
-## 前置
-
-1. 编译 SDK：
-   ```bash
-   ./build.sh -b
-   ```
-2. **CAN / CAN-FD 型号**：拉起对应 CAN 接口并给手上电，例如：
-   ```bash
-   sudo ip link set can0 up type can bitrate 1000000
-   # O20 / L30 / O30 原生 CAN-FD（可选，配合 --channel socketcan:can0）：
-   # sudo ip link set can0 up type can bitrate 1000000 dbitrate 5000000 fd on
-   ```
-   也可用仓库根目录的 `can-autocfg.sh` 一次性配好自动激活/关闭。
-3. **Modbus 型号（RS485 串口）**：给串口读写权限：
-   ```bash
-   sudo chmod 0777 /dev/ttyUSB0
-   # 或把当前用户加入 dialout 组（重新登录后生效）：
-   # sudo usermod -aG dialout $USER
-   ```
-
-## 运行
-
-两种方式，任选其一。
-
-**① 一条命令（推荐）**：仓库根目录的 `./start-webui.sh` 会先检测 `build/bin/web_bridge` 是否已编译，未编译则自动跑 `./build.sh -b`，再启动服务。所有参数原样透传给 `run.py`：
-
-```bash
-./start-webui.sh                       # 在前端「设置」面板在线连接
-./start-webui.sh --model O6 --side left
+```sh
+./build.sh -b
+python3 webui/run.py --model L7 --side left --comm can --channel can0
 ```
 
-**② 在线连接**：不带 `--model` 启动，浏览器打开后在页面「设置」面板里选择型号 / 侧别 / 通信方式并连接，支持热重连与主动断开。
+Omit `--model` to select a device in the browser. Configure SocketCAN before connecting.
+For O20, `--channel socketcan:can0` selects the Linux SocketCAN FD path; an empty channel
+uses the packaged vendor default. Confirm the device's nominal/data rates and adapter.
+Modbus takes a serial port such as `/dev/ttyUSB0` or `COM3`.
 
-```bash
-python3 webui/run.py
-```
+The server defaults to port 8080 and binds all interfaces. Use `--host 127.0.0.1` for local
+access. It has no authentication and should run only on a trusted control network.
+Connecting may set device parameters; inspect the bridge initialization before operating
+hardware. Slider values are legacy 0–255 controls, not physical joint angles.
 
-**③ 命令行直连**：启动即按参数连接指定型号。
-
-```bash
-python3 webui/run.py --model O6  --side left
-python3 webui/run.py --model L20_LITE --side left  --channel can0
-python3 webui/run.py --model O20 --side right                    # 厂商 CAN-FD 设备
-python3 webui/run.py --model O20 --side right --channel socketcan:can0
-python3 webui/run.py --model O30 --side left --comm canfd --channel socketcan:can0
-python3 webui/run.py --model L20_LITE --comm modbus --channel /dev/ttyUSB0
-```
-
-启动后浏览器打开 `http://<本机IP>:8080/`。
-
-参数：
-
-| 参数 | 说明 | 默认 |
-|------|------|------|
-| `--model` | 启动即连的型号（L6/O6/L7/L20_LITE/L20/L20_10/L21/L25/O20/L30/O30）；不填则在前端在线连接 | 无 |
-| `--side` | `left` / `right` | `left` |
-| `--comm` | `can` / `canfd` / `modbus`；O20 / L30 / O30 使用 CAN-FD | 自动 |
-| `--channel` | CAN 接口名（如 `can0`）/ Modbus 串口（如 `/dev/ttyUSB0`）；O20 / L30 / O30 可用 `socketcan:can0` | 自动 |
-| `--host` | 监听地址 | `0.0.0.0` |
-| `--port` | 监听端口 | `8080` |
-
-## 功能
-
-- 按型号动态渲染关节滑块，实时位置回读
-- 速度 / 力矩设置与回读
-- 触觉压感热力图（含 O30 五指 10×7 压感、O6 / L20_10 掌心）
-- 温度 / 故障监控（温度 >50 黄、>60 红，故障码非 0 红）
-- 版本信息展示、明暗主题切换
-
-## 注意
-
-- **未拉起 CAN / 未上电**：前端提示"等待 READY 超时"，检查总线与供电。
-- **Modbus 串口无权限**（`Permission denied: /dev/ttyUSB0`）：先 `sudo chmod 0777 /dev/ttyUSB0`，或把用户加入 `dialout` 组（见「前置」第 3 步）。
-- **触觉 / 温度 / 故障**：仅支持的型号有数据；无数据时不渲染或显示占位提示。
-- **O30 压感超时**：确认使用标准 CAN-FD 帧、总线速率匹配；后端日志出现“读取第 N 路压感超时”时先检查设备 App 版本和 CAN 错误计数。
+Model vector sizes include reserved entries for some devices. An empty or cached reading
+is not confirmation of motion. Follow the [validation procedure](../docs/device-compatibility.md).
+The [migration guide](../docs/migration.md) covers devices maintained by the newer SDK.
