@@ -24,9 +24,13 @@ cmake --build build --parallel 4
 ctest --test-dir build --output-on-failure
 ```
 
-The initial transport source baseline is `ff429d0c0333120dd6867ee7247549e53934ed46`.
-An installed compatible 0.3 package may be used instead of a source directory. No
-implementation dependency is downloaded implicitly by this package.
+The transport baseline is v0.3.4, commit `0e190032d65ed0b315337b45b3779cf4f650ed68`.
+The optional source and installed-package paths require transport 0.3.4 or newer
+in the 0.3 minor line. Rebuild callback consumers with matching transport headers
+and libraries. The prebuilt legacy SDK and vendor binaries remain version 2.2.1
+and are unchanged; this does not rebuild their unavailable implementation source
+or establish new hardware, driver/firmware, bus timing or device-soak acceptance.
+No implementation dependency is downloaded implicitly by this package.
 
 Interactive connection selection and application examples are maintained in
 [linkerbot-hand-tools](https://github.com/linker-bot/linkerbot-hand-tools).
