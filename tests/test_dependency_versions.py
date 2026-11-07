@@ -40,7 +40,9 @@ class DependencyVersions(unittest.TestCase):
         self.count += 1
         result = subprocess.run([
             "cmake", "-S", str(ROOT), "-B", str(self.root / f"build-{self.count}"),
-            "-DBUILD_TESTING=OFF", *['-DBUILD_EXAMPLES=OFF'],
+            "-DBUILD_TESTING=OFF",
+            "-DCMAKE_FIND_USE_PACKAGE_REGISTRY=OFF", "-DCMAKE_FIND_USE_SYSTEM_PACKAGE_REGISTRY=OFF",
+            "-DCMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH=OFF", *['-DBUILD_EXAMPLES=OFF'],
             f"-DCMAKE_PREFIX_PATH={self.prefix}", *options,
         ], capture_output=True, text=True)
         self.assertEqual(result.returncode == 0, success, result.stdout + result.stderr)
