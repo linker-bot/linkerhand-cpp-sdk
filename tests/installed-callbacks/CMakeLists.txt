@@ -1,0 +1,11 @@
+cmake_minimum_required(VERSION 3.16)
+project(legacy-installed-callbacks LANGUAGES CXX)
+find_package(linkerbot-transport 0.3.4 CONFIG REQUIRED)
+find_package(linkerhand-legacy-cpp-sdk 2.2.1 CONFIG REQUIRED)
+add_executable(installed-callbacks can_callbacks_test.cpp)
+target_compile_features(installed-callbacks PRIVATE cxx_std_17)
+target_include_directories(installed-callbacks PRIVATE "${linkerhand-legacy-cpp-sdk_INCLUDE_DIRS}")
+# The callbacks are header-only; this test does not load the legacy/vendor DLLs.
+target_link_libraries(installed-callbacks PRIVATE linkerbot::can)
+enable_testing()
+add_test(NAME installed-callbacks COMMAND installed-callbacks)

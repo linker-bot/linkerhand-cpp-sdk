@@ -52,7 +52,7 @@ jobs:
         if: matrix.transport == 'ON'
         with:
           repository: linker-bot/linkerbot-transport-cpp
-          ref: ff429d0c0333120dd6867ee7247549e53934ed46
+          ref: 0e190032d65ed0b315337b45b3779cf4f650ed68
           path: transport-source
       - name: Configure package consumers
         shell: bash
@@ -88,3 +88,69 @@ jobs:
         with:
           name: linkerhand-legacy-cpp-sdk-manifest-${{ strategy.job-index }}
           path: binary-manifest.json
+
+  released-sdk:
+    name: Published SDK (${{ matrix.runner }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            asset: Linux-x86_64-ubuntu24.04
+          - runner: ubuntu-24.04-arm
+            asset: Linux-aarch64-ubuntu24.04
+          - runner: windows-2022
+            asset: Windows-x64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download the matching released SDK and checksum
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          gh release download v0.3.4 --repo linker-bot/linkerbot-transport-cpp \
+            --pattern 'linkerbot-transport-0.3.4-${{ matrix.asset }}-*-Release*' --dir "$RUNNER_TEMP/sdk-download"
+      - name: Verify and unpack SDK
+        id: sdk
+        shell: python
+        run: |
+          import hashlib, os, pathlib, tarfile, zipfile
+          download = pathlib.Path(os.environ['RUNNER_TEMP']) / 'sdk-download'
+          archives = [p for p in download.iterdir() if p.name.endswith(('.tar.gz', '.zip'))]
+          assert len(archives) == 1, archives
+          archive = archives[0]
+          checksum = pathlib.Path(str(archive) + '.sha256').read_text().split()[0]
+          assert hashlib.sha256(archive.read_bytes()).hexdigest() == checksum
+          destination = pathlib.Path(os.environ['RUNNER_TEMP']) / 'released-sdk'
+          destination.mkdir()
+          if archive.name.endswith('.zip'):
+              with zipfile.ZipFile(archive) as packed:
+                  packed.extractall(destination)
+          else:
+              with tarfile.open(archive) as packed:
+                  packed.extractall(destination, filter='data')
+          roots = list(destination.iterdir())
+          assert len(roots) == 1 and roots[0].is_dir(), roots
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              output.write('prefix=' + roots[0].as_posix() + '\n')
+      - name: Build and test callback adapters with the released transport
+        shell: bash
+        run: |
+          cmake -S . -B build-released -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_TESTING=ON -DBUILD_EXAMPLES=ON -DLINKERHAND_USE_TRANSPORT=ON \
+            -DCMAKE_PREFIX_PATH="${{ steps.sdk.outputs.prefix }}"
+          cmake --build build-released --config Release --parallel 4
+          ctest --test-dir build-released -C Release --output-on-failure --no-tests=error
+      - name: Compile and test an independent installed callback consumer
+        shell: bash
+        run: |
+          cmake --install build-released --config Release --prefix "$GITHUB_WORKSPACE/install-released"
+          mkdir -p "$RUNNER_TEMP/installed-callback-consumer"
+          cp tests/can_callbacks_test.cpp tests/installed-callbacks/CMakeLists.txt "$RUNNER_TEMP/installed-callback-consumer/"
+          cmake -S "$RUNNER_TEMP/installed-callback-consumer" -B build-installed-callbacks \
+            -DCMAKE_BUILD_TYPE=Release \
+            -Dlinkerhand-legacy-cpp-sdk_DIR="$GITHUB_WORKSPACE/install-released/lib/cmake/linkerhand-legacy-cpp-sdk" \
+            -DCMAKE_PREFIX_PATH="${{ steps.sdk.outputs.prefix }}"
+          cmake --build build-installed-callbacks --config Release --parallel 4
+          ctest --test-dir build-installed-callbacks -C Release --output-on-failure --no-tests=error

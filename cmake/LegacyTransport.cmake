@@ -1,4 +1,5 @@
 # Optional source/prebuilt dependency. Do not download dependencies implicitly.
+set(LINKERHAND_TRANSPORT_MIN_VERSION 0.3.4)
 set(LINKERHAND_TRANSPORT_SOURCE_DIR "" CACHE PATH "Path to linkerbot-transport-cpp source")
 if(LINKERHAND_TRANSPORT_SOURCE_DIR)
     set(LINKERBOT_TRANSPORT_BUILD_TESTS OFF CACHE BOOL "")
@@ -7,7 +8,14 @@ if(LINKERHAND_TRANSPORT_SOURCE_DIR)
     set(LINKERBOT_TRANSPORT_ENABLE_MODBUS OFF CACHE BOOL "")
     add_subdirectory("${LINKERHAND_TRANSPORT_SOURCE_DIR}" "${CMAKE_BINARY_DIR}/legacy-transport")
 else()
-    find_package(linkerbot-transport 0.3 CONFIG REQUIRED)
+    find_package(linkerbot-transport ${LINKERHAND_TRANSPORT_MIN_VERSION} CONFIG REQUIRED)
+endif()
+# Check the actual target as well as the package version file.
+get_target_property(_legacy_transport_version linkerbot::can LINKERBOT_TRANSPORT_VERSION)
+string(REGEX MATCH "^[0-9]+[.][0-9]+" _legacy_transport_line "${_legacy_transport_version}")
+if(NOT _legacy_transport_line STREQUAL "0.3"
+   OR _legacy_transport_version VERSION_LESS LINKERHAND_TRANSPORT_MIN_VERSION)
+    message(FATAL_ERROR "Legacy transport adapter requires transport ${LINKERHAND_TRANSPORT_MIN_VERSION} or newer in the 0.3 minor line; found '${_legacy_transport_version}'")
 endif()
 add_library(linkerhand_legacy_transport INTERFACE)
 target_include_directories(linkerhand_legacy_transport INTERFACE "${CMAKE_CURRENT_LIST_DIR}/../include")

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Validate the optional transport callback adapter against transport v0.3.4 and require
+  0.3.4 or newer in the 0.3 minor line for source and installed dependencies.
+  SDK/vendor binaries, default backend and public ABI are unchanged.
+
 - Rename the package to `linkerhand-legacy-cpp-sdk` and the imported CMake target to
   `LinkerHand::linkerhand_legacy_cpp_sdk`. Update installation paths and the Windows
   default prefix; consumers must update package lookups, target names and explicit paths.
